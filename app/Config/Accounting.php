@@ -47,9 +47,9 @@ class Accounting extends BaseConfig
 
     // --- tax (purchase / sales modules)
     public string $ppnRate = '11';           // VAT %
-    public string $ppnInputCode = '1150';    // PPN Masukan (asset)
-    public string $ppnOutputCode = '2140';   // PPN Keluaran (liability)
+    public string $ppnInputCode = '23010';   // PPN Masukan  -> HTI "Tax Payable"
+    public string $ppnOutputCode = '23015';  // PPN Keluaran -> HTI "Tax Collected"
     public string $pph23Rate = '2';          // withholding %
-    public string $pph23PayableCode = '2131'; // Hutang PPh 23 (liability)
-    public string $pph23PrepaidCode = '1170'; // Uang Muka PPh 23 (asset) - customer-withheld on our sales
+    public string $pph23PayableCode = '23031'; // Hutang PPh 23 -> HTI "Tax PPH23"
+    public string $pph23PrepaidCode = '13106'; // Uang Muka PPh 23 -> HTI "Prepaid PPH 25/29" (customer-withheld on our sales)
 }
