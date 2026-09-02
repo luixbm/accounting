@@ -625,6 +625,13 @@ class SalesPoster
         if ($amount <= 0) {
             return ['ok' => false, 'errors' => ['Enter the deposit amount.']];
         }
+        $header['receipt_date'] = trim((string) ($header['receipt_date'] ?? ''));
+        if ($header['receipt_date'] === '' || ! strtotime($header['receipt_date'])) {
+            return ['ok' => false, 'errors' => ['Enter a valid deposit date.']];
+        }
+        if ((int) ($header['customer_id'] ?? 0) <= 0) {
+            return ['ok' => false, 'errors' => ['Choose a customer.']];
+        }
 
         $bank = $this->accounts->find((int) $header['bank_account_id']);
         if (! $bank || (int) $bank['is_cash'] !== 1) {

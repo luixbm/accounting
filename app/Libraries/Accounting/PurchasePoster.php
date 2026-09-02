@@ -646,6 +646,13 @@ class PurchasePoster
         if ($amount <= 0) {
             return ['ok' => false, 'errors' => ['Enter the deposit amount.']];
         }
+        $header['payment_date'] = trim((string) ($header['payment_date'] ?? ''));
+        if ($header['payment_date'] === '' || ! strtotime($header['payment_date'])) {
+            return ['ok' => false, 'errors' => ['Enter a valid deposit date.']];
+        }
+        if ((int) ($header['supplier_id'] ?? 0) <= 0) {
+            return ['ok' => false, 'errors' => ['Choose a supplier.']];
+        }
 
         $bank = $this->accounts->find((int) $header['bank_account_id']);
         if (! $bank || (int) $bank['is_cash'] !== 1) {
