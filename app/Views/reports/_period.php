@@ -6,6 +6,7 @@
  * @var bool|null   $showAsOf
  * @var bool|null   $showCompare
  * @var bool|null   $showZeros  offer "include accounts with no activity"
+ * @var bool|null   $hidePeriodPickers  drop the Year / Period selectors (report has its own date filter)
  * @var string|null $extra    extra <div class="field">…</div> markup (account picker etc.)
  */
 use App\Libraries\Report\ReportFilter;
@@ -14,6 +15,7 @@ $years   = ReportFilter::years();
 $isCustom = $f['period'] === 'custom';
 ?>
 <form class="filterbar no-print" method="get" id="reportFilter">
+  <?php if (empty($hidePeriodPickers)): ?>
   <div class="field" style="max-width:110px">
     <label><?= lang('App.year') ?></label>
     <select name="year">
@@ -41,6 +43,7 @@ $isCustom = $f['period'] === 'custom';
   <div class="field customRange" style="max-width:160px;<?= $isCustom ? '' : 'display:none' ?>">
     <label><?= lang('App.to') ?></label><input type="date" name="to" value="<?= esc($f['to']) ?>">
   </div>
+  <?php endif ?>
 
   <?php if (! empty($showAsOf)): ?>
     <div class="field" style="max-width:160px">
@@ -74,8 +77,12 @@ $isCustom = $f['period'] === 'custom';
   <button class="btn secondary" type="button" onclick="window.print()"><?= lang('App.print') ?></button>
 </form>
 <script>
-  document.getElementById('periodSel').addEventListener('change', function () {
-    var show = this.value === 'custom';
-    document.querySelectorAll('#reportFilter .customRange').forEach(function (el) { el.style.display = show ? '' : 'none'; });
-  });
+  (function () {
+    var sel = document.getElementById('periodSel');
+    if (!sel) return;
+    sel.addEventListener('change', function () {
+      var show = this.value === 'custom';
+      document.querySelectorAll('#reportFilter .customRange').forEach(function (el) { el.style.display = show ? '' : 'none'; });
+    });
+  })();
 </script>

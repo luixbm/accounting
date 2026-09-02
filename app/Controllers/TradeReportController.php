@@ -267,6 +267,143 @@ class TradeReportController extends BaseController
         ], $out);
     }
 
+    // ---------------------------------------------------------------- payment list (by promise date)
+
+    /**
+     * Flat "what to pay" list: one row per unpaid purchase-invoice line, with
+     * the supplier's bank details and the invoice's promise-date custom field.
+     * Purchase only. Columns mirror the client's Excel "Data Payment" template;
+     * all downstream grouping / approval logic stays in their workbook.
+     */
+    public function paymentList()
+    {
+        $f      = ReportFilter::resolve();
+        $pdFrom = trim((string) $this->request->getGet('pd_from'));
+        $pdTo   = trim((string) $this->request->getGet('pd_to'));
+
+        $sql = "SELECT
+                    i.invoice_date                       AS date,
+                    cvpo.value_text                      AS po_no,
+                    i.internal_no                        AS number,
+                    s.name                               AS supplier,
+                    s.code                               AS supplier_code,
+                    jb.code                              AS dossier_code,
+                    l.description                        AS description,
+                    cur.code                             AS currency,
+                    l.cost_remark                        AS remarks,
+                    l.budget_amount                      AS budget,
+                    i.paid_base                          AS paid,
+                    (i.total_base - i.paid_base)         AS balance,
+                    l.service_date                       AS service_date,
+                    jb.name                              AS dossier_name,
+                    cust.name                            AS client_name,
+                    cvbn.value_text                      AS bank_name,
+                    cvan.value_text                      AS bank_account_nr,
+                    cvbf.value_text                      AS account_name,
+                    s.email                              AS email,
+                    i.description                        AS notes,
+                    cvpd.value_date                      AS promise_date,
+                    l.booking_ref                        AS booking_id,
+                    l.job_id                             AS job_id
+                FROM purchase_invoice_lines l
+                JOIN purchase_invoices i        ON i.id = l.invoice_id
+                LEFT JOIN suppliers s           ON s.id = i.supplier_id
+                LEFT JOIN jobs jb               ON jb.id = l.job_id
+                LEFT JOIN customers cust        ON cust.id = jb.customer_id
+                LEFT JOIN currencies cur        ON cur.id = i.currency_id
+                LEFT JOIN custom_values cvpd    ON cvpd.entity = 'purchase_invoice' AND cvpd.record_id = i.id AND cvpd.field_key = 'promise_date'
+                LEFT JOIN custom_values cvpo    ON cvpo.entity = 'purchase_invoice' AND cvpo.record_id = i.id AND cvpo.field_key = 'po_number'
+                LEFT JOIN custom_values cvbn    ON cvbn.entity = 'supplier' AND cvbn.record_id = s.id AND cvbn.field_key = 'bank_name'
+                LEFT JOIN custom_values cvan    ON cvan.entity = 'supplier' AND cvan.record_id = s.id AND cvan.field_key = 'account_nr'
+                LEFT JOIN custom_values cvbf    ON cvbf.entity = 'supplier' AND cvbf.record_id = s.id AND cvbf.field_key = 'beneficiary_name'
+                WHERE i.company_id = ?
+                  AND i.status IN ('posted', 'partial')
+                  AND ABS(i.total_base - i.paid_base) > 0.005";
+        $params = [$this->co()];
+        if ($pdFrom !== '') {
+            $sql .= " AND cvpd.value_date >= ?";
+            $params[] = $pdFrom;
+        }
+        if ($pdTo !== '') {
+            $sql .= " AND cvpd.value_date <= ?";
+            $params[] = $pdTo;
+        }
+        $sql .= " ORDER BY s.name, i.internal_no, l.line_no";
+
+        $rows     = $this->db->query($sql, $params)->getResultArray();
+        $invoices = [];
+        $out      = [];
+        foreach ($rows as $r) {
+            $invoices[$r['number']] = true;
+            $out[] = [
+                'date'            => $r['date'],
+                'po_no'           => $r['po_no'],
+                'number'          => $r['number'],
+                'supplier'        => $r['supplier'],
+                'supplier_code'   => $r['supplier_code'],
+                'dossier_code'    => $r['dossier_code'],
+                'description'     => $r['description'],
+                'currency'        => $r['currency'],
+                'remarks'         => $r['remarks'],
+                'budget'          => $r['budget'],
+                'paid'            => $r['paid'],
+                'balance'         => $r['balance'],
+                'service_date'    => $r['service_date'],
+                'dossier_name'    => $r['dossier_name'],
+                'client_name'     => $r['client_name'],
+                'bank_name'       => $r['bank_name'],
+                'bank_account_nr' => $r['bank_account_nr'],
+                'account_name'    => $r['account_name'],
+                'email'           => $r['email'],
+                'notes'           => $r['notes'],
+                'promise_date'    => $r['promise_date'],
+                'booking_id'      => $r['booking_id'],
+                'category'        => $r['job_id'] ? 'COS' : 'Operational',
+            ];
+        }
+
+        $cols = [
+            ['key' => 'date', 'label' => 'Date'],
+            ['key' => 'po_no', 'label' => 'PO No'],
+            ['key' => 'number', 'label' => 'Number'],
+            ['key' => 'supplier', 'label' => 'Supplier'],
+            ['key' => 'supplier_code', 'label' => 'Supplier ID'],
+            ['key' => 'dossier_code', 'label' => 'Code#'],
+            ['key' => 'description', 'label' => 'Description'],
+            ['key' => 'currency', 'label' => 'Code Currency'],
+            ['key' => 'remarks', 'label' => 'Remarks'],
+            ['key' => 'budget', 'label' => 'Budget', 'money' => true, 'blankZero' => true],
+            ['key' => 'paid', 'label' => 'Payment', 'money' => true, 'blankZero' => true],
+            ['key' => 'balance', 'label' => 'Balance', 'money' => true],
+            ['key' => 'service_date', 'label' => 'Service Date'],
+            ['key' => 'dossier_name', 'label' => 'Dossier Name'],
+            ['key' => 'client_name', 'label' => 'Client Name'],
+            ['key' => 'bank_name', 'label' => 'Bank Name'],
+            ['key' => 'bank_account_nr', 'label' => 'Bank Account Nr'],
+            ['key' => 'account_name', 'label' => 'Account Name'],
+            ['key' => 'email', 'label' => 'Email Contact Info Supplier'],
+            ['key' => 'notes', 'label' => 'Notes'],
+            ['key' => 'promise_date', 'label' => 'Promise Date'],
+            ['key' => 'booking_id', 'label' => 'Booking ID'],
+            ['key' => 'category', 'label' => 'Category'],
+        ];
+
+        // the promise-date range replaces the year/period widget for this report
+        $f['label'] = 'Promise date';
+        $f['from']  = $pdFrom !== '' ? $pdFrom : '2000-01-01';
+        $f['to']    = $pdTo !== '' ? $pdTo : date('Y-m-d');
+
+        $extra = '<div class="field" style="max-width:150px"><label>Promise from</label>'
+            . '<input type="date" name="pd_from" value="' . esc($pdFrom, 'attr') . '"></div>'
+            . '<div class="field" style="max-width:150px"><label>Promise to</label>'
+            . '<input type="date" name="pd_to" value="' . esc($pdTo, 'attr') . '"></div>';
+
+        $sub = count($out) . ' line(s) · ' . count($invoices) . ' invoice(s) to pay'
+            . ($pdFrom !== '' || $pdTo !== '' ? ' · promise ' . ($pdFrom ?: '…') . ' – ' . ($pdTo ?: '…') : '');
+
+        return $this->respond('Payment List', $f, $cols, $out, ['extra' => $extra, 'hidePeriodPickers' => true], $sub);
+    }
+
     // ---------------------------------------------------------------- invoice paid (allocations)
 
     public function invoicePaid(string $kind)

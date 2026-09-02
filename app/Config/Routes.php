@@ -288,6 +288,7 @@ $routes->group('', ['filter' => 'session'], static function (RouteCollection $ro
         }
         $routes->get('sales-receipts', 'TradeReportController::payments/sales');
         $routes->get('purchase-payments', 'TradeReportController::payments/purchase');
+        $routes->get('payment-list', 'TradeReportController::paymentList');
         $routes->get('customer-list', 'TradeReportController::parties/sales');
         $routes->get('supplier-list', 'TradeReportController::parties/purchase');
 
