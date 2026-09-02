@@ -37,6 +37,7 @@ $routes->group('api/v1', ['filter' => 'apiauth', 'namespace' => 'App\Controllers
     }
 
     // Budget -> actual line costs (n8n supplier-invoice pipeline)
+    $routes->get('purchase/lines/pending', 'PurchaseLineController::pending');
     $routes->post('purchase/lines/costs', 'PurchaseLineController::costs');
 
     // Jambix job / dossier upsert (reference figures only - no ledger effect)

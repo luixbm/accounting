@@ -400,6 +400,7 @@
       <a class="sub" href="#job-upsert">POST /jobs</a>
       <a class="sub" href="#create">POST /{kind}/invoices</a>
       <a class="sub" href="#fetch">GET /{kind}/invoices/{ref}</a>
+      <a class="sub" href="#lines-pending">GET /purchase/lines/pending</a>
       <a class="sub" href="#line-costs">POST /purchase/lines/costs</a>
       <a href="#example">Worked example</a>
       <a href="#limits">Limitations</a>
@@ -449,7 +450,7 @@
         <table>
           <thead><tr><th>Ability</th><th>Allows</th></tr></thead>
           <tbody>
-            <tr><td><code>read</code></td><td><code>GET /ping</code>, <code>/accounts</code>, <code>/customers</code>, <code>/suppliers</code>, <code>/jobs</code>, <code>GET /jobs/{code}</code></td></tr>
+            <tr><td><code>read</code></td><td><code>GET /ping</code>, <code>/accounts</code>, <code>/customers</code>, <code>/suppliers</code>, <code>/jobs</code>, <code>/jobs/{code}</code>, <code>/{kind}/invoices/{ref}</code>, <code>/purchase/lines/pending</code></td></tr>
             <tr><td><code>sales:write</code></td><td><code>POST /sales/invoices</code>, including posting</td></tr>
             <tr><td><code>purchase:write</code></td><td><code>POST /purchase/invoices</code>, <code>POST /purchase/lines/costs</code>, including posting</td></tr>
             <tr><td><code>job:write</code></td><td><code>POST /jobs</code> — create / update jobs from Jambix dossier data</td></tr>
@@ -721,6 +722,29 @@
         <pre data-copy><code>{ <span class="k">"invoice"</span>: { <span class="c">/* same shape as the create response's invoice object */</span> } }</code></pre>
       </article>
 
+      <article class="ep" id="lines-pending">
+        <div class="ep-head">
+          <span class="verb get">GET</span><span class="path">/purchase/lines/pending</span>
+        </div>
+        <p class="ep-sum">Purchase-invoice lines still on a <strong>budget</strong> figure (<code>cost_source != actual</code>) on a live invoice — what you're still expecting a supplier invoice for. Fetch the lines for a supplier + date window, match your scanned invoice against them, then call <code>POST …/costs</code>.</p>
+        <p class="ep-meta"><b>Ability</b> &nbsp;<code>read</code> &nbsp;·&nbsp; <b>Query</b> &nbsp;<code>supplier</code> (code / name), <code>from</code>, <code>to</code> (service-date window), <code>booking_ref</code>, <code>res_code</code>, <code>limit</code> (&le; 500, def 200), <code>offset</code></p>
+        <h4>Response</h4>
+        <pre data-copy><code>{
+  <span class="k">"total"</span>: <span class="n">3042</span>, <span class="k">"count"</span>: <span class="n">2</span>, <span class="k">"limit"</span>: <span class="n">200</span>, <span class="k">"offset"</span>: <span class="n">0</span>,
+  <span class="k">"lines"</span>: [
+    {
+      <span class="k">"line_id"</span>: <span class="n">1973</span>, <span class="k">"booking_ref"</span>: <span class="s">"26348-5717003"</span>, <span class="k">"res_code"</span>: <span class="n">null</span>,
+      <span class="k">"service_date"</span>: <span class="s">"2026-05-06"</span>, <span class="k">"party_name"</span>: <span class="s">"Sofie Marie DK1496259"</span>,
+      <span class="k">"description"</span>: <span class="s">"KOT-03-Gili-Komodo Adventure Open Trip"</span>,
+      <span class="k">"budget"</span>: <span class="n">16500000</span>, <span class="k">"current_amount"</span>: <span class="n">16500000</span>, <span class="k">"cost_source"</span>: <span class="s">"budget"</span>, <span class="k">"currency"</span>: <span class="s">"IDR"</span>,
+      <span class="k">"supplier"</span>: { <span class="k">"code"</span>: <span class="s">"S0006"</span>, <span class="k">"name"</span>: <span class="s">"Happy Trails Indonesia"</span> },
+      <span class="k">"dossier"</span>: { <span class="k">"code"</span>: <span class="s">"26348"</span>, <span class="k">"name"</span>: <span class="s">"Sofie Marie DK1496259"</span> },
+      <span class="k">"invoice"</span>: { <span class="k">"id"</span>: <span class="n">787</span>, <span class="k">"internal_no"</span>: <span class="s">"PI-2609-0783"</span>, <span class="k">"status"</span>: <span class="s">"posted"</span>, <span class="k">"paid"</span>: <span class="n">false</span> }
+    }
+  ]
+}</code></pre>
+      </article>
+
       <article class="ep" id="line-costs">
         <div class="ep-head">
           <span class="verb post">POST</span><span class="path">/purchase/lines/costs</span>
@@ -746,6 +770,7 @@
               <tr><td><code>costs</code></td><td>array</td><td><span class="req">req</span></td><td>1–2000 items. <code>lines</code> is accepted as an alias.</td></tr>
               <tr><td><code>cost</code></td><td>number ≥ 0</td><td><span class="req">req</span></td><td>Actual cost, transaction currency. <code>amount</code> is an alias.</td></tr>
               <tr><td><code>booking_ref</code></td><td>string</td><td><span class="opt">opt</span></td><td>The Jambix <code>ID-Number</code>. <strong>Preferred</strong> — exact, unambiguous.</td></tr>
+              <tr><td><code>res_code</code></td><td>string</td><td><span class="opt">opt</span></td><td>The supplier's <strong>own reservation code</strong> (stored on the line at import from Jambix "Res. Code"). Used only on a unique hit; a miss falls through to <code>supplier</code> + <code>service_date</code>. <code>reservation_ref</code> also accepted.</td></tr>
               <tr><td><code>supplier</code></td><td>string</td><td><span class="opt">opt</span></td><td>Fallback key with <code>service_date</code>. Supplier <strong>code or name</strong>. <code>supplier_ref</code> / <code>supplier_name</code> also accepted.</td></tr>
               <tr><td><code>service_date</code></td><td>date</td><td><span class="opt">opt</span></td><td><code>YYYY-MM-DD</code>. Used with <code>supplier</code>.</td></tr>
               <tr><td><code>party_name</code></td><td>string</td><td><span class="opt">opt</span></td><td>Narrows a multi-line <code>supplier</code>+<code>service_date</code> match (substring, either direction).</td></tr>

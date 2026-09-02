@@ -25,4 +25,16 @@ class PurchaseLineController extends BaseApiController
 
         return $this->respond($result['payload'], $result['code']);
     }
+
+    /** Purchase-invoice lines still awaiting an actual cost. Ability: read. */
+    public function pending()
+    {
+        if ($deny = $this->guardAbility('read')) {
+            return $deny;
+        }
+
+        $result = (new PurchaseCostUpdate())->pending($this->request->getGet() ?: []);
+
+        return $this->respond($result['payload'], $result['code']);
+    }
 }

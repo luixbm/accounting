@@ -41,7 +41,7 @@ Each token grants one or more abilities:
 
 | Ability          | Allows                                                        |
 |------------------|--------------------------------------------------------------|
-| `read`           | `GET /ping`, `/accounts`, `/customers`, `/suppliers`, `/jobs`, `GET /jobs/{code}` |
+| `read`           | `GET /ping`, `/accounts`, `/customers`, `/suppliers`, `/jobs`, `/jobs/{code}`, `/{kind}/invoices/{ref}`, `/purchase/lines/pending` |
 | `sales:write`    | `POST /sales/invoices` (including posting)                    |
 | `purchase:write` | `POST /purchase/invoices`, `POST /purchase/lines/costs` (including posting) |
 | `job:write`      | `POST /jobs` (create / update jobs from Jambix dossier data)  |
@@ -333,6 +333,44 @@ Fetch one invoice by **`external_id` or `internal_no`**. Ability: `read`.
 
 ---
 
+### `GET /purchase/lines/pending`
+
+Purchase-invoice lines still on a **budget** figure (`cost_source != actual`) on a
+live invoice — i.e. what you're still expecting a supplier invoice for. Ability:
+`read`. Use it to feed the matcher: fetch the lines for a supplier + date window,
+match your scanned invoice against them locally, then call `POST …/costs`.
+
+**Query:** `supplier` (code or name), `from` / `to` (service-date window,
+`YYYY-MM-DD`), `booking_ref`, `res_code`, `limit` (≤ 500, default 200), `offset`.
+
+```json
+{
+  "total": 3042,
+  "count": 2,
+  "limit": 200,
+  "offset": 0,
+  "lines": [
+    {
+      "line_id": 1973,
+      "booking_ref": "26348-5717003",
+      "res_code": null,
+      "service_date": "2026-05-06",
+      "party_name": "Sofie Marie DK1496259",
+      "description": "KOT-03-Gili-Komodo Adventure Open Trip",
+      "budget": 16500000,
+      "current_amount": 16500000,
+      "cost_source": "budget",
+      "currency": "IDR",
+      "supplier": { "code": "S0006", "name": "Happy Trails Indonesia" },
+      "dossier": { "code": "26348", "name": "Sofie Marie DK1496259" },
+      "invoice": { "id": 787, "internal_no": "PI-2609-0783", "external_id": "26348-happy-trails-indonesia", "status": "posted", "paid": false }
+    }
+  ]
+}
+```
+
+---
+
 ### `POST /purchase/lines/costs`
 
 Apply **actual** supplier costs onto purchase-invoice lines that were imported
@@ -373,6 +411,7 @@ zero or several lines is reported, never guessed.
 | `costs[]` | ✔ | 1–2000 items. `lines[]` is accepted as an alias. |
 | `cost` | ✔ | Actual cost, transaction currency, `>= 0`. `amount` is an alias. |
 | `booking_ref` | — | The Jambix `ID-Number`. **Preferred** — exact, unambiguous. |
+| `res_code` | — | The **supplier's own reservation code** (stored on the line at import from Jambix "Res. Code"). Used only on a unique hit; a miss falls through to `supplier` + `service_date`. `reservation_ref` accepted as an alias. |
 | `supplier` | — | Fallback match key (with `service_date`). Supplier **code or name**. `supplier_ref` / `supplier_name` accepted as aliases. |
 | `service_date` | — | `YYYY-MM-DD`. Used with `supplier`. Tried exact first, then ± `window_days`. |
 | `party_name` | — | Narrows a multi-line `supplier`+`service_date` match (substring, either direction). |

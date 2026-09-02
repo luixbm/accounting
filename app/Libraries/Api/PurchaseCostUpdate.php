@@ -178,6 +178,88 @@ class PurchaseCostUpdate
         ];
     }
 
+    // ------------------------------------------------------------------ pending lines
+
+    /**
+     * Purchase-invoice lines still awaiting an actual cost (cost_source != actual)
+     * on a live invoice — what the n8n pipeline is expecting supplier invoices for.
+     *
+     * @param array<string,mixed> $q  supplier?, from?, to? (service-date window),
+     *                                booking_ref?, res_code?, limit? (<=500), offset?
+     *
+     * @return array{status:string, code:int, payload:array<string,mixed>}
+     */
+    public function pending(array $q): array
+    {
+        $company = active_company_id();
+        $b = $this->db->table('purchase_invoice_lines pil')
+            ->select('pil.id AS line_id, pil.booking_ref, pil.supp_inv_ref AS res_code, pil.service_date,'
+                . ' pil.party_name, pil.description, pil.budget_amount, pil.amount AS current_amount, pil.cost_source,'
+                . ' pi.id AS invoice_id, pi.internal_no, pi.external_id, pi.status AS invoice_status,'
+                . ' pi.invoice_date, pi.paid_base, s.code AS supplier_code, s.name AS supplier_name,'
+                . ' jb.code AS dossier_code, jb.name AS dossier_name, cur.code AS currency')
+            ->join('purchase_invoices pi', 'pi.id = pil.invoice_id')
+            ->join('suppliers s', 's.id = pi.supplier_id', 'left')
+            ->join('jobs jb', 'jb.id = pil.job_id', 'left')
+            ->join('currencies cur', 'cur.id = pi.currency_id', 'left')
+            ->where('pi.company_id', $company)
+            ->where('pi.status !=', 'void')
+            ->where('pil.cost_source !=', 'actual');
+
+        if (! empty($q['supplier'])) {
+            $ids = $this->supplierIds(trim((string) $q['supplier']));
+            $b->whereIn('pi.supplier_id', $ids ?: [0]);
+        }
+        if (! empty($q['from']) && ($d = $this->date($q['from']))) {
+            $b->where('pil.service_date >=', $d);
+        }
+        if (! empty($q['to']) && ($d = $this->date($q['to']))) {
+            $b->where('pil.service_date <=', $d);
+        }
+        if (! empty($q['booking_ref'])) {
+            $b->where('pil.booking_ref', trim((string) $q['booking_ref']));
+        }
+        if (! empty($q['res_code'])) {
+            $b->where('pil.supp_inv_ref', trim((string) $q['res_code']));
+        }
+
+        $limit  = max(1, min(500, (int) ($q['limit'] ?? 200)));
+        $offset = max(0, (int) ($q['offset'] ?? 0));
+        $total  = $b->countAllResults(false);
+        $rows   = $b->orderBy('pi.invoice_date', 'ASC')->orderBy('pil.id', 'ASC')
+            ->limit($limit, $offset)->get()->getResultArray();
+
+        $lines = array_map(static fn ($r) => [
+            'line_id'        => (int) $r['line_id'],
+            'booking_ref'    => $r['booking_ref'] ?: null,
+            'res_code'       => $r['res_code'] ?: null,
+            'service_date'   => $r['service_date'],
+            'party_name'     => $r['party_name'] ?: null,
+            'description'    => $r['description'],
+            'budget'         => $r['budget_amount'] !== null ? (float) $r['budget_amount'] : (float) $r['current_amount'],
+            'current_amount' => (float) $r['current_amount'],
+            'cost_source'    => $r['cost_source'],
+            'currency'       => $r['currency'],
+            'supplier'       => ['code' => $r['supplier_code'], 'name' => $r['supplier_name']],
+            'dossier'        => $r['dossier_code'] ? ['code' => $r['dossier_code'], 'name' => $r['dossier_name']] : null,
+            'invoice'        => [
+                'id'          => (int) $r['invoice_id'],
+                'internal_no' => $r['internal_no'],
+                'external_id' => $r['external_id'],
+                'status'      => $r['invoice_status'],
+                'paid'        => (float) $r['paid_base'] > 0.005,
+            ],
+        ], $rows);
+
+        return ['status' => 'ok', 'code' => 200, 'payload' => [
+            'total'  => $total,
+            'count'  => count($lines),
+            'limit'  => $limit,
+            'offset' => $offset,
+            'lines'  => $lines,
+        ]];
+    }
+
     // ------------------------------------------------------------------ matching
 
     /**
@@ -209,6 +291,25 @@ class PurchaseCostUpdate
             }
 
             return ['status' => 'ambiguous', 'message' => 'Several lines share that booking_ref.', 'candidates' => array_column($rows, 'booking_ref')];
+        }
+
+        // --- 1b. the supplier's own reservation code (stored on the line at
+        //         import as supp_inv_ref, before any actual cost is applied).
+        //         A hint, not authoritative: use it only on a unique hit,
+        //         otherwise fall through to supplier + service_date.
+        $resCode = trim((string) ($item['res_code'] ?? $item['reservation_ref'] ?? ''));
+        if ($resCode !== '') {
+            $rows = $this->db->table('purchase_invoice_lines pil')
+                ->select($sel)
+                ->join('purchase_invoices pi', 'pi.id = pil.invoice_id')
+                ->where('pi.company_id', $company)
+                ->where('pi.status !=', 'void')
+                ->where('pil.cost_source !=', 'actual')
+                ->where('pil.supp_inv_ref', $resCode)
+                ->get()->getResultArray();
+            if (count($rows) === 1) {
+                return ['line' => $rows[0], 'match' => 'res_code'];
+            }
         }
 
         // --- 2. supplier + service_date
