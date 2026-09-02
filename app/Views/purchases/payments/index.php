@@ -7,6 +7,7 @@
   <div class="btn-group">
     <a class="btn ghost" href="<?= site_url('purchases') ?>">Invoices</a>
     <?php if (user_can('journal.post')): ?>
+      <a class="btn ghost" href="<?= site_url('purchases/payments/import') ?>">Import</a>
       <a class="btn ghost" href="<?= site_url('purchases/payments/deposit') ?>">+ Deposit</a>
       <a class="btn" href="<?= site_url('purchases/payments/new') ?>">+ Pay supplier</a>
     <?php endif ?>

@@ -87,6 +87,15 @@ $routes->group('', ['filter' => 'session'], static function (RouteCollection $ro
         $routes->post('payments', 'PurchasePaymentController::create');
         $routes->get('payments/deposit', 'PurchasePaymentController::depositNew');
         $routes->post('payments/deposit', 'PurchasePaymentController::depositCreate');
+
+        // bulk payment import wizard
+        $routes->get('payments/import', 'PaymentImportController::index');
+        $routes->post('payments/import', 'PaymentImportController::upload');
+        $routes->get('payments/import/(:num)/map', 'PaymentImportController::map/$1');
+        $routes->post('payments/import/(:num)/map', 'PaymentImportController::saveMap/$1');
+        $routes->get('payments/import/(:num)/preview', 'PaymentImportController::preview/$1');
+        $routes->post('payments/import/(:num)/commit', 'PaymentImportController::commit/$1');
+        $routes->post('payments/import/(:num)/revert', 'PaymentImportController::revert/$1');
         $routes->get('payments/(:num)', 'PurchasePaymentController::show/$1');
         $routes->get('payments/(:num)/apply', 'PurchasePaymentController::applyForm/$1');
         $routes->post('payments/(:num)/apply', 'PurchasePaymentController::apply/$1');
