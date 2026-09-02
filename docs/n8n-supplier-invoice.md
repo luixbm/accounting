@@ -181,6 +181,60 @@ return { json: { costs, unmatched, invoice } };
 - **Microsoft SharePoint → move file** to `Review/`
 - A person resolves it in the app (or fixes the file and re-drops it in `Inbox` — re-processing is safe: already-actual lines come back `unchanged`).
 
+## Variant — local disk + Gemini (self-hosted n8n)
+
+Same flow; only the first three nodes change. Everything from **4. Code —
+normalise** onward is identical.
+
+### 1. Local File Trigger  (replaces the SharePoint trigger)
+- Trigger on: **file added**
+- Path to watch: e.g. `C:\n8n\invoices\inbox`
+- (n8n's *Local File Trigger* node; the folder must be readable by the n8n process)
+
+### 2. Read/Write Files from Disk  (replaces the Graph download)
+- Operation: **Read a file**
+- File path: `={{ $json.path }}`  (the trigger gives the path of the new file)
+- Puts the PDF/image into the binary property `data`
+
+### 3. HTTP Request — Gemini extraction  (replaces Azure DI / Claude)
+- `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{$env.GEMINI_KEY}}`
+- Send Body: **JSON**
+```json
+{
+  "contents": [{
+    "parts": [
+      { "inline_data": { "mime_type": "application/pdf", "data": "={{ $binary.data.data }}" } },
+      { "text": "You are an invoice parser. Return ONLY minified JSON, no markdown. Schema:\n{\"vendor\":string,\"invoice_no\":string,\"invoice_date\":\"YYYY-MM-DD\",\"currency\":string,\"lines\":[{\"description\":string,\"guest_or_ref\":string,\"service_date\":\"YYYY-MM-DD\"|null,\"reservation_code\":string|null,\"amount\":number}]}\nRules: amount is a plain number (no thousands separators). guest_or_ref = the guest name or booking reference the line is for. If a line has no own date, leave service_date null." }
+    ]
+  }],
+  "generationConfig": { "response_mime_type": "application/json" }
+}
+```
+- For an image invoice use `"mime_type": "image/jpeg"` (or png).
+- **Parse the result** in a tiny Set/Code node: the JSON string is at
+  `={{ $json.candidates[0].content.parts[0].text }}` →
+  `return { json: JSON.parse($json.candidates[0].content.parts[0].text) }`.
+  Then feed that into **4. Code — normalise** (its field-name fallbacks already
+  cover `vendor` / `invoice_no` / `lines[].description` / `amount`).
+
+### 9. File moves (replace the SharePoint move)
+- Use **Read/Write Files from Disk → Move a file** (or a Code node with `fs.rename`)
+  to `C:\n8n\invoices\applied\` or `...\review\`.
+
+### env for this variant
+| var | value |
+|---|---|
+| `API_BASE` | `http://localhost:8080/api/v1` (or your host) |
+| `GEMINI_KEY` | your Google AI Studio key |
+| `OVER_BUDGET_TOLERANCE` | `0` to start |
+
+### Try it
+1. Put one real supplier PDF in `C:\n8n\invoices\inbox`.
+2. Let the trigger fire → check the Gemini node output parses to the schema.
+3. Check the **GET /purchase/lines/pending** node returns candidates for that supplier.
+4. Check the **dry-run** POST — read `summary` and `results[].match` / `variance`.
+5. Only then enable the apply branch.
+
 ## Notes
 
 - **Idempotent.** Re-running the same invoice → every line `unchanged`, nothing re-posted.
