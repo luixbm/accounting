@@ -78,17 +78,27 @@ class Filters extends BaseFilters
         'before' => [
             'setlocale',
             // 'honeypot',
-            // --- Enable CSRF before any non-local deploy. Every POST form in the
-            //     app already emits csrf_field(); the API is token-authed and must
-            //     stay excluded. Uncomment the next line as-is:
-            // 'csrf' => ['except' => ['api/*']],
             // 'invalidchars',
+            // 'csrf' is added below for production only (see __construct) — every
+            //   POST form emits csrf_field(); the token-authed API stays excluded.
         ],
         'after' => [
             // 'honeypot',
             // 'secureheaders',
         ],
     ];
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        // CSRF protection: OFF unless the environment turns it on
+        // (`app.csrfProtection = true` in .env — set on the production server).
+        // Every POST form emits csrf_field(); the token-authed API is excluded.
+        if (env('app.csrfProtection', false)) {
+            $this->globals['before']['csrf'] = ['except' => ['api/*']];
+        }
+    }
 
     /**
      * List of filter aliases that works on a

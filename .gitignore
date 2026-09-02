@@ -1,4 +1,13 @@
 vendor/
-writable/
 .env
 .phpunit.cache/
+/phpunit*.xml
+/builds
+
+# keep the writable/ skeleton, ignore its runtime contents
+writable/**/*
+!writable/
+!writable/**/
+!writable/**/.gitkeep
+!writable/**/index.html
+!writable/**/.htaccess
