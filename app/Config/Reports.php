@@ -62,8 +62,8 @@ class Reports extends BaseConfig
         'p-aging-sum'    => ['purchase', 'AP Aging (summary)', 'Payables by supplier &amp; bucket', 'purchase', 'reports/ap-aging', true],
         'p-aging'        => ['purchase', 'AP Aging (detail)', 'Payables aged per invoice', 'purchase', 'reports/purchase-aging-detail', true],
         'p-detail'       => ['purchase', 'Purchase Invoice Detail', 'Line-item detail across invoices', 'purchase', 'reports/purchase-detail', true],
-        'p-payments'     => ['purchase', 'Payment List', 'Money paid to suppliers', 'purchase', 'reports/purchase-payments', true],
-        'p-paylist'      => ['purchase', 'Payment List (by promise date)', 'Unpaid purchase lines to pay, filtered by promise date', 'purchase', 'reports/payment-list', true],
+        'p-payments'     => ['purchase', 'Payments Made', 'Money already paid to suppliers', 'purchase', 'reports/purchase-payments', true],
+        'p-paylist'      => ['purchase', 'Payment List', 'Unpaid purchase lines to pay, filtered by promise date', 'purchase', 'reports/payment-list', true],
         'p-invoice-paid' => ['purchase', 'Invoice Paid', 'Payments applied to purchase invoices', 'purchase', 'reports/purchase-invoice-paid', true],
         'p-suppliers'    => ['purchase', 'Supplier List', 'All suppliers with AP balance', 'supplier', 'reports/supplier-list', true],
 

@@ -78,7 +78,10 @@ class Filters extends BaseFilters
         'before' => [
             'setlocale',
             // 'honeypot',
-            // 'csrf',
+            // --- Enable CSRF before any non-local deploy. Every POST form in the
+            //     app already emits csrf_field(); the API is token-authed and must
+            //     stay excluded. Uncomment the next line as-is:
+            // 'csrf' => ['except' => ['api/*']],
             // 'invalidchars',
         ],
         'after' => [
