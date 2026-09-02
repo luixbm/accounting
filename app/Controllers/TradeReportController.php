@@ -280,6 +280,7 @@ class TradeReportController extends BaseController
         $f      = ReportFilter::resolve();
         $pdFrom = trim((string) $this->request->getGet('pd_from'));
         $pdTo   = trim((string) $this->request->getGet('pd_to'));
+        $co     = (int) $this->co();
 
         $sql = "SELECT
                     i.invoice_date                       AS date,
@@ -304,7 +305,10 @@ class TradeReportController extends BaseController
                     i.description                        AS notes,
                     cvpd.value_date                      AS promise_date,
                     l.booking_ref                        AS booking_id,
-                    l.job_id                             AS job_id
+                    l.job_id                             AS job_id,
+                    cp.inv_count                         AS cp_inv_count,
+                    cp.inv_received                      AS cp_inv_received,
+                    cd.dep_unapplied                     AS cp_dep_unapplied
                 FROM purchase_invoice_lines l
                 JOIN purchase_invoices i        ON i.id = l.invoice_id
                 LEFT JOIN suppliers s           ON s.id = i.supplier_id
@@ -316,6 +320,21 @@ class TradeReportController extends BaseController
                 LEFT JOIN custom_values cvbn    ON cvbn.entity = 'supplier' AND cvbn.record_id = s.id AND cvbn.field_key = 'bank_name'
                 LEFT JOIN custom_values cvan    ON cvan.entity = 'supplier' AND cvan.record_id = s.id AND cvan.field_key = 'account_nr'
                 LEFT JOIN custom_values cvbf    ON cvbf.entity = 'supplier' AND cvbf.record_id = s.id AND cvbf.field_key = 'beneficiary_name'
+                LEFT JOIN (
+                    SELECT sil.job_id,
+                           COUNT(DISTINCT si.id) AS inv_count,
+                           SUM(CASE WHEN si.received_base > 0.005 THEN 1 ELSE 0 END) AS inv_received
+                    FROM sales_invoice_lines sil
+                    JOIN sales_invoices si ON si.id = sil.invoice_id
+                    WHERE si.company_id = {$co} AND si.status <> 'void' AND sil.job_id IS NOT NULL
+                    GROUP BY sil.job_id
+                ) cp ON cp.job_id = l.job_id
+                LEFT JOIN (
+                    SELECT customer_id, SUM(unapplied) AS dep_unapplied
+                    FROM sales_receipts
+                    WHERE company_id = {$co} AND kind = 'deposit' AND status = 'posted'
+                    GROUP BY customer_id
+                ) cd ON cd.customer_id = jb.customer_id
                 WHERE i.company_id = ?
                   AND i.status IN ('posted', 'partial')
                   AND ABS(i.total_base - i.paid_base) > 0.005";
@@ -335,6 +354,19 @@ class TradeReportController extends BaseController
         $out      = [];
         foreach ($rows as $r) {
             $invoices[$r['number']] = true;
+
+            if (! $r['job_id']) {
+                $clientPayment = '';                       // operational cost - no dossier
+            } elseif ((int) $r['cp_inv_count'] === 0) {
+                $clientPayment = 'No sales invoice';
+            } elseif ((int) $r['cp_inv_received'] > 0) {
+                $clientPayment = 'Paid';
+            } elseif ((float) $r['cp_dep_unapplied'] > 0.005) {
+                $clientPayment = 'Deposit unapplied';
+            } else {
+                $clientPayment = 'Not paid';
+            }
+
             $out[] = [
                 'date'            => $r['date'],
                 'po_no'           => $r['po_no'],
@@ -359,6 +391,7 @@ class TradeReportController extends BaseController
                 'promise_date'    => $r['promise_date'],
                 'booking_id'      => $r['booking_id'],
                 'category'        => $r['job_id'] ? 'COS' : 'Operational',
+                'client_payment'  => $clientPayment,
             ];
         }
 
@@ -386,6 +419,7 @@ class TradeReportController extends BaseController
             ['key' => 'promise_date', 'label' => 'Promise Date'],
             ['key' => 'booking_id', 'label' => 'Booking ID'],
             ['key' => 'category', 'label' => 'Category'],
+            ['key' => 'client_payment', 'label' => 'Client Payment'],
         ];
 
         // the promise-date range replaces the year/period widget for this report
