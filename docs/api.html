@@ -640,6 +640,7 @@
               <tr><td><code>ppn_amount</code></td><td>number</td><td><span class="opt">opt</span></td><td>VAT amount. Default <code>0</code>.</td></tr>
               <tr><td><code>pph_amount</code></td><td>number</td><td><span class="opt">opt</span></td><td>Withholding amount. Default <code>0</code>.</td></tr>
               <tr><td><code>post</code></td><td>boolean</td><td><span class="opt">opt</span></td><td><code>true</code> posts to the ledger now. Default <code>false</code> (draft).</td></tr>
+              <tr><td><code>custom_fields</code></td><td>object</td><td><span class="opt">opt</span></td><td><code>{ "&lt;field_key&gt;": value }</code> for invoice-level custom fields defined for this company. Only defined keys are stored; values are <strong>merged</strong> over what's there. Applied on a repeat <code>external_id</code> push too. Required custom fields must be present when this object is sent.</td></tr>
             </tbody>
           </table>
         </div>
@@ -695,6 +696,7 @@
     <span class="k">"total"</span>: <span class="n">3500000</span>,
     <span class="k">"total_base"</span>: <span class="n">3500000</span>,
     <span class="k">"journal_id"</span>: <span class="n">61</span>,
+    <span class="k">"custom_fields"</span>: { <span class="k">"promise_date"</span>: <span class="s">"2026-09-25"</span>, <span class="k">"po_number"</span>: <span class="s">"PO-123"</span> },
     <span class="k">"lines"</span>: [
       { <span class="k">"account_id"</span>: <span class="n">44</span>, <span class="k">"description"</span>: <span class="s">"Consulting July"</span>, <span class="k">"job_id"</span>: <span class="n">null</span>, <span class="k">"amount"</span>: <span class="n">3000000</span>, <span class="k">"amount_base"</span>: <span class="n">3000000</span> }
     ]
@@ -845,7 +847,7 @@ curl -s -X POST <span class="s">"$BASE/purchase/lines/costs"</span> \
       <h2><span class="n">06</span>Limitations</h2>
       <p class="section-note">What v1 deliberately leaves out.</p>
       <ul class="defs">
-        <li><span class="term">Invoices are create and read only</span><span>No invoice update or delete over the API — corrections are made in the app, and a repeated <code>external_id</code> never mutates the existing invoice. <code>POST /purchase/lines/costs</code> is the one exception: it edits Jambix-imported lines in place.</span></li>
+        <li><span class="term">Invoices are create and read only</span><span>No invoice update or delete over the API — corrections are made in the app, and a repeated <code>external_id</code> never mutates the existing invoice <strong>except <code>custom_fields</code></strong>, which a repeat push still writes (merged). <code>POST /purchase/lines/costs</code> also edits Jambix-imported lines in place.</span></li>
         <li><span class="term">No payments</span><span>Payment and receipt endpoints are not part of v1.</span></li>
         <li><span class="term">No pagination</span><span>Lookup endpoints cap at 500 rows; narrow with <code>q</code>.</span></li>
         <li><span class="term">No per-token rate limiting</span><span>Be a considerate client.</span></li>

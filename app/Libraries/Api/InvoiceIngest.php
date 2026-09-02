@@ -4,6 +4,7 @@ namespace App\Libraries\Api;
 
 use App\Libraries\Accounting\PurchasePoster;
 use App\Libraries\Accounting\SalesPoster;
+use App\Libraries\CustomFields;
 use App\Models\AccountModel;
 use App\Models\CurrencyModel;
 use App\Models\CustomerModel;
@@ -112,9 +113,19 @@ class InvoiceIngest
             return ['status' => 'error', 'code' => 422, 'errors' => ['external_id must be 80 characters or fewer.']];
         }
 
+        $cf       = new CustomFields();
+        $cfEntity = $this->kind . '_invoice';
+        $cfMap    = $this->cfMap($body);
+
         // Idempotency: same external_id for this company -> return what exists.
+        // A repeat push may still set / update the invoice-level custom fields
+        // (e.g. an n8n "validate" step stamping promise_date afterwards).
         $existing = $invModel->where('external_id', $extId)->first();
         if ($existing) {
+            if ($cfMap) {
+                $this->applyCf($cf, $cfEntity, (int) $existing['id'], $cfMap);
+            }
+
             return ['status' => 'exists', 'code' => 200, 'invoice' => $this->format((int) $existing['id'])];
         }
 
@@ -191,6 +202,14 @@ class InvoiceIngest
             return ['status' => 'error', 'code' => 422, 'errors' => $errs];
         }
 
+        // --- custom fields (optional): { "custom_fields": { field_key: value } }
+        if ($cfMap) {
+            $cfErr = $cf->validate($cfEntity, $cfMap);
+            if ($cfErr) {
+                return ['status' => 'error', 'code' => 422, 'errors' => $cfErr];
+            }
+        }
+
         // --- build + save
         $header = [
             $c['partyRef']  => $body['reference'] ?? null,
@@ -211,6 +230,9 @@ class InvoiceIngest
         }
         $invId = (int) $res['id'];
         $invModel->update($invId, ['external_id' => $extId, 'source' => 'api']);
+        if ($cfMap) {
+            $this->applyCf($cf, $cfEntity, $invId, $cfMap);
+        }
 
         $posted     = false;
         $postErrors = [];
@@ -289,6 +311,39 @@ class InvoiceIngest
         return $prefix . str_pad((string) $n, 4, '0', STR_PAD_LEFT);
     }
 
+    /**
+     * Persist the given custom-field values, merged over whatever is already
+     * stored so a partial payload (e.g. just promise_date) does not blank the
+     * other fields. CustomFields::save() rewrites every defined field, hence
+     * the merge.
+     *
+     * @param array<string,string> $cfMap
+     */
+    private function applyCf(CustomFields $cf, string $entity, int $recordId, array $cfMap): void
+    {
+        $cf->save($entity, $recordId, array_merge($cf->valuesFor($entity, $recordId), $cfMap));
+    }
+
+    /**
+     * Normalise the request's custom-field map ( field_key => scalar ).
+     *
+     * @param array<string,mixed> $body
+     *
+     * @return array<string,string>
+     */
+    private function cfMap(array $body): array
+    {
+        $in  = $body['custom_fields'] ?? $body['cf'] ?? null;
+        $out = [];
+        if (is_array($in)) {
+            foreach ($in as $k => $v) {
+                $out[(string) $k] = is_scalar($v) ? (string) $v : '';
+            }
+        }
+
+        return $out;
+    }
+
     private function normDate($v): ?string
     {
         if (! is_string($v) || trim($v) === '') {
@@ -328,6 +383,7 @@ class InvoiceIngest
             'total'        => (float) $inv['total'],
             'total_base'   => (float) $inv['total_base'],
             'journal_id'   => $inv['journal_id'] ? (int) $inv['journal_id'] : null,
+            'custom_fields' => (new CustomFields())->valuesFor($this->kind . '_invoice', $id),
             'lines'        => array_map(static fn ($l) => [
                 'account_id'   => (int) $l['account_id'],
                 'description'  => $l['description'],

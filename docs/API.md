@@ -254,6 +254,7 @@ Create (or idempotently return) an invoice. Ability: `sales:write` /
 | `ppn_amount`     | number          | no       | VAT amount. Default `0`. |
 | `pph_amount`     | number          | no       | Withholding amount. Default `0`. |
 | `post`           | boolean         | no       | `true` = post to the ledger immediately. Default `false` (draft). |
+| `custom_fields`  | object          | no       | `{ "<field_key>": value }` — invoice-level custom fields defined for this company (Setup → Custom Fields). Only defined keys are stored; unknown keys are ignored. Values are **merged** onto whatever is already stored, so a partial payload does not clear the others. Sent on a repeat `external_id` push too — this is the one part of the invoice a repeat call can still change. Any custom field marked *required* must be present when `custom_fields` is included. |
 
 **Party** (`customer` / `supplier`):
 
@@ -306,6 +307,7 @@ Create (or idempotently return) an invoice. Ability: `sales:write` /
     "total": 3500000,
     "total_base": 3500000,
     "journal_id": 61,
+    "custom_fields": { "promise_date": "2026-09-25", "po_number": "PO-123" },
     "lines": [
       { "account_id": 44, "description": "Consulting July", "job_id": null, "amount": 3000000, "amount_base": 3000000 }
     ]
@@ -314,7 +316,8 @@ Create (or idempotently return) an invoice. Ability: `sales:write` /
 ```
 
 Purchase responses use `supplier_id` instead of `customer_id`. `journal_id` is
-`null` while the invoice is a draft. If `post` was requested but failed,
+`null` while the invoice is a draft. `custom_fields` echoes the stored values
+(`{}` when none are defined). If `post` was requested but failed,
 `invoice.post_errors` (array of strings) is present and `status` is `"draft"`.
 
 ---
@@ -474,7 +477,8 @@ curl -s -X POST "$BASE/purchase/lines/costs" \
 
 - **Invoices are create + read only.** No invoice update or delete over the API —
   corrections are made in the app. A repeated `external_id` never mutates the
-  existing invoice. (`POST /purchase/lines/costs` is the one exception: it edits
+  existing invoice, **except `custom_fields`**, which a repeat push still writes
+  (merged over the stored values). (`POST /purchase/lines/costs` also edits
   Jambix-imported lines in place.)
 - No payment / receipt endpoints yet.
 - No pagination on the lookup endpoints (capped at 500 rows; use `q`).
