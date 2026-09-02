@@ -23,12 +23,12 @@ $block = static function (array $group): string {
 };
 ?>
 
-<div class="page-head"><h1>Balance Sheet</h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; All reports</a></div></div>
+<div class="page-head"><h1><?= esc($title) ?></h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; All reports</a></div></div>
 <?= view('reports/_period', ['f' => $f, 'showAsOf' => true, 'showCompare' => true, 'showZeros' => true]) ?>
 
 <div class="report-title">
   <div class="co"><?= esc(company_name()) ?></div>
-  <h1>Neraca / Balance Sheet</h1>
+  <h1><?= esc($title) ?></h1>
   <div class="muted">Per <?= date_id($asOf) ?></div>
 </div>
 

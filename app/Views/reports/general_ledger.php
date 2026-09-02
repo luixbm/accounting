@@ -9,13 +9,13 @@ foreach ($accounts as $a) {
 }
 $acctPicker .= '</select></div>';
 ?>
-<div class="page-head"><h1>General Ledger</h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; All reports</a></div></div>
+<div class="page-head"><h1><?= esc($title) ?></h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; All reports</a></div></div>
 <?= view('reports/_period', ['f' => $f, 'extra' => $acctPicker]) ?>
 
 <?php if ($account && $data): ?>
   <div class="report-title">
     <div class="co"><?= esc(company_name()) ?></div>
-    <h1>Buku Besar / General Ledger — <?= esc($account['code'] . ' ' . $account['name']) ?></h1>
+    <h1><?= esc($title) ?> — <?= esc($account["code"] . " " . $account["name"]) ?></h1>
     <div class="muted"><?= date_id($from) ?> — <?= date_id($to) ?></div>
   </div>
 

@@ -105,6 +105,14 @@ class ReportController extends BaseController
 
     // ------------------------------------------------------------------ hub
 
+    /** Localised report string, falling back to the catalogue's English. */
+    private function rlang(string $key, string $fallback): string
+    {
+        $s = lang('Report.' . $key);
+
+        return $s === 'Report.' . $key ? $fallback : $s;
+    }
+
     public function index()
     {
         $cfg          = config(\Config\Reports::class);
@@ -115,12 +123,19 @@ class ReportController extends BaseController
             if ($key === 'consolidation' && ! $multiCompany) {
                 continue;
             }
+            $ttl  = $this->rlang($key, $ttl);
+            $desc = $this->rlang($key . '_d', $desc);
             $byCat[$cat][] = compact('key', 'ttl', 'desc', 'icon', 'route', 'exists');
         }
 
+        $categories = [];
+        foreach ($cfg->categories as $ck => $c) {
+            $categories[$ck] = ['label' => $this->rlang('cat_' . $ck, $c['label']), 'icon' => $c['icon']];
+        }
+
         return view('reports/index', [
-            'title'      => 'Reports',
-            'categories' => $cfg->categories,
+            'title'      => $this->rlang('title', 'Reports'),
+            'categories' => $categories,
             'byCat'      => $byCat,
         ]);
     }
@@ -153,7 +168,7 @@ class ReportController extends BaseController
             $rows[] = ['_style' => 'total', 'name' => 'TOTAL'] + $six($data['totals']);
 
             return ReportExporter::download([
-                'title'   => 'Trial Balance',
+                'title'   => $this->rlang('trial-balance', 'Trial Balance'),
                 'meta'    => $this->metaFor($f),
                 'columns' => [
                     ['key' => 'code', 'label' => 'Code'], ['key' => 'name', 'label' => 'Account'],
@@ -166,7 +181,7 @@ class ReportController extends BaseController
         }
 
         return view('reports/trial_balance', [
-            'title' => 'Trial Balance', 'f' => $f,
+            'title' => $this->rlang('trial-balance', 'Trial Balance'), 'f' => $f,
             'from'  => $f['from'], 'to' => $f['to'], 'data' => $data,
         ]);
     }
@@ -175,12 +190,12 @@ class ReportController extends BaseController
 
     public function generalLedger()
     {
-        return $this->ledgerLike('general_ledger', 'General Ledger', model(AccountModel::class)->postable());
+        return $this->ledgerLike('general_ledger', $this->rlang('gl-account', 'General Ledger'), model(AccountModel::class)->postable());
     }
 
     public function bankBook()
     {
-        return $this->ledgerLike('bank_book', 'Bank Book', model(AccountModel::class)->cashAccounts());
+        return $this->ledgerLike('bank_book', $this->rlang('bank-history', 'Bank Book'), model(AccountModel::class)->cashAccounts());
     }
 
     private function ledgerLike(string $view, string $title, array $accounts)
@@ -240,7 +255,7 @@ class ReportController extends BaseController
             }
 
             return view('reports/balance_sheet_multi', [
-                'title' => 'Balance Sheet — comparative', 'f' => $f,
+                'title' => $this->rlang('bs_comparative', 'Balance Sheet — comparative'), 'f' => $f,
                 'from'  => $f['from'], 'to' => $f['to'], 'asOf' => $f['asOf'], 'compare' => $f['compare'],
                 'data'  => $data,
             ]);
@@ -270,7 +285,7 @@ class ReportController extends BaseController
             $rows[] = ['_style' => 'total', 'name' => 'LIABILITIES + EQUITY', 'amt' => $data['liab_equity']];
 
             return ReportExporter::download([
-                'title'   => 'Balance Sheet',
+                'title'   => $this->rlang('bs', 'Balance Sheet'),
                 'meta'    => ['Company' => company_name(), 'As of' => date_id($f['asOf'])],
                 'columns' => [['key' => 'name', 'label' => 'Account'], ['key' => 'amt', 'label' => 'Amount (Rp)', 'money' => true]],
                 'rows'    => $rows,
@@ -278,7 +293,7 @@ class ReportController extends BaseController
         }
 
         return view('reports/balance_sheet', [
-            'title'   => 'Balance Sheet', 'f' => $f,
+            'title'   => $this->rlang('bs', 'Balance Sheet'), 'f' => $f,
             'asOf'    => $f['asOf'], 'from' => $f['from'], 'to' => $f['to'], 'compare' => '',
             'data'    => $data,
         ]);
@@ -310,7 +325,7 @@ class ReportController extends BaseController
             }
 
             return view('reports/income_statement_multi', [
-                'title' => 'Income Statement — comparative', 'f' => $f,
+                'title' => $this->rlang('pnl_comparative', 'Income Statement — comparative'), 'f' => $f,
                 'from'  => $f['from'], 'to' => $f['to'], 'compare' => $f['compare'],
                 'data'  => $data,
             ]);
@@ -349,7 +364,7 @@ class ReportController extends BaseController
             $rows[] = ['_style' => 'total', 'name' => 'NET INCOME', 'amt' => $data['net_income']];
 
             return ReportExporter::download([
-                'title'   => 'Profit and Loss',
+                'title'   => $this->rlang('pnl', 'Profit & Loss'),
                 'meta'    => $this->metaFor($f),
                 'columns' => [['key' => 'name', 'label' => 'Account'], ['key' => 'amt', 'label' => 'Amount (Rp)', 'money' => true]],
                 'rows'    => $rows,
@@ -357,7 +372,7 @@ class ReportController extends BaseController
         }
 
         return view('reports/income_statement', [
-            'title' => 'Income Statement', 'f' => $f,
+            'title' => $this->rlang('pnl', 'Profit & Loss'), 'f' => $f,
             'from'  => $f['from'], 'to' => $f['to'], 'compare' => '', 'data' => $data,
         ]);
     }
@@ -383,7 +398,7 @@ class ReportController extends BaseController
                 ]);
             }
 
-            return view('reports/cash_flow_multi', ['title' => 'Cash Flow — comparative', 'f' => $f, 'data' => $data]);
+            return view('reports/cash_flow_multi', ['title' => $this->rlang('cashflow_comparative', 'Cash Flow — comparative'), 'f' => $f, 'data' => $data]);
         }
 
         $data = $this->ledger->cashFlow($f['from'], $f['to']);
@@ -402,26 +417,26 @@ class ReportController extends BaseController
             $rows[] = ['_style' => 'total', 'name' => 'CASH — END', 'amt' => $data['closing']];
 
             return ReportExporter::download([
-                'title'   => 'Cash Flow',
+                'title'   => $this->rlang('cashflow', 'Cash Flow'),
                 'meta'    => $this->metaFor($f),
                 'columns' => [['key' => 'name', 'label' => 'Account'], ['key' => 'amt', 'label' => 'Inflow / (Outflow) Rp', 'money' => true]],
                 'rows'    => $rows,
             ]);
         }
 
-        return view('reports/cash_flow', ['title' => 'Cash Flow', 'f' => $f, 'data' => $data]);
+        return view('reports/cash_flow', ['title' => $this->rlang('cashflow', 'Cash Flow'), 'f' => $f, 'data' => $data]);
     }
 
     // ------------------------------------------------------------------ Aging
 
     public function arAging()
     {
-        return $this->aging('customer', 'Accounts Receivable Aging', 'Piutang Usaha / Accounts Receivable');
+        return $this->aging('customer', $this->rlang('s-aging-sum', 'AR Aging (summary)'), 'Piutang Usaha / Accounts Receivable');
     }
 
     public function apAging()
     {
-        return $this->aging('supplier', 'Accounts Payable Aging', 'Hutang Usaha / Accounts Payable');
+        return $this->aging('supplier', $this->rlang('p-aging-sum', 'AP Aging (summary)'), 'Hutang Usaha / Accounts Payable');
     }
 
     private function aging(string $kind, string $title, string $heading)
@@ -502,7 +517,7 @@ class ReportController extends BaseController
             $codes = array_map(static fn ($c) => $c['code'], array_filter($companies, static fn ($c) => in_array((int) $c['id'], $picked, true)));
 
             return ReportExporter::download([
-                'title'   => 'Consolidated Report',
+                'title'   => $this->rlang('consolidated', 'Consolidated Report'),
                 'meta'    => ['Companies' => implode(' + ', $codes), 'Period' => $f['label']],
                 'columns' => [['key' => 'name', 'label' => 'Account'], ['key' => 'amt', 'label' => 'Amount (Rp)', 'money' => true]],
                 'rows'    => $rows,
@@ -510,7 +525,7 @@ class ReportController extends BaseController
         }
 
         return view('reports/consolidation', [
-            'title'     => 'Consolidated Report', 'f' => $f,
+            'title'     => $this->rlang('consolidated', 'Consolidated Report'), 'f' => $f,
             'companies' => $companies, 'picked' => $picked,
             'from'      => $f['from'], 'to' => $f['to'], 'asOf' => $f['asOf'],
             'data'      => $data,

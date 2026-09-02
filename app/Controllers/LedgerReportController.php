@@ -29,6 +29,14 @@ class LedgerReportController extends BaseController
         return active_company_id();
     }
 
+    /** Localised report string, falling back to English. */
+    private function rlang(string $key, string $fallback): string
+    {
+        $s = lang('Report.' . $key);
+
+        return $s === 'Report.' . $key ? $fallback : $s;
+    }
+
     /**
      * @param list<array<string,mixed>> $columns
      * @param list<array<string,mixed>> $rows
@@ -120,7 +128,7 @@ class LedgerReportController extends BaseController
         $extra = $this->selectField('Source', 'source', $srcOpts, $source)
             . $this->selectField('Status', 'status', ['' => 'Posted + Void', 'posted' => 'Posted', 'void' => 'Void', 'draft' => 'Draft'], $status);
 
-        return $this->respond('Journal List', $f, [
+        return $this->respond($this->rlang('journal-list', 'Journal List'), $f, [
             ['key' => 'no', 'label' => 'Journal No.'], ['key' => 'date', 'label' => 'Date'],
             ['key' => 'ref', 'label' => 'Reference'], ['key' => 'desc', 'label' => 'Description'],
             ['key' => 'src', 'label' => 'Source'], ['key' => 'status', 'label' => 'Status'],
@@ -171,7 +179,7 @@ class LedgerReportController extends BaseController
         $sub = $ids ? '' : 'No realized FX accounts configured — see Setup → Control Accounts.';
         $bc  = base_code();
 
-        return $this->respond('Realized Gain / Loss', $f, [
+        return $this->respond($this->rlang('realized-fx', 'Realized Gain / Loss'), $f, [
             ['key' => 'date', 'label' => 'Date'], ['key' => 'no', 'label' => 'Journal'],
             ['key' => 'ref', 'label' => 'Reference'], ['key' => 'memo', 'label' => 'Memo'],
             ['key' => 'acc', 'label' => 'Account'],
@@ -230,7 +238,7 @@ class LedgerReportController extends BaseController
         }
         $extra = $this->selectField('Accounts (none = all with movement)', 'account_id', $accOpts, $picked, true);
 
-        return $this->respond('General Ledger Details', $f, [
+        return $this->respond($this->rlang('gl-details', 'General Ledger Details'), $f, [
             ['key' => 'date', 'label' => 'Date'], ['key' => 'no', 'label' => 'Journal'],
             ['key' => 'memo', 'label' => 'Memo'], ['key' => 'party', 'label' => 'Party'],
             ['key' => 'd', 'label' => 'Debit (Rp)', 'money' => true, 'blankZero' => true],
@@ -310,7 +318,7 @@ class LedgerReportController extends BaseController
         }
         $out[] = ['_style' => 'total', 'no' => 'GRAND TOTAL', 'in' => $gIn, 'out' => $gOut, 'net' => $gIn - $gOut];
 
-        return $this->respond('Payment by Bank', $f, [
+        return $this->respond($this->rlang('payment-bank', 'Payment by Bank'), $f, [
             ['key' => 'date', 'label' => 'Date'], ['key' => 'no', 'label' => 'No.'],
             ['key' => 'typ', 'label' => 'Type'], ['key' => 'party', 'label' => 'Party'],
             ['key' => 'ref', 'label' => 'Reference'],
@@ -380,7 +388,7 @@ class LedgerReportController extends BaseController
             . $this->selectField('P&L', 'job_pl', ['' => 'All', 'loss' => 'Loss-making only', 'profit' => 'Profitable only'], $plFilter)
             . $this->selectField('Job status', 'job_status', ['' => 'All', 'open' => 'Open', 'closed' => 'Closed'], $status);
 
-        return $this->respond('Job List', $f, [
+        return $this->respond($this->rlang('job-list', 'Job List'), $f, [
             ['key' => 'code', 'label' => 'Code'], ['key' => 'job', 'label' => 'Job'],
             ['key' => 'customer', 'label' => 'Customer'], ['key' => 'arrival', 'label' => 'Arrival'],
             ['key' => 'status', 'label' => 'Status'],
@@ -502,6 +510,6 @@ class LedgerReportController extends BaseController
               . (count($matched) > $cap ? ' — refine the search to see the rest' : '')
             : 'No jobs match the arrival window / search.';
 
-        return $this->respond('Job P&L — Sales vs Purchase', $f, $cols, $out, ['extra' => $extra], $sub);
+        return $this->respond($this->rlang('job-detail', 'Job P&L — Sales vs Purchase'), $f, $cols, $out, ['extra' => $extra], $sub);
     }
 }

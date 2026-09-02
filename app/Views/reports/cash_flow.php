@@ -15,13 +15,13 @@ $section = static function (array $g): string {
 };
 ?>
 
-<div class="page-head"><h1>Cash Flow</h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; All reports</a></div></div>
+<div class="page-head"><h1><?= esc($title) ?></h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; All reports</a></div></div>
 <?= view('reports/_period', ['f' => $f, 'showCompare' => true]) ?>
 
 <div class="report-title">
   <?php if ($u = company_logo_url()): ?><img src="<?= esc($u) ?>"><?php endif ?>
   <div class="co"><?= esc(company_name()) ?></div>
-  <h1>Laporan Arus Kas / Cash Flow Statement</h1>
+  <h1><?= esc($title) ?></h1>
   <div class="muted"><?= date_id($f['from']) ?> — <?= date_id($f['to']) ?> · direct method</div>
 </div>
 

@@ -28,15 +28,23 @@ class TradeReportController extends BaseController
                 'pay' => 'purchase_payments', 'alloc' => 'purchase_payment_allocations', 'allocFk' => 'payment_id',
                 'party' => 'suppliers', 'pid' => 'supplier_id', 'ref' => 'supplier_ref',
                 'paid' => 'paid_base', 'payNo' => 'payment_no', 'payDate' => 'payment_date',
-                'pLabel' => 'Supplier', 'noun' => 'Purchase', 'payNoun' => 'Payment',
+                'pLabel' => 'Supplier', 'noun' => 'Purchase', 'payNoun' => 'Payment', 'k' => 'p',
             ]
             : [
                 'inv' => 'sales_invoices', 'line' => 'sales_invoice_lines',
                 'pay' => 'sales_receipts', 'alloc' => 'sales_receipt_allocations', 'allocFk' => 'receipt_id',
                 'party' => 'customers', 'pid' => 'customer_id', 'ref' => 'customer_ref',
                 'paid' => 'received_base', 'payNo' => 'receipt_no', 'payDate' => 'receipt_date',
-                'pLabel' => 'Customer', 'noun' => 'Sales', 'payNoun' => 'Receipt',
+                'pLabel' => 'Customer', 'noun' => 'Sales', 'payNoun' => 'Receipt', 'k' => 's',
             ];
+    }
+
+    /** Localised report string, falling back to English. */
+    private function rlang(string $key, string $fallback): string
+    {
+        $s = lang('Report.' . $key);
+
+        return $s === 'Report.' . $key ? $fallback : $s;
     }
 
     private function respond(string $title, array $f, array $columns, array $rows, array $periodOpts = [], string $subtitle = '')
@@ -98,7 +106,7 @@ class TradeReportController extends BaseController
         }
         $out[] = ['_style' => 'total', 'no' => 'GRAND TOTAL', 'total' => $grand];
 
-        return $this->respond($c['noun'] . ' Register', $f, [
+        return $this->respond($this->rlang($c['k'] . '-register', $c['noun'] . ' Register'), $f, [
             ['key' => 'no', 'label' => 'No.'], ['key' => 'date', 'label' => 'Date'], ['key' => 'ref', 'label' => 'Ref'],
             ['key' => 'st', 'label' => 'Subtotal', 'money' => true, 'blankZero' => true],
             ['key' => 'ppn', 'label' => 'PPN', 'money' => true, 'blankZero' => true],
@@ -151,7 +159,7 @@ class TradeReportController extends BaseController
         }
         $out[] = $totRow;
 
-        return $this->respond($c['noun'] . ' — Monthly by ' . $c['pLabel'] . ' (' . $f['year'] . ')', $f, $cols, $out, ['showCompare' => false]);
+        return $this->respond($this->rlang($c['k'] . '-monthly', $c['noun'] . ' Monthly') . ' — ' . $c['pLabel'] . ' (' . $f['year'] . ')', $f, $cols, $out, ['showCompare' => false]);
     }
 
     // ---------------------------------------------------------------- outstanding
@@ -185,7 +193,7 @@ class TradeReportController extends BaseController
         }
         $out[] = ['_style' => 'total', 'party' => 'TOTAL OUTSTANDING', 'os' => $tot];
 
-        return $this->respond('Outstanding ' . $c['noun'] . ' Invoices', $f, [
+        return $this->respond($this->rlang('outstanding_' . $c['k'], 'Outstanding ' . $c['noun'] . ' Invoices'), $f, [
             ['key' => 'no', 'label' => 'No.'], ['key' => 'date', 'label' => 'Date'], ['key' => 'due', 'label' => 'Due'],
             ['key' => 'party', 'label' => $c['pLabel']],
             ['key' => 'total', 'label' => 'Total', 'money' => true],
@@ -225,7 +233,7 @@ class TradeReportController extends BaseController
         }
         $out[] = ['_style' => 'total', 'desc' => 'TOTAL', 'amt' => $tot];
 
-        return $this->respond($c['noun'] . ' Invoice Detail', $f, [
+        return $this->respond($this->rlang($c['k'] . '-detail', $c['noun'] . ' Invoice Detail'), $f, [
             ['key' => 'no', 'label' => 'Invoice'], ['key' => 'date', 'label' => 'Date'], ['key' => 'party', 'label' => $c['pLabel']],
             ['key' => 'acc', 'label' => 'Account'], ['key' => 'job', 'label' => 'Job'],
             ['key' => 'desc', 'label' => 'Description'], ['key' => 'amt', 'label' => 'Amount (Rp)', 'money' => true],
@@ -260,7 +268,7 @@ class TradeReportController extends BaseController
         }
         $out[] = ['_style' => 'total', 'party' => 'TOTAL (excl. void)', 'amt' => $tot];
 
-        return $this->respond($c['payNoun'] . ' List', $f, [
+        return $this->respond($this->rlang($c['k'] === 'p' ? 'p-payments' : 's-receipts', $c['payNoun'] . ' List'), $f, [
             ['key' => 'no', 'label' => 'No.'], ['key' => 'date', 'label' => 'Date'], ['key' => 'party', 'label' => $c['pLabel']],
             ['key' => 'bank', 'label' => 'Bank'], ['key' => 'amt', 'label' => 'Amount (Rp)', 'money' => true],
             ['key' => 'ref', 'label' => 'Reference'], ['key' => 'status', 'label' => 'Status'],
@@ -435,7 +443,7 @@ class TradeReportController extends BaseController
         $sub = count($out) . ' line(s) · ' . count($invoices) . ' invoice(s) to pay'
             . ($pdFrom !== '' || $pdTo !== '' ? ' · promise ' . ($pdFrom ?: '…') . ' – ' . ($pdTo ?: '…') : '');
 
-        return $this->respond('Payment List', $f, $cols, $out, ['extra' => $extra, 'hidePeriodPickers' => true], $sub);
+        return $this->respond($this->rlang('p-paylist', 'Payment List'), $f, $cols, $out, ['extra' => $extra, 'hidePeriodPickers' => true], $sub);
     }
 
     // ---------------------------------------------------------------- invoice paid (allocations)
@@ -466,7 +474,7 @@ class TradeReportController extends BaseController
         }
         $out[] = ['_style' => 'total', 'party' => 'TOTAL', 'amt' => $tot];
 
-        return $this->respond($c['noun'] . ' Invoice Paid', $f, [
+        return $this->respond($this->rlang($c['k'] . '-invoice-paid', $c['noun'] . ' Invoice Paid'), $f, [
             ['key' => 'payno', 'label' => $c['payNoun'] . ' No.'], ['key' => 'date', 'label' => 'Date'],
             ['key' => 'inv', 'label' => 'Invoice'], ['key' => 'party', 'label' => $c['pLabel']],
             ['key' => 'amt', 'label' => 'Applied (Rp)', 'money' => true],
@@ -498,7 +506,7 @@ class TradeReportController extends BaseController
         }
         $out[] = ['_style' => 'total', 'name' => 'TOTAL', 'bal' => $tot];
 
-        return $this->respond($c['pLabel'] . ' List', $f, [
+        return $this->respond($this->rlang($c['k'] === 'p' ? 'p-suppliers' : 's-customers', $c['pLabel'] . ' List'), $f, [
             ['key' => 'code', 'label' => 'Code'], ['key' => 'name', 'label' => 'Name'],
             ['key' => 'email', 'label' => 'Email'], ['key' => 'phone', 'label' => 'Phone'],
             ['key' => 'npwp', 'label' => 'NPWP'], ['key' => 'status', 'label' => 'Status'],
@@ -561,7 +569,7 @@ class TradeReportController extends BaseController
         }
         $out[] = $emit('GRAND TOTAL', $grand) + ['_style' => 'total'];
 
-        return $this->respond(($kind === 'purchase' ? 'AP' : 'AR') . ' Aging — Detail', $f, [
+        return $this->respond($this->rlang(($kind === 'purchase' ? 'p' : 's') . '-aging', ($kind === 'purchase' ? 'AP' : 'AR') . ' Aging (detail)'), $f, [
             ['key' => 'inv', 'label' => 'Invoice'], ['key' => 'date', 'label' => 'Date'], ['key' => 'due', 'label' => 'Due'],
             ['key' => 'cur', 'label' => 'Current', 'money' => true, 'blankZero' => true],
             ['key' => 'b30', 'label' => '1-30', 'money' => true, 'blankZero' => true],

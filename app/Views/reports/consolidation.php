@@ -36,12 +36,12 @@ foreach ($companies as $c) {
 }
 $coPicker .= '</div></div>';
 ?>
-<div class="page-head"><h1>Consolidated Report</h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; All reports</a></div></div>
+<div class="page-head"><h1><?= esc($title) ?></h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; All reports</a></div></div>
 <?= view('reports/_period', ['f' => $f, 'showAsOf' => true, 'extra' => $coPicker]) ?>
 
 <div class="report-title">
   <div class="co"><?= esc(company_name()) ?> — Group</div>
-  <h1>Laporan Konsolidasi / Consolidated Report</h1>
+  <h1><?= esc($title) ?></h1>
   <div class="muted">
     <?= esc(implode(' + ', array_map(static fn ($c) => $c['code'], array_filter($companies, static fn ($c) => in_array((int) $c['id'], $picked, true))))) ?>
     &middot; <?= date_id($from) ?> – <?= date_id($to) ?>

@@ -2,12 +2,12 @@
 <?= $this->section('content') ?>
 <?php $t = $data['totals']; ?>
 
-<div class="page-head"><h1>Trial Balance</h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; All reports</a></div></div>
+<div class="page-head"><h1><?= esc($title) ?></h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; All reports</a></div></div>
 <?= view('reports/_period', ['f' => $f, 'showZeros' => true]) ?>
 
 <div class="report-title">
   <div class="co"><?= esc(company_name()) ?></div>
-  <h1>Neraca Saldo / Trial Balance</h1>
+  <h1><?= esc($title) ?></h1>
   <div class="muted"><?= date_id($from) ?> — <?= date_id($to) ?></div>
 </div>
 
