@@ -2,36 +2,36 @@
 <?= $this->section('content') ?>
 
 <div class="page-head">
-  <div><h1>Import payments</h1><div class="muted small">Upload a worked-back payment list to post supplier payments in bulk.</div></div>
+  <div><h1>Import receipts</h1><div class="muted small">Bulk-post customer receipts, or apply a bulk customer deposit across invoices.</div></div>
   <div class="btn-group">
-    <a class="btn ghost" href="<?= site_url('purchases/payments/import/template') ?>">Download template</a>
-    <a class="btn ghost" href="<?= site_url('purchases/payments') ?>">Back to payments</a>
+    <a class="btn ghost" href="<?= site_url('sales/receipts/import/template') ?>">Download template</a>
+    <a class="btn ghost" href="<?= site_url('sales/receipts') ?>">Back to receipts</a>
   </div>
 </div>
 
 <div class="card" style="max-width:680px">
   <h2>New import</h2>
-  <form method="post" action="<?= site_url('purchases/payments/import') ?>" enctype="multipart/form-data">
+  <form method="post" action="<?= site_url('sales/receipts/import') ?>" enctype="multipart/form-data">
     <?= csrf_field() ?>
     <div class="field">
-      <label>Payment list file (.xlsx, .xls or .csv)</label>
+      <label>File (.xlsx, .xls or .csv)</label>
       <input type="file" name="file" accept=".xlsx,.xls,.csv" required>
     </div>
     <button class="btn" type="submit">Upload &amp; continue</button>
   </form>
   <p class="muted small" style="margin-top:10px">
-    The file needs a column with the <b>invoice number</b> and a column with the <b>amount to pay</b>
-    (<a href="<?= site_url('purchases/payments/import/template') ?>">download the template</a>).
-    Rows are matched to open purchase invoices, summed per invoice, grouped by supplier, and posted as
-    one Supplier Payment each. An amount above the invoice's outstanding is capped; a smaller amount
-    pays it partly. Reverting a batch voids the payments it created.
+    Needs an <b>invoice number</b> column and an <b>amount</b> column (<a href="<?= site_url('sales/receipts/import/template') ?>">download the template</a>).
+    On the next step choose the mode:
+    <b>Receipt</b> — money received into a bank, posted as one Customer Receipt per customer;
+    <b>Apply deposit</b> — draw the amounts from each customer's oldest unapplied down payment (no cash).
+    Amounts are capped at each invoice's outstanding.
   </p>
 </div>
 
 <div class="card">
   <h2>Recent imports</h2>
   <table class="grid tight">
-    <thead><tr><th>#</th><th>File</th><th>Status</th><th class="right">Payments</th><th class="right">Unmatched</th><th>When</th><th></th></tr></thead>
+    <thead><tr><th>#</th><th>File</th><th>Status</th><th class="right">Posts</th><th class="right">Unmatched</th><th>When</th><th></th></tr></thead>
     <tbody>
       <?php foreach ($batches as $b): ?>
         <?php $committed = $b['status'] === 'committed'; ?>
@@ -44,12 +44,12 @@
           <td class="small muted"><?= esc($b['committed_at'] ?: $b['created_at']) ?></td>
           <td class="right nowrap">
             <?php if ($committed): ?>
-              <form method="post" action="<?= site_url('purchases/payments/import/' . $b['id'] . '/revert') ?>" style="display:inline"
-                onsubmit="return confirm('Void every payment this batch created?')">
+              <form method="post" action="<?= site_url('sales/receipts/import/' . $b['id'] . '/revert') ?>" style="display:inline"
+                onsubmit="return confirm('Void every receipt this batch created?')">
                 <?= csrf_field() ?><button class="btn sm danger" type="submit">Revert</button>
               </form>
             <?php else: ?>
-              <a class="btn sm ghost" href="<?= site_url('purchases/payments/import/' . $b['id'] . '/map') ?>">Resume</a>
+              <a class="btn sm ghost" href="<?= site_url('sales/receipts/import/' . $b['id'] . '/map') ?>">Resume</a>
             <?php endif ?>
           </td>
         </tr>

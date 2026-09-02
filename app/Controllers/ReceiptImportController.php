@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Libraries\Import\PaymentImporter;
+use App\Libraries\Import\ReceiptImporter;
 use App\Libraries\Import\SpreadsheetReader;
 use App\Models\AccountModel;
 use App\Models\ImportBatchModel;
@@ -10,20 +10,19 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 /**
- * Payment import wizard: upload a worked-back payment list -> map the invoice
- * number + amount columns, pick the pay-from bank / date / reference -> preview
- * -> commit (posts one Supplier Payment per supplier). Lives at
- * /purchases/payments/import.
+ * Customer settlement import wizard: upload a worked-back list -> map the
+ * invoice number + amount columns, choose the mode (bank receipt, or apply an
+ * existing customer deposit) -> preview -> commit. Lives at /sales/receipts/import.
  */
-class PaymentImportController extends BaseController
+class ReceiptImportController extends BaseController
 {
     private ImportBatchModel $batches;
-    private PaymentImporter $importer;
+    private ReceiptImporter $importer;
 
     public function __construct()
     {
         $this->batches  = model(ImportBatchModel::class);
-        $this->importer = new PaymentImporter();
+        $this->importer = new ReceiptImporter();
         @ini_set('memory_limit', '512M');
         @set_time_limit(0);
     }
@@ -35,14 +34,14 @@ class PaymentImportController extends BaseController
 
     private function deny(string $msg = 'Not allowed.')
     {
-        return redirect()->to('purchases/payments/import')->with('error', $msg);
+        return redirect()->to('sales/receipts/import')->with('error', $msg);
     }
 
     private function batchOr404(int $id): ?array
     {
         $b = $this->batches->find($id);
 
-        return $b && ($b['kind'] ?? '') === 'pay-import' ? $b : null;
+        return $b && ($b['kind'] ?? '') === 'rcpt-import' ? $b : null;
     }
 
     private function gridFor(array $batch): array
@@ -56,9 +55,9 @@ class PaymentImportController extends BaseController
     {
         $all = $this->batches->orderBy('id', 'DESC')->findAll(30);
 
-        return view('purchases/payments/import/index', [
-            'title'   => 'Import payments',
-            'batches' => array_values(array_filter($all, static fn ($b) => ($b['kind'] ?? '') === 'pay-import')),
+        return view('sales/receipts/import/index', [
+            'title'   => 'Import receipts',
+            'batches' => array_values(array_filter($all, static fn ($b) => ($b['kind'] ?? '') === 'rcpt-import')),
         ]);
     }
 
@@ -67,11 +66,11 @@ class PaymentImportController extends BaseController
     {
         $ss = new Spreadsheet();
         $sh = $ss->getActiveSheet();
-        $sh->setTitle('Payments');
-        $sh->fromArray([['Number', 'Amount to pay', 'Supplier (ignored)', 'Note (ignored)']], null, 'A1');
+        $sh->setTitle('Receipts');
+        $sh->fromArray([['Number', 'Amount', 'Customer (ignored)', 'Note (ignored)']], null, 'A1');
         $sh->fromArray([
-            ['PI-2609-0001', 1500000, 'example supplier', 'full payment'],
-            ['PI-2609-0002', 500000, 'example supplier', 'partial'],
+            ['SI-2609-0001', 1500000, 'example customer', 'full receipt'],
+            ['SI-2609-0002', 500000, 'example customer', 'partial'],
         ], null, 'A2');
         $sh->getStyle('A1:D1')->getFont()->setBold(true);
         foreach (range('A', 'D') as $c) {
@@ -79,7 +78,7 @@ class PaymentImportController extends BaseController
         }
 
         $this->response->setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        $this->response->setHeader('Content-Disposition', 'attachment; filename="payment-import-template.xlsx"');
+        $this->response->setHeader('Content-Disposition', 'attachment; filename="receipt-import-template.xlsx"');
         ob_start();
         (new Xlsx($ss))->save('php://output');
 
@@ -116,16 +115,16 @@ class PaymentImportController extends BaseController
         }
 
         $id = $this->batches->insert([
-            'kind'        => 'pay-import',
+            'kind'        => 'rcpt-import',
             'filename'    => $file->getClientName(),
             'stored_path' => $path,
             'sheet'       => $sheets[0] ?? null,
             'status'      => 'uploaded',
-            'options'     => json_encode(['headerRow' => 1, 'map' => [], 'header' => []]),
+            'options'     => json_encode(['headerRow' => 1, 'map' => [], 'header' => ['mode' => 'receipt']]),
             'created_by'  => auth()->id(),
         ], true);
 
-        return redirect()->to("purchases/payments/import/{$id}/map");
+        return redirect()->to("sales/receipts/import/{$id}/map");
     }
 
     // ------------------------------------------------------------------ step: mapping + batch header
@@ -152,17 +151,17 @@ class PaymentImportController extends BaseController
             $map = $this->importer->guessMap($headers);
         }
 
-        return view('purchases/payments/import/map', [
-            'title'   => 'Import payments · Map columns',
+        return view('sales/receipts/import/map', [
+            'title'   => 'Import receipts · Map columns',
             'batch'   => $batch,
             'sheets'  => $sheets,
             'opt'     => $opt,
             'headers' => $headers,
             'map'     => $map,
             'sample'  => array_slice($this->importer->dataRows($grid, $headerRow), 0, 6),
-            'fields'  => PaymentImporter::FIELDS,
+            'fields'  => ReceiptImporter::FIELDS,
             'banks'   => model(AccountModel::class)->cashAccounts(),
-            'header'  => (array) ($opt['header'] ?? []),
+            'header'  => (array) ($opt['header'] ?? ['mode' => 'receipt']),
         ]);
     }
 
@@ -179,26 +178,28 @@ class PaymentImportController extends BaseController
         $sheet     = $this->request->getPost('sheet') ?: $batch['sheet'];
         $headerRow = max(1, (int) $this->request->getPost('header_row'));
         $map       = [];
-        foreach (array_keys(PaymentImporter::FIELDS) as $field) {
+        foreach (array_keys(ReceiptImporter::FIELDS) as $field) {
             $col = $this->request->getPost('map_' . $field);
             if ($col !== null && $col !== '') {
                 $map[$field] = (int) $col;
             }
         }
         $missing = [];
-        foreach (PaymentImporter::FIELDS as $field => [$label, $required]) {
+        foreach (ReceiptImporter::FIELDS as $field => [$label, $required]) {
             if ($required && ! isset($map[$field])) {
                 $missing[] = $label;
             }
         }
 
+        $mode   = $this->request->getPost('mode') === 'deposit' ? 'deposit' : 'receipt';
         $header = [
+            'mode'            => $mode,
             'bank_account_id' => (int) $this->request->getPost('bank_account_id'),
-            'payment_date'    => $this->request->getPost('payment_date') ?: date('Y-m-d'),
+            'date'            => $this->request->getPost('date') ?: date('Y-m-d'),
             'reference'       => trim((string) $this->request->getPost('reference')) ?: null,
         ];
-        if (! $header['bank_account_id']) {
-            $missing[] = 'Pay from account';
+        if ($mode === 'receipt' && ! $header['bank_account_id']) {
+            $missing[] = 'Receive into account';
         }
         if ($missing) {
             return redirect()->back()->withInput()->with('error', 'Please set: ' . implode(', ', $missing));
@@ -207,7 +208,7 @@ class PaymentImportController extends BaseController
         $this->batches->update($id, ['sheet' => $sheet, 'status' => 'mapped']);
         $this->batches->setOptions($id, ['headerRow' => $headerRow, 'map' => $map, 'header' => $header]);
 
-        return redirect()->to("purchases/payments/import/{$id}/preview");
+        return redirect()->to("sales/receipts/import/{$id}/preview");
     }
 
     // ------------------------------------------------------------------ step: preview + commit
@@ -231,8 +232,8 @@ class PaymentImportController extends BaseController
 
         $bank = model(AccountModel::class)->find((int) ($opt['header']['bank_account_id'] ?? 0));
 
-        return view('purchases/payments/import/preview', [
-            'title'  => 'Import payments · Preview',
+        return view('sales/receipts/import/preview', [
+            'title'  => 'Import receipts · Preview',
             'batch'  => $batch,
             'parsed' => $parsed,
             'header' => (array) ($opt['header'] ?? []),
@@ -250,7 +251,7 @@ class PaymentImportController extends BaseController
             return $this->deny('Import not found.');
         }
         if (($batch['status'] ?? '') === 'committed') {
-            return redirect()->to('purchases/payments')->with('error', 'This batch is already committed. Use Revert first to re-run it.');
+            return redirect()->to('sales/receipts')->with('error', 'This batch is already committed. Use Revert first to re-run it.');
         }
 
         $opt    = $this->batches->options($batch);
@@ -259,21 +260,23 @@ class PaymentImportController extends BaseController
 
         $this->batches->update($id, [
             'status'        => 'committed',
-            'journal_count' => $res['payments'],
+            'journal_count' => $res['posts'],
             'skipped_count' => $parsed['summary']['unmatched'],
             'committed_at'  => date('Y-m-d H:i:s'),
         ]);
-        $this->batches->setOptions($id, $opt + ['payment_ids' => $res['payment_ids'], 'commit_errors' => $res['errors']]);
+        $this->batches->setOptions($id, $opt + ['receipt_ids' => $res['receipt_ids'], 'commit_errors' => $res['errors']]);
 
-        $msg = sprintf(
-            '%d payment(s) posted for %d invoice(s), total %s. %d row(s) unmatched.',
-            $res['payments'],
+        $mode = ($opt['header']['mode'] ?? 'receipt');
+        $msg  = sprintf(
+            '%d %s posted for %d invoice(s), total %s. %d row(s) unmatched.',
+            $res['posts'],
+            $mode === 'deposit' ? 'deposit application(s)' : 'receipt(s)',
             $res['invoices'],
             number_format($res['amount'], 2),
             $parsed['summary']['unmatched']
         );
 
-        return redirect()->to('purchases/payments')->with($res['errors'] ? 'error' : 'message', $msg
+        return redirect()->to('sales/receipts')->with($res['errors'] ? 'error' : 'message', $msg
             . ($res['errors'] ? ' Some groups failed — see the import batch.' : ''));
     }
 
@@ -287,12 +290,16 @@ class PaymentImportController extends BaseController
             return $this->deny('Import not found.');
         }
         $opt = $this->batches->options($batch);
-        $res = $this->importer->revert($id, (array) ($opt['payment_ids'] ?? []));
+        if (($opt['header']['mode'] ?? 'receipt') === 'deposit') {
+            return redirect()->to('sales/receipts/import')->with('error',
+                'Deposit-application batches are reverted from the deposit’s own Unapply screen, not here.');
+        }
+        $res = $this->importer->revert($id, (array) ($opt['receipt_ids'] ?? []));
         $this->batches->update($id, ['status' => $res['kept'] > 0 ? 'committed' : 'reverted']);
 
-        return redirect()->to('purchases/payments/import')->with(
+        return redirect()->to('sales/receipts/import')->with(
             'message',
-            sprintf('Reverted: %d payment(s) voided, %d kept (already voided or locked).', $res['voided'], $res['kept'])
+            sprintf('Reverted: %d receipt(s) voided, %d kept (already voided or locked).', $res['voided'], $res['kept'])
         );
     }
 }

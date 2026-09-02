@@ -90,6 +90,7 @@ $routes->group('', ['filter' => 'session'], static function (RouteCollection $ro
 
         // bulk payment import wizard
         $routes->get('payments/import', 'PaymentImportController::index');
+        $routes->get('payments/import/template', 'PaymentImportController::template');
         $routes->post('payments/import', 'PaymentImportController::upload');
         $routes->get('payments/import/(:num)/map', 'PaymentImportController::map/$1');
         $routes->post('payments/import/(:num)/map', 'PaymentImportController::saveMap/$1');
@@ -158,6 +159,17 @@ $routes->group('', ['filter' => 'session'], static function (RouteCollection $ro
         $routes->post('receipts', 'SalesReceiptController::create');
         $routes->get('receipts/deposit', 'SalesReceiptController::depositNew');
         $routes->post('receipts/deposit', 'SalesReceiptController::depositCreate');
+
+        // bulk receipt / deposit-application import wizard
+        $routes->get('receipts/import', 'ReceiptImportController::index');
+        $routes->get('receipts/import/template', 'ReceiptImportController::template');
+        $routes->post('receipts/import', 'ReceiptImportController::upload');
+        $routes->get('receipts/import/(:num)/map', 'ReceiptImportController::map/$1');
+        $routes->post('receipts/import/(:num)/map', 'ReceiptImportController::saveMap/$1');
+        $routes->get('receipts/import/(:num)/preview', 'ReceiptImportController::preview/$1');
+        $routes->post('receipts/import/(:num)/commit', 'ReceiptImportController::commit/$1');
+        $routes->post('receipts/import/(:num)/revert', 'ReceiptImportController::revert/$1');
+
         $routes->get('receipts/(:num)', 'SalesReceiptController::show/$1');
         $routes->get('receipts/(:num)/apply', 'SalesReceiptController::applyForm/$1');
         $routes->post('receipts/(:num)/apply', 'SalesReceiptController::apply/$1');
