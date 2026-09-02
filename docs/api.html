@@ -1,0 +1,898 @@
+<title>Simple Accounting API</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,450;9..144,550&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap">
+
+<style>
+  :root {
+    /* light — warm paper, ledger-teal accent */
+    --ground:      #faf8f3;
+    --surface:     #ffffff;
+    --surface-2:   #f4f1e9;
+    --ink:         #201e1a;
+    --ink-soft:    #5f5b52;
+    --ink-faint:   #8a8579;
+    --rule:        #e7e2d6;
+    --rule-strong: #d5cfbf;
+    --accent:      #0c6b5e;
+    --accent-ink:  #094f45;
+    --accent-wash: #e4efec;
+    --m-get:       #0c6b5e;
+    --m-get-wash:  #dfeeeb;
+    --m-post:      #8a5a17;
+    --m-post-wash: #f2e7d4;
+    --danger:      #9c342b;
+    --shadow:      0 1px 2px rgba(32,30,26,.04), 0 8px 24px -12px rgba(32,30,26,.12);
+    --sel:         #cfe6e0;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #17150f;
+      --surface:     #201d16;
+      --surface-2:   #262219;
+      --ink:         #ece6d8;
+      --ink-soft:    #a8a08c;
+      --ink-faint:   #7c7563;
+      --rule:        #35301f;
+      --rule-strong: #453f2b;
+      --accent:      #59c3b1;
+      --accent-ink:  #7fd4c5;
+      --accent-wash: #1c2f2b;
+      --m-get:       #59c3b1;
+      --m-get-wash:  #1c2f2b;
+      --m-post:      #d59a4e;
+      --m-post-wash: #33291a;
+      --danger:      #e0796d;
+      --shadow:      0 1px 2px rgba(0,0,0,.3), 0 12px 32px -14px rgba(0,0,0,.6);
+      --sel:         #234b44;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #17150f;
+    --surface:     #201d16;
+    --surface-2:   #262219;
+    --ink:         #ece6d8;
+    --ink-soft:    #a8a08c;
+    --ink-faint:   #7c7563;
+    --rule:        #35301f;
+    --rule-strong: #453f2b;
+    --accent:      #59c3b1;
+    --accent-ink:  #7fd4c5;
+    --accent-wash: #1c2f2b;
+    --m-get:       #59c3b1;
+    --m-get-wash:  #1c2f2b;
+    --m-post:      #d59a4e;
+    --m-post-wash: #33291a;
+    --danger:      #e0796d;
+    --shadow:      0 1px 2px rgba(0,0,0,.3), 0 12px 32px -14px rgba(0,0,0,.6);
+    --sel:         #234b44;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.62;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection { background: var(--sel); }
+
+  code, kbd, pre, .mono { font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
+
+  a { color: var(--accent); text-underline-offset: 2px; text-decoration-thickness: 1px; }
+  a:hover { color: var(--accent-ink); }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+
+  /* ---------- shell ---------- */
+  .shell {
+    display: grid;
+    grid-template-columns: 1fr;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: clamp(2.5rem, 5vw, 5rem) clamp(1.15rem, 4vw, 3rem) 6rem;
+  }
+
+  @media (min-width: 1080px) {
+    .shell { grid-template-columns: 232px minmax(0, 1fr); column-gap: clamp(3rem, 6vw, 6rem); }
+  }
+
+  /* ---------- side nav ---------- */
+  .rail { display: none; }
+  @media (min-width: 1080px) {
+    .rail {
+      display: block;
+      position: sticky;
+      top: 3rem;
+      align-self: start;
+      height: calc(100vh - 6rem);
+      overflow-y: auto;
+      font-size: .82rem;
+    }
+    .rail nav { border-left: 1px solid var(--rule); }
+    .rail a {
+      display: block;
+      padding: .34rem 0 .34rem 1rem;
+      margin-left: -1px;
+      border-left: 1px solid transparent;
+      color: var(--ink-soft);
+      text-decoration: none;
+      transition: color .12s, border-color .12s;
+    }
+    .rail a:hover { color: var(--ink); }
+    .rail a.sub { padding-left: 1.9rem; font-size: .78rem; color: var(--ink-faint); }
+    .rail a.here { color: var(--accent); border-left-color: var(--accent); font-weight: 500; }
+    .rail .rail-head {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: .68rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      padding: 0 0 .8rem;
+      margin-left: 1rem;
+    }
+  }
+
+  /* ---------- masthead ---------- */
+  .masthead { max-width: 46rem; margin-bottom: 3.5rem; }
+
+  .wordmark {
+    font-family: "Fraunces", Georgia, "Times New Roman", serif;
+    font-weight: 550;
+    font-size: clamp(2.4rem, 6vw, 3.5rem);
+    line-height: 1.04;
+    letter-spacing: -0.012em;
+    text-wrap: balance;
+    margin: 0;
+  }
+  .wordmark .v {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .34em;
+    font-weight: 500;
+    vertical-align: middle;
+    color: var(--accent);
+    background: var(--accent-wash);
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+    border-radius: 999px;
+    padding: .18em .62em;
+    margin-left: .7em;
+    letter-spacing: .04em;
+    position: relative;
+    top: -0.12em;
+  }
+
+  .lede {
+    font-size: 1.14rem;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin: 1.15rem 0 1.9rem;
+    max-width: 40rem;
+    text-wrap: pretty;
+  }
+
+  .baserow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .6rem .9rem;
+    font-size: .86rem;
+    color: var(--ink-faint);
+  }
+  .pill {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .82rem;
+    background: var(--surface);
+    border: 1px solid var(--rule-strong);
+    border-radius: 7px;
+    padding: .4rem .7rem;
+    color: var(--ink);
+    box-shadow: var(--shadow);
+  }
+
+  /* ---------- sections ---------- */
+  section { max-width: 46rem; margin-top: 4.2rem; scroll-margin-top: 2rem; }
+  section > h2 {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-weight: 600;
+    font-size: 1.62rem;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    margin: 0 0 .3rem;
+    text-wrap: balance;
+    display: flex;
+    align-items: baseline;
+    gap: .7rem;
+  }
+  section > h2 .n {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .78rem;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: .1em;
+    flex: none;
+  }
+  .section-note { color: var(--ink-soft); margin: 0 0 1.9rem; max-width: 40rem; }
+
+  h3 {
+    font-size: 1.02rem;
+    font-weight: 600;
+    margin: 2.4rem 0 .7rem;
+    letter-spacing: -0.005em;
+  }
+  h3:first-of-type { margin-top: 1.4rem; }
+
+  p { margin: 0 0 1.05rem; max-width: 40rem; }
+  p:last-child { margin-bottom: 0; }
+  strong { font-weight: 600; }
+
+  :not(pre) > code {
+    font-size: .875em;
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: .08em .38em;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  /* ---------- callout list ---------- */
+  .defs { display: flex; flex-direction: column; gap: 1.2rem; margin: 0 0 1rem; padding: 0; list-style: none; }
+  .defs li {
+    display: grid;
+    grid-template-columns: minmax(0,1fr);
+    gap: .2rem;
+    padding-left: 1rem;
+    border-left: 2px solid var(--rule-strong);
+  }
+  .defs .term { font-weight: 600; }
+  .defs .term code { font-weight: 400; }
+
+  /* ---------- tables ---------- */
+  .twrap { overflow-x: auto; margin: 0 0 1.1rem; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); box-shadow: var(--shadow); }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: .66rem .9rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  thead th {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .68rem;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 500;
+    background: var(--surface-2);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td code { white-space: nowrap; }
+  td:first-child code { color: var(--accent-ink); }
+  .req { color: var(--danger); font-weight: 600; font-size: .82rem; font-family: "IBM Plex Mono", monospace; }
+  .opt { color: var(--ink-faint); font-size: .82rem; font-family: "IBM Plex Mono", monospace; }
+
+  .http { font-family: "IBM Plex Mono", monospace; font-weight: 500; }
+  .http-2 { color: var(--m-get); }
+  .http-4 { color: var(--m-post); }
+  .http-5 { color: var(--danger); }
+
+  /* ---------- endpoint cards ---------- */
+  .ep {
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    padding: 1.4rem 1.4rem 1.5rem;
+    margin: 1.6rem 0;
+    scroll-margin-top: 2rem;
+  }
+  .ep-head { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-bottom: .1rem; }
+  .verb {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .7rem;
+    font-weight: 500;
+    letter-spacing: .09em;
+    padding: .24rem .55rem;
+    border-radius: 5px;
+  }
+  .verb.get  { color: var(--m-get);  background: var(--m-get-wash);  border: 1px solid color-mix(in srgb, var(--m-get) 26%, transparent); }
+  .verb.post { color: var(--m-post); background: var(--m-post-wash); border: 1px solid color-mix(in srgb, var(--m-post) 30%, transparent); }
+  .path {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .96rem;
+    font-weight: 500;
+    color: var(--ink);
+    word-break: break-all;
+  }
+  .path .var { color: var(--accent); }
+  .ep-sum { color: var(--ink-soft); margin: .55rem 0 0; font-size: .95rem; }
+  .ep-meta {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .74rem;
+    color: var(--ink-faint);
+    margin-top: .35rem;
+  }
+  .ep-meta b { color: var(--ink-soft); font-weight: 500; }
+  .ep h4 {
+    font-size: .74rem;
+    font-family: "IBM Plex Mono", monospace;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 1.5rem 0 .6rem;
+    font-weight: 500;
+  }
+
+  /* ---------- code blocks ---------- */
+  pre {
+    position: relative;
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+    overflow-x: auto;
+    margin: 0 0 1.1rem;
+    font-size: .845rem;
+    line-height: 1.62;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ep pre:last-child { margin-bottom: 0; }
+  pre code { display: block; white-space: pre; color: var(--ink); }
+  pre .k  { color: var(--accent-ink); }   /* json keys */
+  pre .s  { color: var(--m-post); }        /* strings */
+  pre .n  { color: var(--danger); }        /* numbers / literals */
+  pre .c  { color: var(--ink-faint); font-style: italic; }  /* comments */
+
+  .copy {
+    position: absolute;
+    top: .5rem;
+    right: .5rem;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .68rem;
+    letter-spacing: .04em;
+    color: var(--ink-soft);
+    background: var(--surface);
+    border: 1px solid var(--rule-strong);
+    border-radius: 6px;
+    padding: .26rem .5rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity .14s, color .14s;
+  }
+  pre:hover .copy, .copy:focus-visible { opacity: 1; }
+  .copy:hover { color: var(--ink); }
+  @media (hover: none) { .copy { opacity: 1; } }
+
+  /* ---------- misc ---------- */
+  hr { border: none; border-top: 1px solid var(--rule); margin: 3rem 0 0; max-width: 46rem; }
+  .foot {
+    max-width: 46rem;
+    margin-top: 2rem;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .74rem;
+    color: var(--ink-faint);
+    letter-spacing: .03em;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<div class="shell">
+  <aside class="rail" aria-label="Contents">
+    <nav>
+      <div class="rail-head">Contents</div>
+      <a href="#auth">Authentication</a>
+      <a href="#conventions">Conventions</a>
+      <a href="#errors">Errors</a>
+      <a href="#endpoints">Endpoints</a>
+      <a class="sub" href="#ping">GET /ping</a>
+      <a class="sub" href="#accounts">GET /accounts</a>
+      <a class="sub" href="#lookups">GET /customers · /suppliers · /jobs</a>
+      <a class="sub" href="#job-fetch">GET /jobs/{code}</a>
+      <a class="sub" href="#job-upsert">POST /jobs</a>
+      <a class="sub" href="#create">POST /{kind}/invoices</a>
+      <a class="sub" href="#fetch">GET /{kind}/invoices/{ref}</a>
+      <a class="sub" href="#line-costs">POST /purchase/lines/costs</a>
+      <a href="#example">Worked example</a>
+      <a href="#limits">Limitations</a>
+    </nav>
+  </aside>
+
+  <main>
+    <header class="masthead">
+      <h1 class="wordmark">Simple Accounting API<span class="v">v1</span></h1>
+      <p class="lede">
+        A small, token-authenticated JSON API for pushing <strong>sales and purchase
+        invoices</strong> into the ledger from a third-party system, with read-only
+        lookups for mapping your data to this chart of accounts.
+      </p>
+      <div class="baserow">
+        <span class="pill">https://YOUR-HOST/api/v1</span>
+        <span>JSON in / JSON out&nbsp;&nbsp;·&nbsp;&nbsp;version in the path&nbsp;&nbsp;·&nbsp;&nbsp;one token per company</span>
+      </div>
+    </header>
+
+    <section id="auth">
+      <h2><span class="n">01</span>Authentication</h2>
+      <p class="section-note">Every request carries an API token issued for a single company.</p>
+
+      <p>Send the token as a bearer credential:</p>
+      <pre data-copy><code>Authorization: Bearer sa_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code></pre>
+      <p><code>X-Api-Key: sa_...</code> is accepted as an alternative header.</p>
+
+      <h3>Getting a token</h3>
+      <p>
+        An administrator creates tokens in the app under <strong>Setup&nbsp;→&nbsp;API&nbsp;Tokens</strong>
+        (<code>/api-tokens</code>). The raw value is shown <strong>once</strong> — copy it
+        immediately; only a hash is stored and it cannot be retrieved later. Revoking a
+        token takes effect on the next request.
+      </p>
+
+      <h3>Company scoping</h3>
+      <p>
+        A token is bound to the company that was active when it was created. Every
+        request made with it reads and writes only that company's data — there is no
+        company parameter, and the same token cannot reach another company. Use one
+        token per company you integrate.
+      </p>
+
+      <h3>Abilities</h3>
+      <div class="twrap">
+        <table>
+          <thead><tr><th>Ability</th><th>Allows</th></tr></thead>
+          <tbody>
+            <tr><td><code>read</code></td><td><code>GET /ping</code>, <code>/accounts</code>, <code>/customers</code>, <code>/suppliers</code>, <code>/jobs</code>, <code>GET /jobs/{code}</code></td></tr>
+            <tr><td><code>sales:write</code></td><td><code>POST /sales/invoices</code>, including posting</td></tr>
+            <tr><td><code>purchase:write</code></td><td><code>POST /purchase/invoices</code>, <code>POST /purchase/lines/costs</code>, including posting</td></tr>
+            <tr><td><code>job:write</code></td><td><code>POST /jobs</code> — create / update jobs from Jambix dossier data</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>A request that needs an ability the token lacks returns <span class="http http-4">403</span>.</p>
+    </section>
+
+    <section id="conventions">
+      <h2><span class="n">02</span>Conventions</h2>
+      <p class="section-note">The rules that hold across every write.</p>
+      <ul class="defs">
+        <li>
+          <span class="term">Amounts</span>
+          <span>Line <code>amount</code> values are in the invoice's transaction currency. Responses also carry <code>*_base</code> fields converted to the base currency (IDR) at <code>exchange_rate</code>. <code>total = subtotal + ppn_amount − pph_amount</code>.</span>
+        </li>
+        <li>
+          <span class="term">Currency</span>
+          <span>Omit <code>currency</code> to use the base currency at rate <code>1</code>. For any other currency, send <code>currency</code> (ISO code) <strong>and</strong> a positive <code>exchange_rate</code> — base-currency units per 1 unit of the invoice currency.</span>
+        </li>
+        <li>
+          <span class="term">Dates</span>
+          <span><code>YYYY-MM-DD</code>.</span>
+        </li>
+        <li>
+          <span class="term">Idempotency</span>
+          <span>Every invoice carries a unique <code>external_id</code> — your system's ID for it, ≤ 80 chars, unique per company. Re-<code>POST</code>ing the same <code>external_id</code> never creates a duplicate or changes anything: it returns the existing invoice with <code>"created": false</code> and HTTP <span class="http http-2">200</span>. Corrections are made in the app UI.</span>
+        </li>
+        <li>
+          <span class="term">Posting</span>
+          <span>New invoices are created as <strong>drafts</strong>. Send <code>"post": true</code> to post to the ledger in the same call. If posting fails — a closed period, say — the invoice is still saved as a draft and the reasons come back in <code>invoice.post_errors</code>.</span>
+        </li>
+      </ul>
+    </section>
+
+    <section id="errors">
+      <h2><span class="n">03</span>Errors</h2>
+      <p class="section-note">Every non-2xx response uses the same envelope.</p>
+      <pre data-copy><code>{
+  <span class="k">"error"</span>: {
+    <span class="k">"code"</span>: <span class="s">"invalid_request"</span>,
+    <span class="k">"message"</span>: <span class="s">"The invoice could not be accepted."</span>,
+    <span class="k">"details"</span>: [<span class="s">"Line 1: unknown account_code '9999'."</span>]
+  }
+}</code></pre>
+      <div class="twrap">
+        <table>
+          <thead><tr><th>HTTP</th><th>code</th><th>When</th></tr></thead>
+          <tbody>
+            <tr><td><span class="http http-4">401</span></td><td><code>missing_token</code></td><td>No <code>Authorization</code> / <code>X-Api-Key</code> header</td></tr>
+            <tr><td><span class="http http-4">401</span></td><td><code>invalid_token</code></td><td>Token unknown or revoked</td></tr>
+            <tr><td><span class="http http-4">403</span></td><td><code>forbidden</code></td><td>Token lacks the ability the endpoint needs</td></tr>
+            <tr><td><span class="http http-4">404</span></td><td><code>not_found</code></td><td>No matching invoice</td></tr>
+            <tr><td><span class="http http-4">422</span></td><td><code>invalid_request</code></td><td>Payload rejected; <code>details[]</code> lists the specific reasons</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><span class="http http-2">200</span> is returned for a successful read and for an idempotent no-op create. <span class="http http-2">201</span> is returned only when a new invoice is actually created.</p>
+    </section>
+
+    <section id="endpoints">
+      <h2><span class="n">04</span>Endpoints</h2>
+      <p class="section-note">Five endpoints, plus the two invoice writes mirrored across <code>sales</code> and <code>purchase</code>.</p>
+
+      <article class="ep" id="ping">
+        <div class="ep-head"><span class="verb get">GET</span><span class="path">/ping</span></div>
+        <p class="ep-sum">Health and auth check — confirms the token and shows which company it targets.</p>
+        <p class="ep-meta"><b>Ability</b> &nbsp;none beyond a valid token</p>
+        <h4>Response</h4>
+        <pre data-copy><code>{
+  <span class="k">"ok"</span>: <span class="n">true</span>,
+  <span class="k">"company"</span>: { <span class="k">"id"</span>: <span class="n">1</span>, <span class="k">"code"</span>: <span class="s">"C7"</span>, <span class="k">"name"</span>: <span class="s">"Acme Nusantara"</span> },
+  <span class="k">"token"</span>: <span class="s">"Jambix production"</span>,
+  <span class="k">"abilities"</span>: [<span class="s">"read"</span>, <span class="s">"sales:write"</span>, <span class="s">"purchase:write"</span>]
+}</code></pre>
+      </article>
+
+      <article class="ep" id="accounts">
+        <div class="ep-head"><span class="verb get">GET</span><span class="path">/accounts</span></div>
+        <p class="ep-sum">Postable chart-of-accounts entries, for mapping your GL codes.</p>
+        <p class="ep-meta"><b>Ability</b> &nbsp;<code>read</code> &nbsp;·&nbsp; <b>Query</b> &nbsp;<code>type</code> (revenue, expense, cogs, asset, liability…), <code>q</code> (code or name substring) &nbsp;·&nbsp; max 500 rows</p>
+        <h4>Response</h4>
+        <pre data-copy><code>{
+  <span class="k">"accounts"</span>: [
+    {
+      <span class="k">"code"</span>: <span class="s">"4100"</span>,
+      <span class="k">"name"</span>: <span class="s">"Pendapatan Jasa"</span>,
+      <span class="k">"type"</span>: <span class="s">"revenue"</span>,
+      <span class="k">"normal_balance"</span>: <span class="s">"K"</span>,
+      <span class="k">"is_cash"</span>: <span class="n">false</span>,
+      <span class="k">"subledger"</span>: <span class="s">"none"</span>
+    }
+  ]
+}</code></pre>
+      </article>
+
+      <article class="ep" id="lookups">
+        <div class="ep-head">
+          <span class="verb get">GET</span><span class="path">/customers</span>
+          <span class="verb get">GET</span><span class="path">/suppliers</span>
+          <span class="verb get">GET</span><span class="path">/jobs</span>
+        </div>
+        <p class="ep-sum">Party and job lists for building your mapping. <code>customers</code> and <code>suppliers</code> accept <code>?q=</code> (code or name substring).</p>
+        <p class="ep-meta"><b>Ability</b> &nbsp;<code>read</code></p>
+        <h4>Response</h4>
+        <pre data-copy><code>{ <span class="k">"customers"</span>: [ { <span class="k">"code"</span>: <span class="s">"C001"</span>, <span class="k">"name"</span>: <span class="s">"Customer 1"</span>, <span class="k">"npwp"</span>: <span class="n">null</span>, <span class="k">"is_active"</span>: <span class="n">true</span> } ] }
+
+{ <span class="k">"jobs"</span>: [ { <span class="k">"code"</span>: <span class="s">"JOB-1"</span>, <span class="k">"name"</span>: <span class="s">"Bali Tour Batch A"</span>, <span class="k">"status"</span>: <span class="s">"open"</span> } ] }</code></pre>
+      </article>
+
+      <article class="ep" id="job-fetch">
+        <div class="ep-head">
+          <span class="verb get">GET</span><span class="path">/jobs/{code}</span>
+        </div>
+        <p class="ep-sum">One job by its <b>dossier number</b> (job code), with the Jambix reference figures. <code>net_ref</code> / <code>margin_ref</code> are <code>sales_ref − buy_ref</code> and its margin — <b>quoted</b>, not the posted ledger. The job P&amp;L reports are always built from the posted transactions.</p>
+        <p class="ep-meta"><b>Ability</b> &nbsp;<code>read</code></p>
+        <h4>Response</h4>
+        <pre data-copy><code>{ <span class="k">"job"</span>: {
+  <span class="k">"code"</span>: <span class="s">"26216"</span>, <span class="k">"name"</span>: <span class="s">"Ruud Van Stijn H112250419"</span>, <span class="k">"status"</span>: <span class="s">"open"</span>,
+  <span class="k">"customer_id"</span>: <span class="n">11</span>, <span class="k">"arrival_date"</span>: <span class="s">"2026-01-06"</span>, <span class="k">"end_date"</span>: <span class="s">"2026-02-08"</span>,
+  <span class="k">"created_on"</span>: <span class="s">"2025-08-22"</span>, <span class="k">"pax"</span>: <span class="n">2</span>, <span class="k">"category"</span>: <span class="s">"RTN"</span>, <span class="k">"jambix_status"</span>: <span class="s">"Booking"</span>,
+  <span class="k">"sales_ref"</span>: <span class="n">96889892</span>, <span class="k">"buy_ref"</span>: <span class="n">69760722.24</span>, <span class="k">"net_ref"</span>: <span class="n">27129169.76</span>, <span class="k">"margin_ref"</span>: <span class="n">28</span>
+} }</code></pre>
+        <p><span class="http http-4">404</span> if no job has that code in the token's company.</p>
+      </article>
+
+      <article class="ep" id="job-upsert">
+        <div class="ep-head">
+          <span class="verb post">POST</span><span class="path">/jobs</span>
+        </div>
+        <p class="ep-sum">Create or update jobs from a Jambix job / dossier report. Upsert is keyed on <code>code</code> (the dossier number) within the token's company. <b>Reference figures only</b> — nothing here posts to the ledger; the job P&amp;L reports keep reading the posted purchase / sales transactions.</p>
+        <p class="ep-meta"><b>Ability</b> &nbsp;<code>job:write</code></p>
+
+        <h4>Request body</h4>
+        <p class="ep-sum">A single job object, or <code>{ "jobs": [ … ] }</code> for up to 1000 at once.</p>
+        <div class="twrap">
+          <table>
+            <thead><tr><th>Field</th><th></th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>code</code></td><td><span class="req">req</span></td><td>Dossier number → job code (≤ 30). Also accepts <code>dossier_nr</code>.</td></tr>
+              <tr><td><code>name</code></td><td><span class="opt">opt</span></td><td>Dossier name → job name. Left unchanged on update if omitted.</td></tr>
+              <tr><td><code>customer</code> / <code>client</code></td><td><span class="opt">opt</span></td><td>Name string, or <code>{ "code": … }</code> / <code>{ "name": … }</code>. Matched case-insensitively, created if new.</td></tr>
+              <tr><td><code>arrival_date</code> / <code>travel_date</code></td><td><span class="opt">opt</span></td><td>Travel / arrival date <code>YYYY-MM-DD</code>. Stored as <code>start_date</code>; not overwritten on update if omitted.</td></tr>
+              <tr><td><code>end_date</code></td><td><span class="opt">opt</span></td><td><code>YYYY-MM-DD</code>.</td></tr>
+              <tr><td><code>created_on</code></td><td><span class="opt">opt</span></td><td>When the dossier was created in Jambix, <code>YYYY-MM-DD</code>.</td></tr>
+              <tr><td><code>pax</code></td><td><span class="opt">opt</span></td><td>Integer traveller count.</td></tr>
+              <tr><td><code>sales</code></td><td><span class="opt">opt</span></td><td>Jambix quoted sales total → <code>sales_ref</code>.</td></tr>
+              <tr><td><code>buy</code></td><td><span class="opt">opt</span></td><td>Jambix quoted buy / cost total → <code>buy_ref</code>.</td></tr>
+              <tr><td><code>category</code> / <code>cat</code></td><td><span class="opt">opt</span></td><td>e.g. <code>B2C</code>, <code>B2B</code>, <code>RTN</code> (≤ 10).</td></tr>
+              <tr><td><code>status</code></td><td><span class="opt">opt</span></td><td>Raw Jambix status. <code>cancelled</code> / <code>done</code> / <code>complete</code> / <code>closed</code> / <code>finished</code> / <code>archived</code> → job <code>closed</code>, else <code>open</code>. Kept verbatim in <code>jambix_status</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>Response — <span class="http http-2">200</span> if at least one job was accepted, <span class="http http-4">422</span> if none were</h4>
+        <pre data-copy><code>{
+  <span class="k">"summary"</span>: { <span class="k">"created"</span>: <span class="n">0</span>, <span class="k">"updated"</span>: <span class="n">1</span>, <span class="k">"failed"</span>: <span class="n">0</span>, <span class="k">"customers"</span>: <span class="n">0</span> },
+  <span class="k">"results"</span>: [
+    { <span class="k">"result"</span>: <span class="s">"updated"</span>, <span class="k">"code"</span>: <span class="s">"26216"</span>, <span class="k">"job_id"</span>: <span class="n">2574</span>, <span class="k">"index"</span>: <span class="n">0</span> }
+  ]
+}</code></pre>
+        <p>Each <code>results</code> entry is <code>{ result: "created" | "updated" | "error", code, index, job_id?, errors? }</code>. Rows are processed independently — a bad row fails on its own without rolling back the good ones.</p>
+      </article>
+
+      <article class="ep" id="create">
+        <div class="ep-head">
+          <span class="verb post">POST</span><span class="path">/sales/invoices</span>
+          <span class="verb post">POST</span><span class="path">/purchase/invoices</span>
+        </div>
+        <p class="ep-sum">Create — or idempotently return — an invoice. Use <code>customer</code> for sales, <code>supplier</code> for purchase.</p>
+        <p class="ep-meta"><b>Ability</b> &nbsp;<code>sales:write</code> / <code>purchase:write</code></p>
+
+        <h4>Request body</h4>
+        <div class="twrap">
+          <table>
+            <thead><tr><th>Field</th><th>Type</th><th></th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>external_id</code></td><td>string ≤ 80</td><td><span class="req">req</span></td><td>Your unique ID for this invoice. The idempotency key.</td></tr>
+              <tr><td><code>customer</code> / <code>supplier</code></td><td>object · string</td><td><span class="req">req</span></td><td>See <em>Party</em>. <code>party</code> is also accepted.</td></tr>
+              <tr><td><code>invoice_date</code></td><td>date</td><td><span class="req">req</span></td><td></td></tr>
+              <tr><td><code>lines</code></td><td>array</td><td><span class="req">req</span></td><td>One or more. See <em>Line</em>.</td></tr>
+              <tr><td><code>due_date</code></td><td>date</td><td><span class="opt">opt</span></td><td></td></tr>
+              <tr><td><code>currency</code></td><td>string (ISO)</td><td><span class="opt">opt</span></td><td>Defaults to the base currency.</td></tr>
+              <tr><td><code>exchange_rate</code></td><td>number &gt; 0</td><td><span class="opt">cond</span></td><td>Required when <code>currency</code> is not the base currency.</td></tr>
+              <tr><td><code>reference</code></td><td>string</td><td><span class="opt">opt</span></td><td>Stored as the customer/supplier reference (their PO no).</td></tr>
+              <tr><td><code>description</code></td><td>string</td><td><span class="opt">opt</span></td><td>Invoice memo.</td></tr>
+              <tr><td><code>ppn_amount</code></td><td>number</td><td><span class="opt">opt</span></td><td>VAT amount. Default <code>0</code>.</td></tr>
+              <tr><td><code>pph_amount</code></td><td>number</td><td><span class="opt">opt</span></td><td>Withholding amount. Default <code>0</code>.</td></tr>
+              <tr><td><code>post</code></td><td>boolean</td><td><span class="opt">opt</span></td><td><code>true</code> posts to the ledger now. Default <code>false</code> (draft).</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>Party — <code>customer</code> / <code>supplier</code></h4>
+        <div class="twrap">
+          <table>
+            <thead><tr><th>Shape</th><th>Behaviour</th></tr></thead>
+            <tbody>
+              <tr><td><code>{ "code": "C001" }</code></td><td>Must already exist, else <span class="http http-4">422</span>.</td></tr>
+              <tr><td><code>{ "name": "PT Contoh" }</code></td><td>Matched by exact name (case-insensitive); <strong>created automatically</strong> if not found.</td></tr>
+              <tr><td><code>{ "code": "C001", "name": "PT Contoh" }</code></td><td>Tries <code>code</code> first, falls back to matching or creating by <code>name</code>.</td></tr>
+              <tr><td><code>"C001"</code></td><td>A bare string is treated as a <code>code</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>Line — each element of <code>lines</code></h4>
+        <div class="twrap">
+          <table>
+            <thead><tr><th>Field</th><th>Type</th><th></th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>amount</code></td><td>number &gt; 0</td><td><span class="req">req</span></td><td>Line amount in the invoice currency.</td></tr>
+              <tr><td><code>account_code</code></td><td>string</td><td><span class="opt">opt</span></td><td>Postable (non-header, active) account. <strong>Omitted &rarr; the company's Jambix fallback account</strong> (<code>Accounting.jambixSalesAcct</code>, default <code>42000</code>, for sales; <code>Accounting.jambixFallbackAcct</code>, default <code>52000</code>, for purchase).</td></tr>
+              <tr><td><code>job_code</code></td><td>string</td><td><span class="opt">opt</span></td><td><strong>Auto-created if new</strong> (open job; linked to the invoice's customer for sales).</td></tr>
+              <tr><td><code>job_name</code></td><td>string</td><td><span class="opt">opt</span></td><td>Name for an auto-created job (defaults to the code).</td></tr>
+              <tr><td><code>description</code></td><td>string</td><td><span class="opt">opt</span></td><td></td></tr>
+              <tr><td><code>booking_ref</code> · <code>service_date</code> · <code>party_name</code> · <code>units</code> · <code>nights</code></td><td>string / date</td><td><span class="opt">opt</span></td><td>External booking metadata carried onto the line.</td></tr>
+              <tr><td><code>pax</code> · <code>duration</code> · <code>remark</code></td><td>string</td><td><span class="opt">opt</span></td><td>Sales only — Ttl Pax / trip duration / line note.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>Response — 201 created / 200 already existed</h4>
+        <pre data-copy><code>{
+  <span class="k">"created"</span>: <span class="n">true</span>,
+  <span class="k">"invoice"</span>: {
+    <span class="k">"id"</span>: <span class="n">6</span>,
+    <span class="k">"kind"</span>: <span class="s">"sales"</span>,
+    <span class="k">"internal_no"</span>: <span class="s">"SI-2608-0002"</span>,
+    <span class="k">"external_id"</span>: <span class="s">"JMBX-INV-42"</span>,
+    <span class="k">"status"</span>: <span class="s">"posted"</span>,
+    <span class="k">"source"</span>: <span class="s">"api"</span>,
+    <span class="k">"customer_id"</span>: <span class="n">4</span>,
+    <span class="k">"reference"</span>: <span class="s">"PO-123"</span>,
+    <span class="k">"invoice_date"</span>: <span class="s">"2026-08-15"</span>,
+    <span class="k">"due_date"</span>: <span class="s">"2026-09-14"</span>,
+    <span class="k">"currency_id"</span>: <span class="n">1</span>,
+    <span class="k">"exchange_rate"</span>: <span class="n">1</span>,
+    <span class="k">"subtotal"</span>: <span class="n">3500000</span>,
+    <span class="k">"ppn_amount"</span>: <span class="n">0</span>,
+    <span class="k">"pph_amount"</span>: <span class="n">0</span>,
+    <span class="k">"total"</span>: <span class="n">3500000</span>,
+    <span class="k">"total_base"</span>: <span class="n">3500000</span>,
+    <span class="k">"journal_id"</span>: <span class="n">61</span>,
+    <span class="k">"lines"</span>: [
+      { <span class="k">"account_id"</span>: <span class="n">44</span>, <span class="k">"description"</span>: <span class="s">"Consulting July"</span>, <span class="k">"job_id"</span>: <span class="n">null</span>, <span class="k">"amount"</span>: <span class="n">3000000</span>, <span class="k">"amount_base"</span>: <span class="n">3000000</span> }
+    ]
+  }
+}</code></pre>
+        <p class="ep-sum">
+          Purchase responses use <code>supplier_id</code> instead of <code>customer_id</code>.
+          <code>journal_id</code> is <code>null</code> while the invoice is a draft. If <code>post</code>
+          was requested but failed, <code>invoice.post_errors</code> (array of strings) is present
+          and <code>status</code> is <code>"draft"</code>.
+        </p>
+      </article>
+
+      <article class="ep" id="fetch">
+        <div class="ep-head">
+          <span class="verb get">GET</span><span class="path">/sales/invoices/<span class="var">{ref}</span></span>
+          <span class="verb get">GET</span><span class="path">/purchase/invoices/<span class="var">{ref}</span></span>
+        </div>
+        <p class="ep-sum">Fetch one invoice by <strong><code>external_id</code> or <code>internal_no</code></strong>. <span class="http http-4">404</span> if nothing matches.</p>
+        <p class="ep-meta"><b>Ability</b> &nbsp;<code>read</code></p>
+        <h4>Response</h4>
+        <pre data-copy><code>{ <span class="k">"invoice"</span>: { <span class="c">/* same shape as the create response's invoice object */</span> } }</code></pre>
+      </article>
+
+      <article class="ep" id="line-costs">
+        <div class="ep-head">
+          <span class="verb post">POST</span><span class="path">/purchase/lines/costs</span>
+        </div>
+        <p class="ep-sum">
+          Apply <strong>actual</strong> supplier costs onto purchase-invoice lines imported from Jambix
+          with a <strong>budget</strong> figure, then re-post each affected invoice. Built for an n8n flow
+          that reads a supplier's own invoice and pushes the numbers back.
+        </p>
+        <p class="ep-meta"><b>Ability</b> &nbsp;<code>purchase:write</code></p>
+        <p class="ep-sum">
+          Each item is matched to <strong>exactly one</strong> line — first by <code>booking_ref</code>
+          (the Jambix <code>ID-Number</code>), else by <code>supplier</code> + <code>service_date</code>
+          (exact, then ± <code>window_days</code>), narrowed by <code>party_name</code> / <code>budget</code>.
+          Anything resolving to zero or several lines is reported, never guessed.
+        </p>
+
+        <h4>Request body</h4>
+        <div class="twrap">
+          <table>
+            <thead><tr><th>Field</th><th>Type</th><th></th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>costs</code></td><td>array</td><td><span class="req">req</span></td><td>1–2000 items. <code>lines</code> is accepted as an alias.</td></tr>
+              <tr><td><code>cost</code></td><td>number ≥ 0</td><td><span class="req">req</span></td><td>Actual cost, transaction currency. <code>amount</code> is an alias.</td></tr>
+              <tr><td><code>booking_ref</code></td><td>string</td><td><span class="opt">opt</span></td><td>The Jambix <code>ID-Number</code>. <strong>Preferred</strong> — exact, unambiguous.</td></tr>
+              <tr><td><code>supplier</code></td><td>string</td><td><span class="opt">opt</span></td><td>Fallback key with <code>service_date</code>. Supplier <strong>code or name</strong>. <code>supplier_ref</code> / <code>supplier_name</code> also accepted.</td></tr>
+              <tr><td><code>service_date</code></td><td>date</td><td><span class="opt">opt</span></td><td><code>YYYY-MM-DD</code>. Used with <code>supplier</code>.</td></tr>
+              <tr><td><code>party_name</code></td><td>string</td><td><span class="opt">opt</span></td><td>Narrows a multi-line <code>supplier</code>+<code>service_date</code> match (substring, either direction).</td></tr>
+              <tr><td><code>budget</code></td><td>number</td><td><span class="opt">opt</span></td><td>Narrows by the line's <em>current</em> amount (exact).</td></tr>
+              <tr><td><code>account_code</code></td><td>string</td><td><span class="opt">opt</span></td><td>Re-point the line to this cost account (non-header, active).</td></tr>
+              <tr><td><code>remark</code></td><td>string</td><td><span class="opt">opt</span></td><td>Free-text note stored on the line (<code>cost_remark</code>) — e.g. why the actual ran over budget.</td></tr>
+              <tr><td><code>supplier_invoice_ref</code> / <code>supplier_invoice_date</code></td><td>string · date</td><td><span class="opt">opt</span></td><td>Recorded on the line as the audit trail behind the flip.</td></tr>
+              <tr><td><code>window_days</code></td><td>int 0–15</td><td><span class="opt">opt</span></td><td>Top-level default <code>2</code>; per-item override allowed.</td></tr>
+              <tr><td><code>dry_run</code></td><td>boolean</td><td><span class="opt">opt</span></td><td>Resolve and report only; write nothing.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <pre data-copy><code>{
+  <span class="k">"dry_run"</span>: <span class="n">false</span>,
+  <span class="k">"costs"</span>: [
+    { <span class="k">"booking_ref"</span>: <span class="s">"29593-6096761"</span>, <span class="k">"cost"</span>: <span class="n">2100000</span>,
+      <span class="k">"supplier_invoice_ref"</span>: <span class="s">"PURI-8841"</span>, <span class="k">"supplier_invoice_date"</span>: <span class="s">"2026-05-03"</span> },
+    { <span class="k">"supplier"</span>: <span class="s">"Margo Utomo Eco Resort"</span>, <span class="k">"service_date"</span>: <span class="s">"2026-05-01"</span>,
+      <span class="k">"party_name"</span>: <span class="s">"Smith H12345"</span>, <span class="k">"cost"</span>: <span class="n">480000</span> }
+  ]
+}</code></pre>
+
+        <p class="ep-sum">
+          On a match: amount becomes <code>cost</code>, <code>cost_source</code> flips to <code>actual</code>,
+          the supplier-invoice fields are stored. Changes are grouped per invoice and applied with
+          <strong>one</strong> re-post each. A <strong>draft</strong> invoice (all-budget-zero on import)
+          that now carries a real cost is <strong>posted</strong>.
+        </p>
+
+        <h4>Response &mdash; always <span class="http http-2">200</span> unless the body itself is malformed</h4>
+        <pre data-copy><code>{
+  <span class="k">"dry_run"</span>: <span class="n">false</span>,
+  <span class="k">"summary"</span>: { <span class="k">"received"</span>: <span class="n">2</span>, <span class="k">"applied"</span>: <span class="n">1</span>, <span class="k">"unchanged"</span>: <span class="n">0</span>, <span class="k">"ambiguous"</span>: <span class="n">1</span>,
+              <span class="k">"not_found"</span>: <span class="n">0</span>, <span class="k">"errors"</span>: <span class="n">0</span>, <span class="k">"over_budget"</span>: <span class="n">1</span>, <span class="k">"invoices_reposted"</span>: <span class="n">1</span> },
+  <span class="k">"results"</span>: [
+    { <span class="k">"index"</span>: <span class="n">0</span>, <span class="k">"match"</span>: <span class="s">"booking_ref"</span>, <span class="k">"status"</span>: <span class="s">"applied"</span>,
+      <span class="k">"booking_ref"</span>: <span class="s">"29593-6096761"</span>,
+      <span class="k">"invoice"</span>: { <span class="k">"id"</span>: <span class="n">5</span>, <span class="k">"internal_no"</span>: <span class="s">"PI-2609-0001"</span>, <span class="k">"status"</span>: <span class="s">"posted"</span> },
+      <span class="k">"budget"</span>: <span class="n">2000000</span>, <span class="k">"old_amount"</span>: <span class="n">2000000</span>, <span class="k">"new_amount"</span>: <span class="n">2350000</span>,
+      <span class="k">"variance"</span>: <span class="n">350000</span>, <span class="k">"over_budget"</span>: <span class="n">true</span> },
+    { <span class="k">"index"</span>: <span class="n">1</span>, <span class="k">"match"</span>: <span class="s">"supplier+service_date~2d"</span>, <span class="k">"status"</span>: <span class="s">"ambiguous"</span>,
+      <span class="k">"message"</span>: <span class="s">"3 lines matched; add party_name / budget, or use booking_ref."</span>,
+      <span class="k">"candidates"</span>: [ <span class="s">"25785-5647201"</span>, <span class="s">"25785-5647202"</span>, <span class="s">"25785-5647208"</span> ] }
+  ],
+  <span class="k">"invoices"</span>: [ { <span class="k">"id"</span>: <span class="n">5</span>, <span class="k">"internal_no"</span>: <span class="s">"PI-2609-0001"</span>, <span class="k">"status"</span>: <span class="s">"posted"</span>, <span class="k">"lines_changed"</span>: <span class="n">1</span> } ]
+}</code></pre>
+        <p class="ep-sum">
+          Per-item <code>status</code>: <code>applied</code> · <code>would_apply</code> (dry run) ·
+          <code>unchanged</code> (already that actual figure) · <code>ambiguous</code> ·
+          <code>not_found</code> · <code>error</code>. Re-send freely — already-actual lines at the same
+          figure come back <code>unchanged</code> with nothing re-posted. A re-post failure (period
+          locked, invoice already paid) marks that item <code>error</code>; other items still apply.
+        </p>
+      </article>
+    </section>
+
+    <section id="example">
+      <h2><span class="n">05</span>Worked example</h2>
+      <p class="section-note">Confirm the token, map an account, push an invoice, then prove the retry is safe.</p>
+      <pre data-copy><code><span class="c"># settings</span>
+BASE=<span class="s">"https://your-host/api/v1"</span>
+TOKEN=<span class="s">"sa_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"</span>
+
+<span class="c"># 1 — confirm the token and see which company it targets</span>
+curl -s <span class="s">"$BASE/ping"</span> -H <span class="s">"Authorization: Bearer $TOKEN"</span>
+
+<span class="c"># 2 — look up the revenue account to book sales against</span>
+curl -s <span class="s">"$BASE/accounts?type=revenue"</span> -H <span class="s">"Authorization: Bearer $TOKEN"</span>
+
+<span class="c"># 3 — push an invoice and post it</span>
+curl -s -X POST <span class="s">"$BASE/sales/invoices"</span> \
+  -H <span class="s">"Authorization: Bearer $TOKEN"</span> \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -d <span class="s">'{
+    "external_id": "JMBX-INV-42",
+    "customer": { "code": "C001", "name": "PT Contoh" },
+    "invoice_date": "2026-08-15",
+    "due_date": "2026-09-14",
+    "reference": "PO-123",
+    "ppn_amount": 0,
+    "post": true,
+    "lines": [
+      { "account_code": "4100", "description": "Consulting", "amount": 3000000, "job_code": "JOB-1" },
+      { "account_code": "4100", "description": "Expenses",   "amount": 500000 }
+    ]
+  }'</span>
+
+<span class="c"># 4 — safe to retry: same external_id returns the existing invoice (created: false, HTTP 200)</span>
+curl -s <span class="s">"$BASE/sales/invoices/JMBX-INV-42"</span> -H <span class="s">"Authorization: Bearer $TOKEN"</span>
+
+<span class="c"># 5 — later: push actual supplier costs onto Jambix-imported purchase lines</span>
+curl -s -X POST <span class="s">"$BASE/purchase/lines/costs"</span> \
+  -H <span class="s">"Authorization: Bearer $TOKEN"</span> \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -d <span class="s">'{ "costs": [ { "booking_ref": "29593-6096761", "cost": 2100000, "supplier_invoice_ref": "PURI-8841" } ] }'</span></code></pre>
+    </section>
+
+    <section id="limits">
+      <h2><span class="n">06</span>Limitations</h2>
+      <p class="section-note">What v1 deliberately leaves out.</p>
+      <ul class="defs">
+        <li><span class="term">Invoices are create and read only</span><span>No invoice update or delete over the API — corrections are made in the app, and a repeated <code>external_id</code> never mutates the existing invoice. <code>POST /purchase/lines/costs</code> is the one exception: it edits Jambix-imported lines in place.</span></li>
+        <li><span class="term">No payments</span><span>Payment and receipt endpoints are not part of v1.</span></li>
+        <li><span class="term">No pagination</span><span>Lookup endpoints cap at 500 rows; narrow with <code>q</code>.</span></li>
+        <li><span class="term">No per-token rate limiting</span><span>Be a considerate client.</span></li>
+        <li><span class="term">No CORS</span><span>The API is intended for server-to-server use.</span></li>
+      </ul>
+    </section>
+
+    <hr>
+    <p class="foot">Simple Accounting · REST API v1</p>
+  </main>
+</div>
+
+<script>
+  (function () {
+    // copy buttons
+    document.querySelectorAll('pre[data-copy]').forEach(function (pre) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'copy';
+      btn.textContent = 'Copy';
+      btn.addEventListener('click', function () {
+        var text = (pre.querySelector('code') || pre).innerText;
+        var done = function (label) { btn.textContent = label; setTimeout(function () { btn.textContent = 'Copy'; }, 1600); };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function () { done('Copied'); }, function () { done('Press ⌘C'); });
+        } else {
+          done('Press ⌘C');
+        }
+      });
+      pre.appendChild(btn);
+    });
+
+    // scroll-spy on the side rail
+    var rail = document.querySelector('.rail');
+    if (!rail || !('IntersectionObserver' in window)) return;
+    var links = Array.prototype.slice.call(rail.querySelectorAll('a'));
+    var byId = {};
+    links.forEach(function (a) { byId[a.getAttribute('href').slice(1)] = a; });
+    var targets = Object.keys(byId).map(function (id) { return document.getElementById(id); }).filter(Boolean);
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        links.forEach(function (a) { a.classList.remove('here'); });
+        var a = byId[e.target.id];
+        if (a) a.classList.add('here');
+      });
+    }, { rootMargin: '0px 0px -75% 0px', threshold: 0 });
+    targets.forEach(function (t) { spy.observe(t); });
+  })();
+</script>

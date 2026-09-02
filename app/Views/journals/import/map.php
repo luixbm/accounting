@@ -1,0 +1,99 @@
+<?= $this->extend('layout') ?>
+<?= $this->section('content') ?>
+<?php
+$map    = $opt['map'] ?? [];
+$colOpt = static function ($selected) use ($headers) {
+    $h = '<option value="">— not mapped —</option>';
+    foreach ($headers as $i => $label) {
+        $sel = (string) $selected === (string) $i ? ' selected' : '';
+        $h .= '<option value="' . $i . '"' . $sel . '>' . esc($label) . '</option>';
+    }
+
+    return $h;
+};
+?>
+
+<div class="page-head">
+  <div><h1>Import · Map columns</h1><div class="muted small"><?= esc($batch['filename']) ?></div></div>
+</div>
+<?= view('journals/import/_steps', ['active' => 'map', 'batch' => $batch]) ?>
+
+<form method="post" action="<?= site_url('journals/import/' . $batch['id'] . '/map') ?>">
+  <?= csrf_field() ?>
+
+  <div class="card">
+    <div class="row">
+      <div class="field" style="max-width:260px">
+        <label>Sheet</label>
+        <select name="sheet">
+          <?php foreach ($sheets as $s): ?>
+            <option value="<?= esc($s, 'attr') ?>" <?= $batch['sheet'] === $s ? 'selected' : '' ?>><?= esc($s) ?></option>
+          <?php endforeach ?>
+        </select>
+        <span class="small muted">Change the sheet, then Save to reload its columns.</span>
+      </div>
+      <div class="field" style="max-width:140px">
+        <label>Header row</label>
+        <input type="number" name="header_row" min="1" value="<?= (int) ($opt['headerRow'] ?? 1) ?>">
+      </div>
+      <div class="field" style="max-width:200px">
+        <label>Date format in file</label>
+        <select name="date_format">
+          <?php foreach (['auto' => 'Auto-detect', 'dmy' => 'DD/MM/YYYY', 'mdy' => 'MM/DD/YYYY', 'ymd' => 'YYYY-MM-DD'] as $k => $lbl): ?>
+            <option value="<?= $k ?>" <?= ($opt['dateFormat'] ?? 'auto') === $k ? 'selected' : '' ?>><?= $lbl ?></option>
+          <?php endforeach ?>
+        </select>
+      </div>
+      <div class="field" style="max-width:220px">
+        <label>Default source</label>
+        <select name="default_source">
+          <?php foreach ($sources as $k => $lbl): ?>
+            <option value="<?= $k ?>" <?= ($opt['defaultSource'] ?? 'general') === $k ? 'selected' : '' ?>><?= esc($lbl) ?></option>
+          <?php endforeach ?>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Column mapping</h2>
+    <div class="row">
+      <?php foreach ($fields as $field => [$label, $required]): ?>
+        <div class="field" style="min-width:230px">
+          <label><?= esc($label) ?><?= $required ? ' *' : '' ?></label>
+          <select name="map_<?= $field ?>"><?= $colOpt($map[$field] ?? '') ?></select>
+        </div>
+      <?php endforeach ?>
+    </div>
+    <p class="muted small">* required. Map either Debit or Credit (or both). “Account” may hold either the
+      account name (matched on the next screen) or this app’s account code.</p>
+  </div>
+
+  <div class="card">
+    <h2>First rows of the sheet</h2>
+    <div style="overflow-x:auto">
+      <table class="grid tight mono">
+        <thead><tr><th>#</th><?php foreach ($headers as $h): ?><th><?= esc($h) ?></th><?php endforeach ?></tr></thead>
+        <tbody>
+          <?php foreach ($sample as $r): ?>
+            <tr>
+              <td class="muted"><?= $r['n'] ?></td>
+              <?php foreach ($headers as $i => $_): ?>
+                <td><?= esc(mb_strimwidth((string) ($r['cells'][$i] ?? ''), 0, 22, '…')) ?></td>
+              <?php endforeach ?>
+            </tr>
+          <?php endforeach ?>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="btn-group">
+      <button class="btn" type="submit">Save &amp; continue</button>
+      <a class="btn ghost" href="<?= site_url('journals/import') ?>">Cancel</a>
+    </div>
+  </div>
+</form>
+
+<?= $this->endSection() ?>

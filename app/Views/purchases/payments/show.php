@@ -1,0 +1,112 @@
+<?= $this->extend('layout') ?>
+<?= $this->section('content') ?>
+<?php
+$isDeposit = ($pay['kind'] ?? 'settlement') === 'deposit';
+$cc        = $pay['currency_code'] ?: base_code();
+$foreign   = $cc !== base_code();
+?>
+
+<div class="page-head">
+  <div>
+    <h1><?= esc($pay['payment_no']) ?> <?= status_badge($pay['status'] === 'void' ? 'void' : 'posted') ?>
+      <?php if ($isDeposit): ?><span class="badge badge-gray">deposit</span><?php endif ?></h1>
+    <div class="muted small">
+      <?= esc($pay['supplier_name']) ?> · <?= date_id($pay['payment_date']) ?> · from <?= esc($pay['bank_name']) ?>
+      · <?= esc($cc) ?><?= (float) $pay['exchange_rate'] != 1.0 ? ' @ ' . money($pay['exchange_rate'], 4) : '' ?>
+    </div>
+  </div>
+  <div class="btn-group no-print">
+    <?php if ($isDeposit && $pay['status'] === 'posted' && (float) $pay['unapplied'] > 0.005 && user_can('journal.post')): ?>
+      <a class="btn" href="<?= site_url('purchases/payments/' . $pay['id'] . '/apply') ?>">Apply to invoices</a>
+    <?php endif ?>
+    <?php if ($pay['journal_id']): ?><a class="btn ghost" href="<?= site_url('journals/' . $pay['journal_id']) ?>">Journal</a><?php endif ?>
+    <button class="btn secondary" onclick="window.print()">Print</button>
+    <a class="btn ghost" href="<?= site_url('purchases/payments') ?>">Back</a>
+  </div>
+</div>
+
+<?php if ($isDeposit): ?>
+  <div class="row">
+    <div class="card" style="flex:1;min-width:240px">
+      <table class="grid tight">
+        <tbody>
+          <tr><td class="muted">Deposit amount</td><td class="right mono"><?= money($pay['amount']) ?> <?= esc($cc) ?></td></tr>
+          <tr><td class="muted">Applied</td><td class="right mono"><?= money((float) $pay['amount'] - (float) $pay['unapplied']) ?></td></tr>
+          <tr class="subtotal"><td>Unapplied</td><td class="right mono"><?= money($pay['unapplied']) ?> <?= esc($cc) ?></td></tr>
+        </tbody>
+      </table>
+      <?php if ($pay['reference']): ?><p class="small muted">Reference: <?= esc($pay['reference']) ?></p><?php endif ?>
+    </div>
+    <div class="card" style="flex:2;min-width:340px">
+      <h2>Applications</h2>
+      <?php if (! $applications): ?>
+        <p class="muted small">Not applied to any invoice yet.</p>
+      <?php else: ?>
+        <?php foreach ($applications as $ap): ?>
+          <table class="grid tight" style="margin-bottom:10px">
+            <thead><tr><th><?= date_id($ap['date']) ?></th><th>Ref</th><th class="right"><?= esc($cc) ?></th><th class="no-print"></th></tr></thead>
+            <tbody>
+              <?php foreach ($ap['lines'] as $l): ?>
+                <tr>
+                  <td class="mono"><a href="<?= site_url('purchases/' . $l['invoice_id']) ?>"><?= esc($l['internal_no']) ?></a></td>
+                  <td class="small"><?= esc($l['supplier_ref']) ?></td>
+                  <td class="right mono"><?= money($l['amount']) ?></td>
+                  <td class="no-print"></td>
+                </tr>
+              <?php endforeach ?>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="2" class="right">Subtotal</td>
+                <td class="right mono"><?= money($ap['total']) ?></td>
+                <td class="right no-print">
+                  <?php if ($pay['status'] === 'posted' && user_can('journal.void')): ?>
+                    <form method="post" action="<?= site_url('purchases/payments/' . $pay['id'] . '/unapply') ?>" onsubmit="return confirm('Reverse this allocation? The deposit balance and the invoices are restored.')">
+                      <?= csrf_field() ?><input type="hidden" name="journal_id" value="<?= $ap['journal_id'] ?>">
+                      <button class="btn sm ghost">Unapply</button>
+                    </form>
+                  <?php endif ?>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        <?php endforeach ?>
+      <?php endif ?>
+    </div>
+  </div>
+<?php else: ?>
+  <div class="card" style="max-width:560px">
+    <table class="grid tight">
+      <thead><tr><th>Invoice</th><th>Supplier ref</th><th class="right">Applied (<?= esc($cc) ?>)</th><?php if ($foreign): ?><th class="right">at inv. rate (<?= base_code() ?>)</th><?php endif ?></tr></thead>
+      <tbody>
+        <?php foreach ($allocs as $a): ?>
+          <tr>
+            <td class="mono"><a href="<?= site_url('purchases/' . $a['invoice_id']) ?>"><?= esc($a['internal_no']) ?></a></td>
+            <td class="small"><?= esc($a['supplier_ref']) ?></td>
+            <td class="right mono"><?= money($a['amount']) ?></td>
+            <?php if ($foreign): ?><td class="right mono"><?= money($a['amount_base']) ?></td><?php endif ?>
+          </tr>
+        <?php endforeach ?>
+      </tbody>
+      <tfoot>
+        <tr><td colspan="2" class="right">Cash paid</td><td class="right mono"><?= money($pay['amount']) ?></td><?php if ($foreign): ?><td class="right mono"><?= money($pay['amount_base']) ?></td><?php endif ?></tr>
+        <?php if ($foreign): ?><tr class="muted small"><td colspan="4" class="right">Any rate difference is booked to realized FX — see the journal.</td></tr><?php endif ?>
+      </tfoot>
+    </table>
+    <?php if ($pay['reference']): ?><p class="small muted">Reference: <?= esc($pay['reference']) ?></p><?php endif ?>
+  </div>
+<?php endif ?>
+
+<?php if ($pay['status'] === 'posted' && user_can('journal.void')): ?>
+  <div class="card">
+    <h2>Void this <?= $isDeposit ? 'deposit' : 'payment' ?></h2>
+    <form method="post" action="<?= site_url('purchases/payments/' . $pay['id'] . '/void') ?>" class="inline"
+      onsubmit="return confirm('Void this <?= $isDeposit ? 'deposit' : 'payment' ?>? <?= $isDeposit ? 'It must have no applications.' : 'The invoices it paid will be reopened.' ?>')">
+      <?= csrf_field() ?>
+      <input name="reason" placeholder="Reason" style="max-width:320px">
+      <button class="btn danger" type="submit">Void &amp; reverse</button>
+    </form>
+  </div>
+<?php endif ?>
+
+<?= $this->endSection() ?>

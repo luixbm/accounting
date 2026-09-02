@@ -1,0 +1,63 @@
+<?= $this->extend('layout') ?>
+<?= $this->section('content') ?>
+
+<div class="page-head">
+  <div><h1>Roles &amp; Permissions</h1><div class="muted small">Create roles and choose exactly what each one can do.</div></div>
+  <div class="btn-group"><a class="btn" href="<?= site_url('roles/new') ?>">+ New Role</a></div>
+</div>
+
+<div class="card" style="overflow-x:auto">
+  <table class="grid tight">
+    <thead>
+      <tr>
+        <th>Role</th>
+        <?php foreach ($permissions as $key => $label): ?>
+          <th class="center" style="writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;font-weight:600" title="<?= esc($label) ?>"><?= esc($key) ?></th>
+        <?php endforeach ?>
+        <th class="center">Users</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php foreach ($groups as $key => $g): ?>
+        <?php $perms = $matrix[$key] ?? []; ?>
+        <tr>
+          <td>
+            <strong><?= esc($g['title'] ?? $key) ?></strong>
+            <div class="small muted mono"><?= esc($key) ?></div>
+          </td>
+          <?php foreach ($permissions as $pk => $pl): ?>
+            <td class="center">
+              <?php $has = in_array($pk, $perms, true) || in_array($pk . '.*', $perms, true) || in_array('*', $perms, true); ?>
+              <?= $has ? '<span style="color:var(--green);font-weight:700">✓</span>' : '<span class="muted">·</span>' ?>
+            </td>
+          <?php endforeach ?>
+          <td class="center"><?= $counts[$key] ?? 0 ?></td>
+          <td class="right nowrap">
+            <a class="btn sm ghost" href="<?= site_url('roles/' . urlencode($key) . '/edit') ?>">Edit</a>
+            <?php if ($key !== 'admin' && ($counts[$key] ?? 0) === 0): ?>
+              <form method="post" action="<?= site_url('roles/' . urlencode($key) . '/delete') ?>" style="display:inline"
+                onsubmit="return confirm('Delete role <?= esc($key) ?>?')">
+                <?= csrf_field() ?><button class="btn sm danger" type="submit">Delete</button>
+              </form>
+            <?php endif ?>
+          </td>
+        </tr>
+      <?php endforeach ?>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>Permissions</h2>
+  <table class="grid tight">
+    <tbody>
+      <?php foreach ($permissions as $key => $label): ?>
+        <tr><td class="mono nowrap"><?= esc($key) ?></td><td><?= esc($label) ?></td></tr>
+      <?php endforeach ?>
+    </tbody>
+  </table>
+  <p class="muted small">The permission set is defined by the application. Roles above decide which roles hold each one.</p>
+</div>
+
+<?= $this->endSection() ?>

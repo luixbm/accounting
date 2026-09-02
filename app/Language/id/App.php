@@ -1,0 +1,81 @@
+<?php
+
+return [
+    // actions
+    'save'        => 'Simpan',
+    'cancel'      => 'Batal',
+    'edit'        => 'Ubah',
+    'delete'      => 'Hapus',
+    'add'         => 'Tambah',
+    'add_line'    => '+ Tambah baris',
+    'back'        => 'Kembali',
+    'apply'       => 'Terapkan',
+    'filter'      => 'Saring',
+    'reset'       => 'Reset',
+    'search'      => 'Cari',
+    'print'       => 'Cetak',
+    'export_xlsx' => 'Ekspor Excel',
+    'new'         => 'Baru',
+    'close'       => 'Tutup',
+    'reopen'      => 'Buka kembali',
+    'void'        => 'Batalkan',
+    'post'        => 'Posting',
+    'submit'      => 'Kirim',
+    'confirm'     => 'Konfirmasi',
+
+    // words
+    'yes'      => 'Ya',
+    'no'       => 'Tidak',
+    'all'      => 'Semua',
+    'none'     => 'Tidak ada',
+    'choose'   => '— pilih —',
+    'optional' => 'opsional',
+
+    // fields
+    'status'      => 'Status',
+    'date'        => 'Tanggal',
+    'from'        => 'Dari',
+    'to'          => 'Sampai',
+    'as_of'       => 'Per tanggal',
+    'amount'      => 'Jumlah',
+    'total'       => 'Total',
+    'subtotal'    => 'Subtotal',
+    'description' => 'Keterangan',
+    'reference'   => 'Referensi',
+    'memo'        => 'Memo',
+    'account'     => 'Akun',
+    'accounts'    => 'Akun',
+    'currency'    => 'Mata uang',
+    'rate'        => 'Kurs',
+    'job'        => 'Job',
+    'actions'     => 'Aksi',
+    'created_by'  => 'Dibuat oleh',
+    'due_date'    => 'Jatuh tempo',
+
+    // states
+    'active'   => 'Aktif',
+    'inactive' => 'Nonaktif',
+    'draft'    => 'Draf',
+    'posted'   => 'Diposting',
+    'paid'     => 'Lunas',
+    'partial'  => 'Sebagian',
+    'voided'   => 'Dibatalkan',
+
+    // period
+    'period'     => 'Periode',
+    'year'       => 'Tahun',
+    'month'      => 'Bulan',
+    'quarter'    => 'Triwulan',
+    'full_year'  => 'Satu tahun penuh',
+    'this_year'  => 'Tahun ini',
+    'custom'     => 'Kustom',
+    'compare_by' => 'Bandingkan per',
+
+    // misc
+    'no_records'    => 'Belum ada data.',
+    'please_fix'    => 'Mohon perbaiki hal berikut:',
+    'not_allowed'   => 'Tidak diizinkan.',
+    'saved'         => 'Tersimpan.',
+    'company'       => 'Perusahaan',
+    'additional_info' => 'Informasi tambahan',
+];
