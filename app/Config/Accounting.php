@@ -34,12 +34,16 @@ class Accounting extends BaseConfig
      * Control accounts, referenced by account code. The seeder creates
      * matching accounts; change these if you renumber the chart.
      */
+    // NOTE: trade A/R, A/P and realized FX are resolved per-currency via
+    // App\Libraries\Accounting\ControlAccounts (Setup -> Control Accounts).
+    // The four codes below are kept only as a last-resort fallback.
     public string $arControlCode = '1120';   // Piutang Usaha
     public string $apControlCode = '2110';   // Hutang Usaha
-    public string $retainedEarningsCode = '3200'; // Laba Ditahan
     public string $fxGainCode = '7300';      // Laba Selisih Kurs
     public string $fxLossCode = '8300';      // Rugi Selisih Kurs
-    public string $roundingCode = '8400';    // Selisih Pembulatan
+
+    public string $retainedEarningsCode = '38000'; // Retained Earnings
+    public string $roundingCode = '98000';   // Miscellanous non op Expense
 
     // --- tax (purchase / sales modules)
     public string $ppnRate = '11';           // VAT %
