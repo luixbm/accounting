@@ -29,13 +29,10 @@ class SalesController extends BaseController
 
     public function index()
     {
-        $filters = [
-            'status'      => $this->request->getGet('status'),
-            'customer_id' => $this->request->getGet('customer_id'),
-            'q'           => $this->request->getGet('q'),
-            'from'        => $this->request->getGet('from'),
-            'to'          => $this->request->getGet('to'),
-        ];
+        $filters = sticky_filters('sales', ['status', 'customer_id', 'q', 'from', 'to']);
+        if ($filters instanceof \CodeIgniter\HTTP\RedirectResponse) {
+            return $filters;
+        }
         $rows = $this->invoices->listing($filters);
         $ids  = array_map(static fn ($r) => (int) $r['id'], $rows);
 

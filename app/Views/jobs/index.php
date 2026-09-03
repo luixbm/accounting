@@ -50,7 +50,7 @@ $xlsxUrl = site_url('jobs') . '?' . http_build_query($qs + ['format' => 'xlsx'])
     </select>
   </div>
   <button class="btn" type="submit">Filter</button>
-  <a class="btn ghost" href="<?= site_url('jobs') ?>">Reset</a>
+  <?= view('partials/filter_clear') ?>
 </form>
 
 <div class="card">

@@ -32,11 +32,10 @@ class SalesReceiptController extends BaseController
 
     public function index()
     {
-        $filters = [
-            'customer_id' => $this->request->getGet('customer_id'),
-            'q'           => $this->request->getGet('q'),
-            'kind'        => $this->request->getGet('kind'),
-        ];
+        $filters = sticky_filters('sales_receipts', ['customer_id', 'q', 'kind']);
+        if ($filters instanceof \CodeIgniter\HTTP\RedirectResponse) {
+            return $filters;
+        }
 
         return view('sales/receipts/index', [
             'title'     => 'Customer Receipts',

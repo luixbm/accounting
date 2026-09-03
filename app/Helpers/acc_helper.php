@@ -387,3 +387,49 @@ if (! function_exists('current_announcements')) {
         return $cache;
     }
 }
+
+if (! function_exists('sticky_filters')) {
+    /**
+     * Remember a list's filter values across navigation. Call once at the top of
+     * a list controller's index():
+     *
+     *   $filters = sticky_filters('purchases', ['status', 'supplier_id', 'q', 'from', 'to']);
+     *   if ($filters instanceof \CodeIgniter\HTTP\RedirectResponse) { return $filters; }
+     *
+     * - a request carrying any of $fields is authoritative and is saved to the session
+     * - a bare request restores the saved filter by redirecting with it in the URL
+     *   (so pagination / export / row links inherit it too)
+     * - ?fclear=1 forgets the saved filter (the "clear" icon on the filter bar)
+     *
+     * @param list<string> $fields
+     *
+     * @return array<string,mixed>|\CodeIgniter\HTTP\RedirectResponse
+     */
+    function sticky_filters(string $key, array $fields)
+    {
+        $skey = 'lf.' . $key;
+        $get  = service('request')->getGet() ?? [];
+
+        if (array_key_exists('fclear', $get)) {
+            session()->remove($skey);
+            unset($get['fclear']);
+
+            return redirect()->to(current_url() . ($get !== [] ? '?' . http_build_query($get) : ''));
+        }
+
+        $present = array_intersect_key($get, array_flip($fields));
+        if ($present !== []) {
+            $keep = array_filter($present, static fn ($v) => $v !== '' && $v !== null && $v !== []);
+            $keep !== [] ? session()->set($skey, $keep) : session()->remove($skey);
+        } elseif (is_array($saved = session($skey)) && $saved !== []) {
+            return redirect()->to(current_url() . '?' . http_build_query(array_merge($get, $saved)));
+        }
+
+        $out = [];
+        foreach ($fields as $f) {
+            $out[$f] = $get[$f] ?? null;
+        }
+
+        return $out;
+    }
+}

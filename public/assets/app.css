@@ -372,6 +372,8 @@ legend{font-weight:700;font-size:12px;color:var(--muted);padding:0 6px}
 .report-title img{max-height:54px;margin-bottom:6px;object-fit:contain}
 .filterbar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px}
 .filterbar .field{margin:0;min-width:150px}
+.filter-clear{display:inline-flex;align-items:center;gap:6px}
+.filter-clear svg{flex:0 0 auto}
 
 /* list column show/hide menu (parties list) - distinct from the invoice
    line-grid .colmenu in partials/line_grid_assets.php */

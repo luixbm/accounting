@@ -65,7 +65,7 @@
     </select>
   </div>
   <button class="btn" type="submit">Filter</button>
-  <a class="btn ghost" href="<?= site_url('accounts') ?>">Reset</a>
+  <?= view('partials/filter_clear') ?>
 </form>
 
 <div class="card">

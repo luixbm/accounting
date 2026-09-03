@@ -30,11 +30,15 @@ class AccountController extends BaseController
             }
         }
 
+        $filters = sticky_filters('accounts', ['q', 'type', 'group', 'status']);
+        if ($filters instanceof \CodeIgniter\HTTP\RedirectResponse) {
+            return $filters;
+        }
         $filters = [
-            'q'      => trim((string) $this->request->getGet('q')),
-            'type'   => (string) $this->request->getGet('type'),
-            'group'  => (int) $this->request->getGet('group'),
-            'status' => (string) $this->request->getGet('status'),
+            'q'      => trim((string) ($filters['q'] ?? '')),
+            'type'   => (string) ($filters['type'] ?? ''),
+            'group'  => (int) ($filters['group'] ?? 0),
+            'status' => (string) ($filters['status'] ?? ''),
         ];
 
         // resolve the chosen group's whole subtree (id + descendants)

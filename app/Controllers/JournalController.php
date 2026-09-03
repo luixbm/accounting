@@ -22,13 +22,10 @@ class JournalController extends BaseController
 
     public function index()
     {
-        $filters = [
-            'status' => $this->request->getGet('status'),
-            'source' => $this->request->getGet('source'),
-            'from'   => $this->request->getGet('from'),
-            'to'     => $this->request->getGet('to'),
-            'q'      => $this->request->getGet('q'),
-        ];
+        $filters = sticky_filters('journals', ['status', 'source', 'from', 'to', 'q']);
+        if ($filters instanceof \CodeIgniter\HTTP\RedirectResponse) {
+            return $filters;
+        }
 
         return view('journals/index', [
             'title'   => 'Journals',

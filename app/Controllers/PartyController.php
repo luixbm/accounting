@@ -32,10 +32,15 @@ abstract class PartyController extends BaseController
 
     public function index()
     {
+        $sf = sticky_filters($this->route, ['q', 'cf']);
+        if ($sf instanceof \CodeIgniter\HTTP\RedirectResponse) {
+            return $sf;
+        }
+
         $defs = $this->cf->defs($this->kind);
-        $q    = trim((string) $this->request->getGet('q'));
+        $q    = trim((string) ($sf['q'] ?? ''));
         $cf   = [];
-        foreach ((array) $this->request->getGet('cf') as $k => $v) {
+        foreach ((array) ($sf['cf'] ?? []) as $k => $v) {
             $cf[(string) $k] = is_scalar($v) ? trim((string) $v) : '';
         }
 

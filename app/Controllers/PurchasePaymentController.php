@@ -32,11 +32,10 @@ class PurchasePaymentController extends BaseController
 
     public function index()
     {
-        $filters = [
-            'supplier_id' => $this->request->getGet('supplier_id'),
-            'q'           => $this->request->getGet('q'),
-            'kind'        => $this->request->getGet('kind'),
-        ];
+        $filters = sticky_filters('purchase_payments', ['supplier_id', 'q', 'kind']);
+        if ($filters instanceof \CodeIgniter\HTTP\RedirectResponse) {
+            return $filters;
+        }
 
         return view('purchases/payments/index', [
             'title'     => 'Supplier Payments',

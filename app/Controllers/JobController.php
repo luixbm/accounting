@@ -26,13 +26,13 @@ class JobController extends BaseController
 
     public function index()
     {
-        $filters = [
-            'status'   => $this->request->getGet('status'),
-            'q'        => $this->request->getGet('q'),
-            'arr_from' => trim((string) $this->request->getGet('arr_from')),
-            'arr_to'   => trim((string) $this->request->getGet('arr_to')),
-            'pl'       => (string) ($this->request->getGet('pl') ?? ''),
-        ];
+        $filters = sticky_filters('jobs', ['status', 'q', 'arr_from', 'arr_to', 'pl']);
+        if ($filters instanceof \CodeIgniter\HTTP\RedirectResponse) {
+            return $filters;
+        }
+        $filters['arr_from'] = trim((string) ($filters['arr_from'] ?? ''));
+        $filters['arr_to']   = trim((string) ($filters['arr_to'] ?? ''));
+        $filters['pl']       = (string) ($filters['pl'] ?? '');
         $rows      = $this->jobs->withCustomer($filters);
         $summaries = (new Ledger())->jobSummaries();
 

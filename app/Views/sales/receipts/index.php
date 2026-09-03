@@ -36,6 +36,7 @@
     </select>
   </div>
   <button class="btn" type="submit">Filter</button>
+  <?= view('partials/filter_clear') ?>
 </form>
 
 <div class="card">

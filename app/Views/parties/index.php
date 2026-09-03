@@ -81,7 +81,7 @@ $span          = count($columns) + 1;
     </div>
   <?php endforeach ?>
   <button class="btn" type="submit">Filter</button>
-  <a class="btn ghost" href="<?= site_url($route) ?>">Reset</a>
+  <?= view('partials/filter_clear') ?>
 </form>
 
 <div class="card">

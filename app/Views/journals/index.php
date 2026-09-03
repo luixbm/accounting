@@ -35,7 +35,7 @@
   <div class="field"><label>From</label><input type="date" name="from" value="<?= esc($f['from']) ?>"></div>
   <div class="field"><label>To</label><input type="date" name="to" value="<?= esc($f['to']) ?>"></div>
   <button class="btn" type="submit">Filter</button>
-  <a class="btn ghost" href="<?= site_url('journals') ?>">Reset</a>
+  <?= view('partials/filter_clear') ?>
 </form>
 
 <div class="card">
