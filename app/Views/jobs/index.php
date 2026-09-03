@@ -62,17 +62,12 @@ $xlsxUrl = site_url('jobs') . '?' . http_build_query($qs + ['format' => 'xlsx'])
         <th>Status</th><th class="no-print"></th></tr>
     </thead>
     <tbody>
-      <?php $tR = $tC = $tN = $tJ = 0.0; ?>
       <?php foreach ($rows as $j): ?>
         <?php $s = $summaries[$j['id']] ?? ['revenue' => 0, 'cost' => 0, 'net' => 0];
         $margin = $s['revenue'] != 0 ? $s['net'] / $s['revenue'] * 100 : 0;
         $jbxHas = ($j['sales_ref'] ?? null) !== null || ($j['buy_ref'] ?? null) !== null;
         $jbxNet = (float) ($j['sales_ref'] ?? 0) - (float) ($j['buy_ref'] ?? 0);
-        $jbxMargin = (float) ($j['sales_ref'] ?? 0) != 0.0 ? $jbxNet / (float) $j['sales_ref'] * 100 : null;
-        $tR += (float) $s['revenue'];
-        $tC += (float) $s['cost'];
-        $tN += (float) $s['net'];
-        $tJ += $jbxHas ? $jbxNet : 0.0; ?>
+        $jbxMargin = (float) ($j['sales_ref'] ?? 0) != 0.0 ? $jbxNet / (float) $j['sales_ref'] * 100 : null; ?>
         <tr>
           <td class="mono nowrap"><a href="<?= site_url('jobs/' . $j['id']) ?>"><?= esc($j['code']) ?></a></td>
           <td><?= esc($j['name']) ?></td>
@@ -95,17 +90,19 @@ $xlsxUrl = site_url('jobs') . '?' . http_build_query($qs + ['format' => 'xlsx'])
     <?php if ($rows): ?>
       <tfoot>
         <tr class="subtotal">
-          <td colspan="4">TOTAL — <?= count($rows) ?> job<?= count($rows) === 1 ? '' : 's' ?></td>
-          <td class="right mono"><?= money($tR, 0, true) ?></td>
-          <td class="right mono"><?= money($tC, 0, true) ?></td>
-          <td class="right mono" style="font-weight:700;color:<?= $tN < 0 ? 'var(--red)' : 'var(--green)' ?>"><?= money($tN, 0) ?></td>
-          <td class="right mono small"><?= $tR != 0.0 ? number_format($tN / $tR * 100, 1) . '%' : '' ?></td>
-          <td class="right mono small" style="color:var(--muted)"><?= money($tJ, 0, true) ?></td>
+          <td colspan="4">TOTAL — <?= number_format($total) ?> job<?= $total === 1 ? '' : 's' ?></td>
+          <td class="right mono"><?= money($grand['revenue'], 0, true) ?></td>
+          <td class="right mono"><?= money($grand['cost'], 0, true) ?></td>
+          <td class="right mono" style="font-weight:700;color:<?= $grand['net'] < 0 ? 'var(--red)' : 'var(--green)' ?>"><?= money($grand['net'], 0) ?></td>
+          <td class="right mono small"><?= $grand['revenue'] != 0.0 ? number_format($grand['net'] / $grand['revenue'] * 100, 1) . '%' : '' ?></td>
+          <td class="right mono small" style="color:var(--muted)"><?= money($grand['jbxnet'], 0, true) ?></td>
           <td></td><td></td><td class="no-print"></td>
         </tr>
       </tfoot>
     <?php endif ?>
   </table>
 </div>
+
+<?= $pager->links('default', 'default_full') ?>
 
 <?= $this->endSection() ?>

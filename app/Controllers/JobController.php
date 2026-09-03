@@ -33,24 +33,48 @@ class JobController extends BaseController
         $filters['arr_from'] = trim((string) ($filters['arr_from'] ?? ''));
         $filters['arr_to']   = trim((string) ($filters['arr_to'] ?? ''));
         $filters['pl']       = (string) ($filters['pl'] ?? '');
-        $rows      = $this->jobs->withCustomer($filters);
+
         $summaries = (new Ledger())->jobSummaries();
 
-        if ($filters['pl'] === 'loss') {
-            $rows = array_values(array_filter($rows, static fn ($j) => ($summaries[$j['id']]['net'] ?? 0) < -0.005));
-        } elseif ($filters['pl'] === 'profit') {
-            $rows = array_values(array_filter($rows, static fn ($j) => ($summaries[$j['id']]['net'] ?? 0) > 0.005));
+        // Resolve the P&L filter to an id set up front so the list query itself
+        // stays paginated (jobs with no journal activity have no summary → net 0
+        // → excluded from both loss and profit, which is what we want).
+        if (in_array($filters['pl'], ['loss', 'profit'], true)) {
+            $ids = [];
+            foreach ($summaries as $jid => $s) {
+                $net = $s['net'] ?? 0;
+                if (($filters['pl'] === 'loss' && $net < -0.005) || ($filters['pl'] === 'profit' && $net > 0.005)) {
+                    $ids[] = (int) $jid;
+                }
+            }
+            $filters['ids'] = $ids ?: [0];
         }
 
-        $subtitle = $this->filterSummary($filters, count($rows));
+        $xlsx = $this->request->getGet('format') === 'xlsx';
 
-        if ($this->request->getGet('format') === 'xlsx') {
-            return $this->exportXlsx($rows, $summaries, $subtitle);
+        // Grand totals across the whole filtered set (the on-screen table is paged)
+        $refRows = $this->jobs->filteredRefTotals($filters);
+        $grand   = ['revenue' => 0.0, 'cost' => 0.0, 'net' => 0.0, 'jbxnet' => 0.0];
+        foreach ($refRows as $j) {
+            $s = $summaries[(int) $j['id']] ?? ['revenue' => 0, 'cost' => 0, 'net' => 0];
+            $grand['revenue'] += (float) $s['revenue'];
+            $grand['cost']    += (float) $s['cost'];
+            $grand['net']     += (float) $s['net'];
+            $grand['jbxnet']  += (float) ($j['sales_ref'] ?? 0) - (float) ($j['buy_ref'] ?? 0);
+        }
+        $total    = count($refRows);
+        $subtitle = $this->filterSummary($filters, $total);
+
+        if ($xlsx) {
+            return $this->exportXlsx($this->jobs->withCustomer($filters), $summaries, $subtitle);
         }
 
         return view('jobs/index', [
             'title'     => 'Jobs',
-            'rows'      => $rows,
+            'rows'      => $this->jobs->withCustomer($filters, 25),
+            'pager'     => $this->jobs->pager,
+            'total'     => $total,
+            'grand'     => $grand,
             'filters'   => $filters,
             'summaries' => $summaries,
             'subtitle'  => $subtitle,

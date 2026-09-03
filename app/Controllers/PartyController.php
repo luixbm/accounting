@@ -75,10 +75,24 @@ abstract class PartyController extends BaseController
             return true;
         }));
 
+        // Filtering is custom-field aware so it runs in PHP; the table is then
+        // paged so a big master list doesn't render hundreds of rows at once.
+        $perPage  = 25;
+        $matched  = count($rows);
+        $page     = max(1, (int) ($this->request->getGet('page') ?? 1));
+        $page     = min($page, max(1, (int) ceil($matched / $perPage)));
+        $pageRows = array_slice($rows, ($page - 1) * $perPage, $perPage);
+
+        $pager = service('pager');
+
         return view('parties/index', [
-            'title'  => $this->label . 's',
-            'rows'   => $rows,
-            'total'  => count($all),
+            'title'    => $this->label . 's',
+            'rows'     => $pageRows,
+            'matched'  => $matched,
+            'total'    => count($all),
+            'pagerHtml' => $matched > $perPage
+                ? $pager->makeLinks($page, $perPage, $matched, 'default_full')
+                : '',
             'route'  => $this->route,
             'label'  => $this->label,
             'cfDefs' => $defs,

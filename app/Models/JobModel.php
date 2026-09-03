@@ -25,10 +25,29 @@ class JobModel extends TenantModel
         return $this->where('status', 'open')->orderBy('code', 'ASC')->findAll();
     }
 
-    public function withCustomer(array $filters = [])
+    /**
+     * @param int $perPage  >0 paginates (result + $this->pager); 0 returns all
+     */
+    public function withCustomer(array $filters = [], int $perPage = 0)
     {
-        $b = $this->select('jobs.*, customers.name AS customer_name')
-            ->join('customers', 'customers.id = jobs.customer_id', 'left');
+        $b = $this->applyFilters(
+            $this->select('jobs.*, customers.name AS customer_name')
+                ->join('customers', 'customers.id = jobs.customer_id', 'left'),
+            $filters
+        )->orderBy('jobs.start_date', 'ASC')->orderBy('jobs.code', 'ASC');
+
+        return $perPage > 0 ? $b->paginate($perPage) : $b->findAll();
+    }
+
+    /** Ids + Jambix ref amounts for every job matching the filters (for grand totals). */
+    public function filteredRefTotals(array $filters = []): array
+    {
+        return $this->applyFilters($this->select('jobs.id, jobs.sales_ref, jobs.buy_ref'), $filters)
+            ->findAll();
+    }
+
+    private function applyFilters($b, array $filters)
+    {
         if (! empty($filters['status'])) {
             $b->where('jobs.status', $filters['status']);
         }
@@ -41,7 +60,10 @@ class JobModel extends TenantModel
         if (! empty($filters['arr_to'])) {
             $b->where('jobs.start_date <=', $filters['arr_to']);
         }
+        if (! empty($filters['ids'])) {
+            $b->whereIn('jobs.id', $filters['ids']);
+        }
 
-        return $b->orderBy('jobs.start_date', 'ASC')->orderBy('jobs.code', 'ASC')->findAll();
+        return $b;
     }
 }

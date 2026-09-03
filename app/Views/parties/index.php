@@ -26,7 +26,7 @@ $span          = count($columns) + 1;
 <div class="page-head">
   <div>
     <h1><?= esc($label) ?>s</h1>
-    <div class="muted small"><?= count($rows) ?><?= isset($total) && $total !== count($rows) ? ' of ' . $total : '' ?> records</div>
+    <div class="muted small"><?= number_format($matched) ?><?= $matched !== $total ? ' of ' . number_format($total) : '' ?> record<?= $matched === 1 ? '' : 's' ?></div>
   </div>
   <div class="btn-group">
     <details class="colpick no-print" id="colpick">
@@ -137,6 +137,7 @@ $span          = count($columns) + 1;
       </tbody>
     </table>
   </div>
+  <?= $pagerHtml ?>
 </div>
 
 <script>
