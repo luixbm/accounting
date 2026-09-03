@@ -50,7 +50,7 @@ $acctCell = static function ($selId) use ($acctById) {
 
     return '<div class="combo" data-combo="account">'
         . '<input type="hidden" name="line_account[]" value="' . ($selId !== '' && $selId !== null ? (int) $selId : '') . '">'
-        . '<input class="combo-input" autocomplete="off" spellcheck="false" placeholder="account…" value="' . $code . '" title="' . $nm . '">'
+        . '<input class="combo-input" autocomplete="off" spellcheck="false" placeholder="' . esc(lang('App.account'), 'attr') . '…" value="' . $code . '" title="' . $nm . '">'
         . '<div class="combo-pop" hidden></div>'
         . '</div>';
 };
@@ -68,7 +68,7 @@ $jobOpt = static function ($sel) use ($jobs) {
 
 <?php $wasPosted = $isEdit && ($inv['status'] ?? '') === 'posted'; ?>
 <?php if ($wasPosted): ?>
-  <div class="alert alert-info">This invoice is <b>posted</b>. Saving un-posts its ledger journal, applies your changes, and re-posts it.</div>
+  <div class="alert alert-info"><?= lang('Txn.posted_note_full') ?></div>
 <?php endif ?>
 
 <form method="post" action="<?= $action ?>" id="piform">
@@ -77,21 +77,21 @@ $jobOpt = static function ($sel) use ($jobs) {
   <div class="card">
     <div class="row">
       <div class="field">
-        <label>Supplier</label>
+        <label><?= lang('Txn.supplier') ?></label>
         <select name="supplier_id" required>
-          <option value="">— choose —</option>
+          <option value=""><?= lang('App.choose') ?></option>
           <?php foreach ($suppliers as $s): ?>
             <option value="<?= $s['id'] ?>" <?= (string) old('supplier_id', $inv['supplier_id'] ?? '') === (string) $s['id'] ? 'selected' : '' ?>><?= esc($s['name']) ?></option>
           <?php endforeach ?>
         </select>
       </div>
-      <div class="field" style="max-width:220px"><label>Supplier ref.</label><input name="supplier_ref" value="<?= esc(old('supplier_ref', $inv['supplier_ref'] ?? '')) ?>" title="Supplier invoice no., or for a Jambix import the supplier-ID + dossier-number key"></div>
-      <div class="field" style="max-width:160px"><label>Invoice date</label><input type="date" name="invoice_date" value="<?= esc(old('invoice_date', $inv['invoice_date'] ?? date('Y-m-d'))) ?>" required></div>
-      <div class="field" style="max-width:160px"><label>Due date</label><input type="date" name="due_date" value="<?= esc(old('due_date', $inv['due_date'] ?? '')) ?>"></div>
+      <div class="field" style="max-width:220px"><label><?= lang('Txn.supplier_ref') ?></label><input name="supplier_ref" value="<?= esc(old('supplier_ref', $inv['supplier_ref'] ?? '')) ?>" title="<?= esc(lang('Txn.supplier_ref_hint'), 'attr') ?>"></div>
+      <div class="field" style="max-width:160px"><label><?= lang('Txn.invoice_date') ?></label><input type="date" name="invoice_date" value="<?= esc(old('invoice_date', $inv['invoice_date'] ?? date('Y-m-d'))) ?>" required></div>
+      <div class="field" style="max-width:160px"><label><?= lang('App.due_date') ?></label><input type="date" name="due_date" value="<?= esc(old('due_date', $inv['due_date'] ?? '')) ?>"></div>
     </div>
     <div class="row">
       <div class="field" style="max-width:140px">
-        <label>Currency</label>
+        <label><?= lang('App.currency') ?></label>
         <select name="currency_id" id="curSel" data-base="<?= $baseId ?>">
           <?php foreach ($currencies as $c): ?>
             <option value="<?= $c['id'] ?>" <?= (string) $curDefault === (string) $c['id'] ? 'selected' : '' ?>><?= esc($c['code']) ?></option>
@@ -99,24 +99,24 @@ $jobOpt = static function ($sel) use ($jobs) {
         </select>
       </div>
       <div class="field" style="max-width:180px" id="rateWrap">
-        <label>Rate to Rp</label>
+        <label><?= lang('Txn.rate_to', [base_code()]) ?></label>
         <input name="exchange_rate" id="rateInp" type="number" step="0.00000001" value="<?= esc(old('exchange_rate', $inv['exchange_rate'] ?? 1)) ?>">
       </div>
-      <div class="field"><label>Reference</label><input name="description" value="<?= esc(old('description', $inv['description'] ?? '')) ?>" placeholder="e.g. dossier / trip reference"></div>
+      <div class="field"><label><?= lang('App.reference') ?></label><input name="description" value="<?= esc(old('description', $inv['description'] ?? '')) ?>" placeholder="<?= esc(lang('Txn.ref_hint_dossier'), 'attr') ?>"></div>
     </div>
   </div>
 
   <div class="card">
     <div class="page-head" style="margin-bottom:8px">
-      <h2 style="margin:0">Lines</h2>
+      <h2 style="margin:0"><?= lang('Txn.lines') ?></h2>
       <div class="colmenu-wrap no-print">
-        <button type="button" class="btn sm ghost" id="colToggle">Columns ▾</button>
+        <button type="button" class="btn sm ghost" id="colToggle"><?= lang('Txn.columns_toggle') ?></button>
         <div class="colmenu" id="colMenu" hidden>
-          <label><input type="checkbox" data-col="job"> Job</label>
-          <label><input type="checkbox" data-col="budget"> Budget</label>
-          <label><input type="checkbox" data-col="service"> Service Date</label>
-          <label><input type="checkbox" data-col="booking"> Booking ID</label>
-          <label><input type="checkbox" data-col="remarks"> Remarks</label>
+          <label><input type="checkbox" data-col="job"> <?= lang('Txn.job') ?></label>
+          <label><input type="checkbox" data-col="budget"> <?= lang('Txn.budget') ?></label>
+          <label><input type="checkbox" data-col="service"> <?= lang('Txn.service_date') ?></label>
+          <label><input type="checkbox" data-col="booking"> <?= lang('Txn.booking_id') ?></label>
+          <label><input type="checkbox" data-col="remarks"> <?= lang('Txn.remarks') ?></label>
         </div>
       </div>
     </div>
@@ -124,14 +124,14 @@ $jobOpt = static function ($sel) use ($jobs) {
     <table class="grid tight piline-grid" id="lineTable">
       <thead>
         <tr>
-          <th class="c-acct">Account</th>
-          <th class="c-desc">Description</th>
-          <th class="c-job col-job">Job</th>
-          <th class="c-num right col-budget">Budget</th>
-          <th class="c-num right">Amount</th>
-          <th class="c-date col-service">Service Date</th>
-          <th class="c-book col-booking">Booking ID</th>
-          <th class="c-rmk col-remarks">Remarks</th>
+          <th class="c-acct"><?= lang('App.account') ?></th>
+          <th class="c-desc"><?= lang('App.description') ?></th>
+          <th class="c-job col-job"><?= lang('Txn.job') ?></th>
+          <th class="c-num right col-budget"><?= lang('Txn.budget') ?></th>
+          <th class="c-num right"><?= lang('App.amount') ?></th>
+          <th class="c-date col-service"><?= lang('Txn.service_date') ?></th>
+          <th class="c-book col-booking"><?= lang('Txn.booking_id') ?></th>
+          <th class="c-rmk col-remarks"><?= lang('Txn.remarks') ?></th>
           <th class="c-rm"></th>
         </tr>
       </thead>
@@ -147,45 +147,45 @@ $jobOpt = static function ($sel) use ($jobs) {
             </td>
             <td><input name="line_desc[]" value="<?= esc($r['description'] ?? '') ?>"></td>
             <td class="col-job"><select name="line_job[]"><?= $jobOpt($r['job_id'] ?? '') ?></select></td>
-            <td class="col-budget"><input name="line_budget[]" class="bud right mono" value="<?= esc($r['budget_amount'] ?? '') ?>" readonly tabindex="-1" title="Original budget — set on import, not editable"></td>
+            <td class="col-budget"><input name="line_budget[]" class="bud right mono" value="<?= esc($r['budget_amount'] ?? '') ?>" readonly tabindex="-1" title="<?= esc(lang('Txn.budget_hint'), 'attr') ?>"></td>
             <td><input name="line_amount[]" class="amt right mono" inputmode="decimal" value="<?= esc($r['amount'] ?? '') ?>"></td>
             <td class="col-service"><input type="date" name="line_service_date[]" value="<?= esc($r['service_date'] ?? '') ?>"></td>
             <td class="col-booking"><input name="line_booking[]" class="mono" value="<?= esc($r['booking_ref'] ?? '') ?>"></td>
             <td class="col-remarks"><input name="line_remark[]" value="<?= esc($r['cost_remark'] ?? '') ?>"></td>
-            <td class="right"><button type="button" class="btn sm ghost rm" title="Remove line">✕</button></td>
+            <td class="right"><button type="button" class="btn sm ghost rm" title="<?= esc(lang('Txn.remove_line'), 'attr') ?>">✕</button></td>
           </tr>
         <?php endforeach ?>
       </tbody>
       <tfoot>
         <tr>
-          <td colspan="3" class="right muted small">Budget / Subtotal</td>
+          <td colspan="3" class="right muted small"><?= lang('Txn.budget_subtotal') ?></td>
           <td class="right mono muted small" id="budTot">0.00</td>
           <td class="right mono" id="subTot">0.00</td><td colspan="4"></td>
         </tr>
         <tr>
           <td colspan="4" class="right">
             PPN <input type="number" step="any" id="ppnRateInp" value="<?= esc($ppnRate) ?>" style="width:60px;display:inline-block;padding:2px 5px">%
-            <button type="button" class="btn sm ghost" id="calcPpn">calc</button>
+            <button type="button" class="btn sm ghost" id="calcPpn"><?= lang('Txn.calc') ?></button>
           </td>
           <td><input name="ppn_amount" id="ppnInp" class="right mono" inputmode="decimal" value="<?= esc(old('ppn_amount', $inv['ppn_amount'] ?? 0)) ?>"></td>
           <td colspan="4"></td>
         </tr>
         <tr>
           <td colspan="4" class="right">
-            PPh 23 <input type="number" step="any" id="pphRateInp" value="<?= esc($pphRate) ?>" style="width:60px;display:inline-block;padding:2px 5px">% (dipotong)
-            <button type="button" class="btn sm ghost" id="calcPph">calc</button>
+            PPh 23 <input type="number" step="any" id="pphRateInp" value="<?= esc($pphRate) ?>" style="width:60px;display:inline-block;padding:2px 5px">% (<?= lang('Txn.withheld') ?>)
+            <button type="button" class="btn sm ghost" id="calcPph"><?= lang('Txn.calc') ?></button>
           </td>
           <td><input name="pph_amount" id="pphInp" class="right mono" inputmode="decimal" value="<?= esc(old('pph_amount', $inv['pph_amount'] ?? 0)) ?>"></td>
           <td colspan="4"></td>
         </tr>
         <tr class="subtotal">
-          <td colspan="4" class="right">Payable to supplier</td>
+          <td colspan="4" class="right"><?= lang('Txn.payable_to_supplier') ?></td>
           <td class="right mono" id="grandTot">0.00</td><td colspan="4"></td>
         </tr>
       </tfoot>
     </table>
     </div>
-    <div style="margin-top:8px"><button type="button" class="btn sm secondary" id="addRow">+ Add line</button></div>
+    <div style="margin-top:8px"><button type="button" class="btn sm secondary" id="addRow"><?= lang('App.add_line') ?></button></div>
   </div>
 
   <?php if ($cfDefs): ?>
@@ -195,13 +195,13 @@ $jobOpt = static function ($sel) use ($jobs) {
   <div class="card">
     <div class="btn-group">
       <?php if ($wasPosted): ?>
-        <button class="btn" type="submit" name="action" value="post">Save &amp; re-post</button>
+        <button class="btn" type="submit" name="action" value="post"><?= lang('Txn.save_repost') ?></button>
       <?php else: ?>
-        <button class="btn ghost" type="submit" name="action" value="draft">Save draft</button>
-        <?php if ($canPost): ?><button class="btn" type="submit" name="action" value="post">Save &amp; post</button><?php endif ?>
+        <button class="btn ghost" type="submit" name="action" value="draft"><?= lang('Txn.save_draft') ?></button>
+        <?php if ($canPost): ?><button class="btn" type="submit" name="action" value="post"><?= lang('Txn.save_post') ?></button><?php endif ?>
       <?php endif ?>
-      <a class="btn ghost" href="<?= site_url('purchases') ?>">Cancel</a>
-      <span class="muted small" style="align-self:center">Posting books: Dr expense + PPN / Cr PPh 23 + Hutang Usaha.</span>
+      <a class="btn ghost" href="<?= site_url('purchases') ?>"><?= lang('App.cancel') ?></a>
+      
     </div>
   </div>
 </form>
@@ -227,12 +227,12 @@ $jobOpt = static function ($sel) use ($jobs) {
     </td>
     <td><input name="line_desc[]"></td>
     <td class="col-job"><select name="line_job[]"><?= $jobOpt('') ?></select></td>
-    <td class="col-budget"><input name="line_budget[]" class="bud right mono" readonly tabindex="-1" title="Original budget — set on import, not editable"></td>
+    <td class="col-budget"><input name="line_budget[]" class="bud right mono" readonly tabindex="-1" title="<?= esc(lang('Txn.budget_hint'), 'attr') ?>"></td>
     <td><input name="line_amount[]" class="amt right mono" inputmode="decimal"></td>
     <td class="col-service"><input type="date" name="line_service_date[]"></td>
     <td class="col-booking"><input name="line_booking[]" class="mono"></td>
     <td class="col-remarks"><input name="line_remark[]"></td>
-    <td class="right"><button type="button" class="btn sm ghost rm" title="Remove line">✕</button></td>
+    <td class="right"><button type="button" class="btn sm ghost rm" title="<?= esc(lang('Txn.remove_line'), 'attr') ?>">✕</button></td>
   </tr>
 </template>
 
