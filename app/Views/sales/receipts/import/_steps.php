@@ -1,8 +1,8 @@
 <?php
 /** @var string $active  map | preview  @var array $batch */
 $steps = [
-    'map'     => ['Map columns', "sales/receipts/import/{$batch['id']}/map"],
-    'preview' => ['Preview & commit', "sales/receipts/import/{$batch['id']}/preview"],
+    'map'     => [lang('Import.step_map'), "sales/receipts/import/{$batch['id']}/map"],
+    'preview' => [lang('Import.step_preview'), "sales/receipts/import/{$batch['id']}/preview"],
 ];
 ?>
 <div class="pill-nav no-print" style="margin-bottom:18px">

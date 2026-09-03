@@ -2,7 +2,7 @@
 <?= $this->section('content') ?>
 <?php
 $colOpt = static function ($selected) use ($headers) {
-    $h = '<option value="">— not mapped —</option>';
+    $h = '<option value="">' . lang('Import.not_mapped_opt') . '</option>';
     foreach ($headers as $i => $label) {
         $h .= '<option value="' . $i . '"' . ((string) $selected === (string) $i ? ' selected' : '') . '>' . esc($label) . '</option>';
     }
@@ -12,8 +12,8 @@ $colOpt = static function ($selected) use ($headers) {
 ?>
 
 <div class="page-head">
-  <div><h1>Import payments · Map columns</h1><div class="muted small"><?= esc($batch['filename']) ?></div></div>
-  <div class="btn-group"><a class="btn ghost" href="<?= site_url('purchases/payments/import') ?>">Cancel</a></div>
+  <div><h1><?= lang('Import.pp_crumb_map') ?></h1><div class="muted small"><?= esc($batch['filename']) ?></div></div>
+  <div class="btn-group"><a class="btn ghost" href="<?= site_url('purchases/payments/import') ?>"><?= lang('App.cancel') ?></a></div>
 </div>
 <?= view('purchases/payments/import/_steps', ['active' => 'map', 'batch' => $batch]) ?>
 
@@ -21,16 +21,16 @@ $colOpt = static function ($selected) use ($headers) {
   <?= csrf_field() ?>
 
   <div class="card">
-    <h2>Batch payment settings</h2>
+    <h2><?= lang('Import.pp_settings_h') ?></h2>
     <div class="row">
       <div class="field" style="max-width:160px">
-        <label>Payment date *</label>
+        <label><?= lang('Import.pp_payment_date') ?> *</label>
         <input type="date" name="payment_date" value="<?= esc($header['payment_date'] ?? date('Y-m-d'), 'attr') ?>" required>
       </div>
       <div class="field" style="max-width:280px">
-        <label>Pay from account *</label>
+        <label><?= lang('Import.pp_pay_from') ?> *</label>
         <select name="bank_account_id" required>
-          <option value="">— bank / cash —</option>
+          <option value=""><?= lang('Import.pp_bank_cash_opt') ?></option>
           <?php foreach ($banks as $b): ?>
             <option value="<?= $b['id'] ?>" <?= (int) ($header['bank_account_id'] ?? 0) === (int) $b['id'] ? 'selected' : '' ?>>
               <?= esc($b['code'] . ' · ' . $b['name']) ?>
@@ -38,15 +38,15 @@ $colOpt = static function ($selected) use ($headers) {
           <?php endforeach ?>
         </select>
       </div>
-      <div class="field"><label>Reference</label><input name="reference" value="<?= esc($header['reference'] ?? '', 'attr') ?>" placeholder="e.g. BCA run 05 Sep"></div>
+      <div class="field"><label><?= lang('App.reference') ?></label><input name="reference" value="<?= esc($header['reference'] ?? '', 'attr') ?>" placeholder="<?= esc(lang('Import.pp_reference_ph'), 'attr') ?>"></div>
     </div>
-    <p class="muted small">One Supplier Payment is posted per supplier, dated as above, from this account. The account's currency must match the invoices.</p>
+    <p class="muted small"><?= lang('Import.pp_settings_note') ?></p>
   </div>
 
   <div class="card">
     <div class="row">
       <div class="field" style="max-width:240px">
-        <label>Sheet</label>
+        <label><?= lang('Import.sheet') ?></label>
         <select name="sheet">
           <?php foreach ($sheets as $s): ?>
             <option value="<?= esc($s, 'attr') ?>" <?= $batch['sheet'] === $s ? 'selected' : '' ?>><?= esc($s) ?></option>
@@ -54,7 +54,7 @@ $colOpt = static function ($selected) use ($headers) {
         </select>
       </div>
       <div class="field" style="max-width:130px">
-        <label>Header row</label>
+        <label><?= lang('Import.header_row') ?></label>
         <input type="number" name="header_row" min="1" value="<?= (int) ($opt['headerRow'] ?? 1) ?>">
       </div>
       <?php foreach ($fields as $field => [$label, $required]): ?>
@@ -67,7 +67,7 @@ $colOpt = static function ($selected) use ($headers) {
   </div>
 
   <div class="card">
-    <h2>First rows</h2>
+    <h2><?= lang('Import.first_rows') ?></h2>
     <div style="overflow-x:auto">
       <table class="grid tight">
         <thead><tr><th>#</th><?php foreach ($headers as $h): ?><th><?= esc($h) ?></th><?php endforeach ?></tr></thead>
@@ -77,7 +77,7 @@ $colOpt = static function ($selected) use ($headers) {
               <?php foreach ($headers as $i => $_): ?><td><?= esc((string) ($r['cells'][$i] ?? '')) ?></td><?php endforeach ?>
             </tr>
           <?php endforeach ?>
-          <?php if (! $sample): ?><tr><td colspan="<?= count($headers) + 1 ?>" class="muted">No data rows below the header.</td></tr><?php endif ?>
+          <?php if (! $sample): ?><tr><td colspan="<?= count($headers) + 1 ?>" class="muted"><?= lang('Import.no_data_rows') ?></td></tr><?php endif ?>
         </tbody>
       </table>
     </div>
@@ -85,8 +85,8 @@ $colOpt = static function ($selected) use ($headers) {
 
   <div class="card">
     <div class="btn-group">
-      <button class="btn" type="submit">Save &amp; preview</button>
-      <a class="btn ghost" href="<?= site_url('purchases/payments/import') ?>">Cancel</a>
+      <button class="btn" type="submit"><?= lang('Import.save_preview') ?></button>
+      <a class="btn ghost" href="<?= site_url('purchases/payments/import') ?>"><?= lang('App.cancel') ?></a>
     </div>
   </div>
 </form>

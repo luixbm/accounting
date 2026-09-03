@@ -8,39 +8,37 @@ $isDep  = ($parsed['mode'] ?? 'receipt') === 'deposit';
 ?>
 
 <div class="page-head">
-  <div><h1>Import receipts · Preview</h1><div class="muted small"><?= esc($batch['filename']) ?> · <?= $isDep ? 'apply deposit' : 'receipt' ?></div></div>
-  <div class="btn-group"><a class="btn ghost" href="<?= site_url('sales/receipts/import/' . $batch['id'] . '/map') ?>">Back to mapping</a></div>
+  <div><h1><?= lang('Import.rc_crumb_prev') ?></h1><div class="muted small"><?= esc($batch['filename']) ?> · <?= $isDep ? lang('Import.rc_lc_apply_deposit') : lang('Import.rc_lc_receipt') ?></div></div>
+  <div class="btn-group"><a class="btn ghost" href="<?= site_url('sales/receipts/import/' . $batch['id'] . '/map') ?>"><?= lang('Import.back_to_mapping') ?></a></div>
 </div>
 <?= view('sales/receipts/import/_steps', ['active' => 'preview', 'batch' => $batch]) ?>
 
 <div class="card">
   <div class="row" style="gap:26px;flex-wrap:wrap">
-    <div><div class="muted small">Rows read</div><div class="mono" style="font-size:1.2rem"><?= $s['rows'] ?></div></div>
-    <div><div class="muted small">Customers → posts</div><div class="mono" style="font-size:1.2rem"><?= $s['customers'] ?></div></div>
-    <div><div class="muted small">Invoices</div><div class="mono" style="font-size:1.2rem"><?= $s['invoices'] ?></div></div>
-    <div><div class="muted small">Capped to outstanding</div><div class="mono" style="font-size:1.2rem;<?= $s['capped'] ? 'color:var(--red)' : '' ?>"><?= $s['capped'] ?></div></div>
+    <div><div class="muted small"><?= lang('Import.rc_s_rows_read') ?></div><div class="mono" style="font-size:1.2rem"><?= $s['rows'] ?></div></div>
+    <div><div class="muted small"><?= lang('Import.rc_s_customers') ?></div><div class="mono" style="font-size:1.2rem"><?= $s['customers'] ?></div></div>
+    <div><div class="muted small"><?= lang('Import.rc_s_invoices') ?></div><div class="mono" style="font-size:1.2rem"><?= $s['invoices'] ?></div></div>
+    <div><div class="muted small"><?= lang('Import.rc_s_capped') ?></div><div class="mono" style="font-size:1.2rem;<?= $s['capped'] ? 'color:var(--red)' : '' ?>"><?= $s['capped'] ?></div></div>
     <?php if ($isDep): ?>
-      <div><div class="muted small">No deposit</div><div class="mono" style="font-size:1.2rem;<?= $s['no_deposit'] ? 'color:var(--red)' : '' ?>"><?= $s['no_deposit'] ?></div></div>
-      <div><div class="muted small">Over deposit balance</div><div class="mono" style="font-size:1.2rem;<?= $s['over_deposit'] ? 'color:var(--red)' : '' ?>"><?= $s['over_deposit'] ?></div></div>
+      <div><div class="muted small"><?= lang('Import.rc_s_no_deposit') ?></div><div class="mono" style="font-size:1.2rem;<?= $s['no_deposit'] ? 'color:var(--red)' : '' ?>"><?= $s['no_deposit'] ?></div></div>
+      <div><div class="muted small"><?= lang('Import.rc_s_over_deposit') ?></div><div class="mono" style="font-size:1.2rem;<?= $s['over_deposit'] ? 'color:var(--red)' : '' ?>"><?= $s['over_deposit'] ?></div></div>
     <?php endif ?>
-    <div><div class="muted small">Unmatched rows</div><div class="mono" style="font-size:1.2rem;<?= $s['unmatched'] ? 'color:var(--red)' : '' ?>"><?= $s['unmatched'] ?></div></div>
-    <div><div class="muted small">Total (<?= base_code() ?>)</div><div class="mono" style="font-size:1.2rem"><?= money($s['apply_total']) ?></div></div>
+    <div><div class="muted small"><?= lang('Import.rc_s_unmatched') ?></div><div class="mono" style="font-size:1.2rem;<?= $s['unmatched'] ? 'color:var(--red)' : '' ?>"><?= $s['unmatched'] ?></div></div>
+    <div><div class="muted small"><?= lang('Import.rc_s_total', [base_code()]) ?></div><div class="mono" style="font-size:1.2rem"><?= money($s['apply_total']) ?></div></div>
   </div>
   <div class="muted small" style="margin-top:10px">
-    <?= $isDep
-        ? 'Applying each customer’s oldest unapplied deposit'
-        : 'Receiving into <b>' . esc($bank) . '</b>' ?>
-    on <b><?= esc($header['date'] ?? '') ?></b><?= ! empty($header['reference']) ? ' · ref “' . esc($header['reference']) . '”' : '' ?>.
+    <?= $isDep ? lang('Import.rc_applying_deposit') : lang('Import.rc_receiving_into', [esc($bank)]) ?>
+    <?= lang('Import.rc_on_date', [esc($header['date'] ?? '')]) ?><?= ! empty($header['reference']) ? lang('Import.rc_ref_suffix', [esc($header['reference'])]) : '' ?>.
   </div>
 </div>
 
 <?php foreach ($groups as $g): ?>
   <div class="card">
     <h2><?= esc($g['customer']) ?> <span class="muted small">· <?= esc($g['currency']) ?> · <?= money($g['total']) ?><?php
-      if ($isDep && ! empty($g['deposit'])): ?> · from <?= esc($g['deposit']['receipt_no']) ?> (<?= money((float) $g['deposit']['unapplied']) ?> unapplied)<?php
-      elseif ($isDep): ?> · <span style="color:var(--red)">no deposit</span><?php endif ?></span></h2>
+      if ($isDep && ! empty($g['deposit'])): ?><?= lang('Import.rc_from_deposit', [esc($g['deposit']['receipt_no']), money((float) $g['deposit']['unapplied'])]) ?><?php
+      elseif ($isDep): ?> · <span style="color:var(--red)"><?= lang('Import.rc_s_no_deposit') ?></span><?php endif ?></span></h2>
     <table class="grid tight">
-      <thead><tr><th>Invoice</th><th>Date</th><th class="right">Outstanding</th><th class="right">Requested</th><th class="right">Will <?= $isDep ? 'apply' : 'receive' ?></th><th></th></tr></thead>
+      <thead><tr><th><?= lang('Import.rc_c_invoice') ?></th><th><?= lang('App.date') ?></th><th class="right"><?= lang('Import.rc_c_outstanding') ?></th><th class="right"><?= lang('Import.rc_c_requested') ?></th><th class="right"><?= $isDep ? lang('Import.rc_c_will_apply') : lang('Import.rc_c_will_receive') ?></th><th></th></tr></thead>
       <tbody>
         <?php foreach ($g['invoices'] as $iv): ?>
           <tr>
@@ -51,9 +49,9 @@ $isDep  = ($parsed['mode'] ?? 'receipt') === 'deposit';
             <td class="right mono" style="font-weight:600"><?= money($iv['pay']) ?></td>
             <td class="small">
               <?php if ($iv['skip']): ?><span class="badge badge-red"><?= esc($iv['skip']) ?></span>
-              <?php elseif ($iv['capped']): ?><span class="badge badge-amber">capped</span>
-              <?php elseif ($iv['partial']): ?><span class="badge badge-amber">partial</span>
-              <?php else: ?><span class="badge badge-green">full</span><?php endif ?>
+              <?php elseif ($iv['capped']): ?><span class="badge badge-amber"><?= lang('Import.st_capped') ?></span>
+              <?php elseif ($iv['partial']): ?><span class="badge badge-amber"><?= lang('Import.st_partial') ?></span>
+              <?php else: ?><span class="badge badge-green"><?= lang('Import.st_full') ?></span><?php endif ?>
             </td>
           </tr>
         <?php endforeach ?>
@@ -64,9 +62,9 @@ $isDep  = ($parsed['mode'] ?? 'receipt') === 'deposit';
 
 <?php if ($un): ?>
   <div class="card">
-    <h2 style="color:var(--red)">Unmatched rows (<?= count($un) ?>) — skipped</h2>
+    <h2 style="color:var(--red)"><?= lang('Import.rc_unmatched_h', [count($un)]) ?></h2>
     <table class="grid tight">
-      <thead><tr><th>Row</th><th>Number</th><th class="right">Amount</th><th>Reason</th></tr></thead>
+      <thead><tr><th><?= lang('Import.rc_c_row') ?></th><th><?= lang('Import.rc_c_number') ?></th><th class="right"><?= lang('App.amount') ?></th><th><?= lang('Import.rc_c_reason') ?></th></tr></thead>
       <tbody>
         <?php foreach (array_slice($un, 0, 200) as $u): ?>
           <tr><td class="muted"><?= $u['n'] ?></td><td class="mono small"><?= esc($u['number']) ?></td>
@@ -79,15 +77,15 @@ $isDep  = ($parsed['mode'] ?? 'receipt') === 'deposit';
 
 <div class="card">
   <?php if (! $groups): ?>
-    <p class="muted">Nothing to post — no rows matched an open sales invoice.</p>
-    <a class="btn ghost" href="<?= site_url('sales/receipts/import/' . $batch['id'] . '/map') ?>">Back to mapping</a>
+    <p class="muted"><?= lang('Import.rc_nothing') ?></p>
+    <a class="btn ghost" href="<?= site_url('sales/receipts/import/' . $batch['id'] . '/map') ?>"><?= lang('Import.back_to_mapping') ?></a>
   <?php else: ?>
     <form method="post" action="<?= site_url('sales/receipts/import/' . $batch['id'] . '/commit') ?>"
-      onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='Posting…';return confirm('Post <?= $s['customers'] ?> <?= $isDep ? 'deposit application(s)' : 'receipt(s)' ?> totalling <?= number_format($s['apply_total'], 2) ?>?');">
+      onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='<?= esc(lang('Import.posting'), 'js') ?>';return confirm('<?= esc(lang('Import.rc_commit_confirm', [$s['customers'], $isDep ? lang('Import.rc_deposit_apps') : lang('Import.rc_receipts_word'), number_format($s['apply_total'], 2)]), 'js') ?>');">
       <?= csrf_field() ?>
       <div class="btn-group">
-        <button class="btn" type="submit">Commit — <?= $isDep ? 'apply deposits' : 'post receipts' ?></button>
-        <a class="btn ghost" href="<?= site_url('sales/receipts/import') ?>">Cancel</a>
+        <button class="btn" type="submit"><?= $isDep ? lang('Import.rc_commit_apply') : lang('Import.rc_commit_receipts') ?></button>
+        <a class="btn ghost" href="<?= site_url('sales/receipts/import') ?>"><?= lang('App.cancel') ?></a>
       </div>
     </form>
   <?php endif ?>

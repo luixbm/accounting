@@ -3,29 +3,29 @@
 <?php $s = $parsed['summary']; ?>
 
 <div class="page-head">
-  <div><h1>Import COA · Preview</h1><div class="muted small"><?= esc($batch['filename']) ?></div></div>
-  <div class="btn-group"><a class="btn ghost" href="<?= site_url('accounts/import/' . $batch['id'] . '/map') ?>">Back to mapping</a></div>
+  <div><h1><?= lang('Import.ai_crumb_prev') ?></h1><div class="muted small"><?= esc($batch['filename']) ?></div></div>
+  <div class="btn-group"><a class="btn ghost" href="<?= site_url('accounts/import/' . $batch['id'] . '/map') ?>"><?= lang('Import.back_to_mapping') ?></a></div>
 </div>
 <?= view('accounts/import/_steps', ['active' => 'preview', 'batch' => $batch]) ?>
 
 <div class="card">
   <div class="row" style="gap:26px">
-    <div><div class="muted small">Rows</div><div class="mono" style="font-size:1.2rem"><?= $s['total'] ?></div></div>
-    <div><div class="muted small">New</div><div class="mono" style="font-size:1.2rem"><?= $s['new'] ?></div></div>
-    <div><div class="muted small">Update</div><div class="mono" style="font-size:1.2rem"><?= $s['update'] ?></div></div>
-    <div><div class="muted small">Group headers</div><div class="mono" style="font-size:1.2rem"><?= $s['groups'] ?></div></div>
-    <div><div class="muted small">Errors</div><div class="mono" style="font-size:1.2rem;<?= $s['error'] ? 'color:var(--red)' : '' ?>"><?= $s['error'] ?></div></div>
+    <div><div class="muted small"><?= lang('Import.kpi_rows') ?></div><div class="mono" style="font-size:1.2rem"><?= $s['total'] ?></div></div>
+    <div><div class="muted small"><?= lang('Import.kpi_new') ?></div><div class="mono" style="font-size:1.2rem"><?= $s['new'] ?></div></div>
+    <div><div class="muted small"><?= lang('Import.kpi_update') ?></div><div class="mono" style="font-size:1.2rem"><?= $s['update'] ?></div></div>
+    <div><div class="muted small"><?= lang('Import.ai_col_group_headers') ?></div><div class="mono" style="font-size:1.2rem"><?= $s['groups'] ?></div></div>
+    <div><div class="muted small"><?= lang('Import.kpi_errors') ?></div><div class="mono" style="font-size:1.2rem;<?= $s['error'] ? 'color:var(--red)' : '' ?>"><?= $s['error'] ?></div></div>
   </div>
 </div>
 
 <?php if ($s['error']): ?>
-  <div class="alert alert-error">Rows with errors are skipped on commit. Fix them in the file and re-import, or continue and add them later.</div>
+  <div class="alert alert-error"><?= lang('Import.ai_err_note') ?></div>
 <?php endif ?>
 
 <div class="card">
   <div style="overflow-x:auto">
     <table class="grid tight">
-      <thead><tr><th>#</th><th>Code</th><th>Name</th><th>File type</th><th>App type</th><th>Cash</th><th>Group</th><th>Parent</th><th>Cur</th><th></th></tr></thead>
+      <thead><tr><th>#</th><th><?= lang('Import.ai_col_code') ?></th><th><?= lang('Import.ai_col_name') ?></th><th><?= lang('Import.ai_col_file_type') ?></th><th><?= lang('Import.ai_app_type') ?></th><th><?= lang('Import.ai_col_cash') ?></th><th><?= lang('Import.ai_col_group') ?></th><th><?= lang('Import.ai_col_parent') ?></th><th><?= lang('App.currency') ?></th><th></th></tr></thead>
       <tbody>
         <?php foreach ($parsed['rows'] as $r): ?>
           <tr<?= $r['errors'] ? ' style="background:var(--red-bg)"' : '' ?>>
@@ -51,12 +51,12 @@
 </div>
 
 <div class="card">
-  <form method="post" action="<?= site_url('accounts/import/' . $batch['id'] . '/commit') ?>" onsubmit="return confirm('Import <?= $s['new'] ?> new and update <?= $s['update'] ?> existing accounts?')">
+  <form method="post" action="<?= site_url('accounts/import/' . $batch['id'] . '/commit') ?>" onsubmit="return confirm('<?= esc(lang('Import.ai_commit_confirm', [$s['new'], $s['update']]), 'js') ?>')">
     <?= csrf_field() ?>
     <div class="btn-group">
-      <button class="btn" type="submit">Commit import</button>
-      <a class="btn ghost" href="<?= site_url('accounts/import') ?>">Cancel</a>
-      <span class="muted small" style="align-self:center"><?= $s['ok'] ?> of <?= $s['total'] ?> rows will be written.</span>
+      <button class="btn" type="submit"><?= lang('Import.commit_import') ?></button>
+      <a class="btn ghost" href="<?= site_url('accounts/import') ?>"><?= lang('App.cancel') ?></a>
+      <span class="muted small" style="align-self:center"><?= lang('Import.ai_rows_written', [$s['ok'], $s['total']]) ?></span>
     </div>
   </form>
 </div>

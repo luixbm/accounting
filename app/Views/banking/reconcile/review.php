@@ -12,7 +12,7 @@ foreach ($sum['book'] as $b) {
 }
 
 $bookOpt = static function ($rows) {
-    $h = '<option value="">— match to book entry —</option>';
+    $h = '<option value="">' . lang('Import.bk_match_to_book') . '</option>';
     foreach ($rows as $b) {
         $h .= '<option value="' . (int) $b['id'] . '">'
             . esc(date_id($b['entry_date']) . '  ' . $b['journal_no'] . '  ' . money_c($b['effect'])
@@ -23,7 +23,7 @@ $bookOpt = static function ($rows) {
     return $h;
 };
 $accOpt = static function ($rows) {
-    $h = '<option value="">— offset account —</option>';
+    $h = '<option value="">' . lang('Import.bk_offset_acct') . '</option>';
     foreach ($rows as $a) {
         $h .= '<option value="' . (int) $a['id'] . '">' . esc($a['code'] . ' · ' . $a['name']) . '</option>';
     }
@@ -34,32 +34,32 @@ $accOpt = static function ($rows) {
 
 <div class="page-head">
   <div>
-    <h1>Reconcile — <?= esc($bank['name'] ?? '') ?>
-      <?= $reconciled ? '<span class="badge badge-green">Reconciled</span>' : '<span class="badge badge-gray">Draft</span>' ?>
+    <h1><?= lang('Import.bk_reconcile_h') ?> — <?= esc($bank['name'] ?? '') ?>
+      <?= $reconciled ? '<span class="badge badge-green">' . esc(lang('Import.bk_reconciled')) . '</span>' : '<span class="badge badge-gray">' . esc(lang('Import.bk_draft')) . '</span>' ?>
     </h1>
     <div class="muted small">
-      Statement to <?= date_id($st['statement_date']) ?> ·
-      opening <?= money_c($st['opening_balance']) ?> · closing <?= money_c($st['closing_balance']) ?>
+      <?= lang('Import.bk_stmt_to', [date_id($st['statement_date'])]) ?> ·
+      <?= lang('Import.bk_opening_lc') ?> <?= money_c($st['opening_balance']) ?> · <?= lang('Import.bk_closing_lc') ?> <?= money_c($st['closing_balance']) ?>
       <?= $st['note'] ? ' · ' . esc($st['note']) : '' ?>
     </div>
   </div>
   <div class="btn-group no-print">
-    <a class="btn ghost" href="<?= site_url('banking/reconcile') ?>">&lsaquo; All statements</a>
-    <a class="btn ghost" href="<?= site_url('banking/reconcile/' . $st['id'] . '/report') ?>">Print statement</a>
+    <a class="btn ghost" href="<?= site_url('banking/reconcile') ?>">&lsaquo; <?= lang('Import.bk_all_stmts') ?></a>
+    <a class="btn ghost" href="<?= site_url('banking/reconcile/' . $st['id'] . '/report') ?>"><?= lang('Import.bk_print_stmt') ?></a>
     <?php if ($canPost && ! $reconciled): ?>
-      <a class="btn ghost" href="<?= site_url('banking/reconcile/' . $st['id'] . '/map') ?>">Re-map columns</a>
-      <form method="post" action="<?= site_url('banking/reconcile/' . $st['id'] . '/rematch') ?>" style="display:inline"><?= csrf_field() ?><button class="btn secondary">Auto-match again</button></form>
+      <a class="btn ghost" href="<?= site_url('banking/reconcile/' . $st['id'] . '/map') ?>"><?= lang('Import.bk_remap') ?></a>
+      <form method="post" action="<?= site_url('banking/reconcile/' . $st['id'] . '/rematch') ?>" style="display:inline"><?= csrf_field() ?><button class="btn secondary"><?= lang('Import.bk_automatch_again') ?></button></form>
     <?php endif ?>
   </div>
 </div>
 
 <?php
 $tiles = [
-    ['Book balance @ date', money_c($sum['book_balance']), ''],
-    ['Statement closing', money_c($st['closing_balance']), ''],
-    ['Unmatched on bank', money_c($sum['unmatched_stmt_total']) . ' · ' . $sum['counts']['stmt_unmatched'], 'warn'],
-    ['Outstanding in books', money_c($sum['unmatched_book_total']) . ' · ' . $sum['counts']['book_unmatched'], 'warn'],
-    ['Difference', money_c($sum['difference']), $sum['reconciled'] ? 'ok' : 'bad'],
+    [lang('Import.bk_t_book_balance'), money_c($sum['book_balance']), ''],
+    [lang('Import.bk_t_stmt_closing'), money_c($st['closing_balance']), ''],
+    [lang('Import.bk_t_unmatched_bank'), money_c($sum['unmatched_stmt_total']) . ' · ' . $sum['counts']['stmt_unmatched'], 'warn'],
+    [lang('Import.bk_t_outstanding_books'), money_c($sum['unmatched_book_total']) . ' · ' . $sum['counts']['book_unmatched'], 'warn'],
+    [lang('Import.bk_t_difference'), money_c($sum['difference']), $sum['reconciled'] ? 'ok' : 'bad'],
 ];
 ?>
 <div class="kpi-row">
@@ -70,30 +70,29 @@ $tiles = [
 
 <?php if (abs((float) $sum['import_check']) >= 0.5): ?>
   <div class="alert alert-error no-print">
-    Imported lines don't tie to the statement: closing − opening − Σlines = <?= money_c($sum['import_check']) ?>.
-    Re-map the columns (wrong amount convention or a missed column?).
+    <?= lang('Import.bk_import_check', [money_c($sum['import_check'])]) ?>
   </div>
 <?php endif ?>
 
 <?php if ($sum['reconciled'] && ! $reconciled && $canPost): ?>
   <form method="post" action="<?= site_url('banking/reconcile/' . $st['id'] . '/finish') ?>" class="no-print" style="margin-bottom:14px">
     <?= csrf_field() ?>
-    <div class="alert alert-success">Difference is zero — <button class="btn sm">Mark reconciled</button></div>
+    <div class="alert alert-success"><?= lang('Import.bk_diff_zero') ?> <button class="btn sm"><?= lang('Import.bk_mark_reconciled') ?></button></div>
   </form>
 <?php endif ?>
 <?php if ($reconciled && $canPost): ?>
   <form method="post" action="<?= site_url('banking/reconcile/' . $st['id'] . '/reopen') ?>" class="no-print" style="margin-bottom:14px">
     <?= csrf_field() ?>
-    <button class="btn sm ghost">Reopen for editing</button>
+    <button class="btn sm ghost"><?= lang('Import.bk_reopen_edit') ?></button>
   </form>
 <?php endif ?>
 
 <div class="card">
-  <h2>Statement lines <span class="muted small">(<?= $sum['counts']['stmt'] ?>)</span></h2>
+  <h2><?= lang('Import.bk_stmt_lines_h') ?> <span class="muted small">(<?= $sum['counts']['stmt'] ?>)</span></h2>
   <div style="overflow-x:auto">
     <table class="grid tight">
       <thead>
-        <tr><th>Date</th><th>Description</th><th>Ref</th><th class="right">Amount</th><th>Status / action</th></tr>
+        <tr><th><?= lang('App.date') ?></th><th><?= lang('App.description') ?></th><th><?= lang('Import.bk_c_ref') ?></th><th class="right"><?= lang('App.amount') ?></th><th><?= lang('Import.bk_status_action') ?></th></tr>
       </thead>
       <tbody>
         <?php foreach ($sum['stmt_lines'] as $sl): ?>
@@ -105,7 +104,7 @@ $tiles = [
             <td class="right mono"><?= money_c($sl['amount']) ?></td>
             <td>
               <?php if ($mid !== null): ?>
-                <span class="badge badge-green">Matched</span>
+                <span class="badge badge-green"><?= lang('Import.bk_matched') ?></span>
                 <?php if (isset($bookById[$mid])): ?>
                   <a class="mono small" href="<?= site_url('journals/' . $bookById[$mid]['journal_id']) ?>"><?= esc($bookById[$mid]['journal_no']) ?></a>
                 <?php endif ?>
@@ -113,7 +112,7 @@ $tiles = [
                 <?php if ($canPost && ! $reconciled): ?>
                   <form method="post" action="<?= site_url('banking/reconcile/' . $st['id'] . '/unmatch') ?>" style="display:inline">
                     <?= csrf_field() ?><input type="hidden" name="stmt_line_id" value="<?= $sl['id'] ?>">
-                    <button class="btn sm ghost">Unmatch</button>
+                    <button class="btn sm ghost"><?= lang('Import.bk_unmatch') ?></button>
                   </form>
                 <?php endif ?>
               <?php elseif ($canPost && ! $reconciled): ?>
@@ -121,32 +120,32 @@ $tiles = [
                   <form method="post" action="<?= site_url('banking/reconcile/' . $st['id'] . '/match') ?>" class="inline-form">
                     <?= csrf_field() ?><input type="hidden" name="stmt_line_id" value="<?= $sl['id'] ?>">
                     <select name="book_line_id"><?= $bookOpt($freeBook) ?></select>
-                    <button class="btn sm">Match</button>
+                    <button class="btn sm"><?= lang('Import.bk_match') ?></button>
                   </form>
                   <form method="post" action="<?= site_url('banking/reconcile/' . $st['id'] . '/add-entry') ?>" class="inline-form">
                     <?= csrf_field() ?><input type="hidden" name="stmt_line_id" value="<?= $sl['id'] ?>">
                     <select name="account_id"><?= $accOpt($expenseAccounts) ?></select>
-                    <input name="memo" placeholder="memo" value="<?= esc($sl['description']) ?>">
-                    <button class="btn sm secondary">Add to books</button>
+                    <input name="memo" placeholder="<?= esc(lang('Import.bk_memo_ph'), 'attr') ?>" value="<?= esc($sl['description']) ?>">
+                    <button class="btn sm secondary"><?= lang('Import.bk_add_to_books') ?></button>
                   </form>
                 </div>
               <?php else: ?>
-                <span class="badge badge-gray">Unmatched</span>
+                <span class="badge badge-gray"><?= lang('Import.bk_unmatched') ?></span>
               <?php endif ?>
             </td>
           </tr>
         <?php endforeach ?>
-        <?php if (! $sum['stmt_lines']): ?><tr><td colspan="5" class="muted">No statement lines imported.</td></tr><?php endif ?>
+        <?php if (! $sum['stmt_lines']): ?><tr><td colspan="5" class="muted"><?= lang('Import.bk_no_stmt_lines') ?></td></tr><?php endif ?>
       </tbody>
     </table>
   </div>
 </div>
 
 <div class="card">
-  <h2>Outstanding book entries <span class="muted small">(in the ledger, not on this statement — <?= $sum['counts']['book_unmatched'] ?>)</span></h2>
+  <h2><?= lang('Import.bk_outstanding_h') ?> <span class="muted small">(<?= lang('Import.bk_outstanding_sub', [$sum['counts']['book_unmatched']]) ?>)</span></h2>
   <div style="overflow-x:auto">
     <table class="grid tight">
-      <thead><tr><th>Date</th><th>Journal</th><th>Memo</th><th class="right">Amount</th></tr></thead>
+      <thead><tr><th><?= lang('App.date') ?></th><th><?= lang('Import.bk_c_journal') ?></th><th><?= lang('Import.bk_c_memo') ?></th><th class="right"><?= lang('App.amount') ?></th></tr></thead>
       <tbody>
         <?php foreach ($sum['unmatched_book'] as $b): ?>
           <tr>
@@ -156,7 +155,7 @@ $tiles = [
             <td class="right mono"><?= money_c($b['effect']) ?></td>
           </tr>
         <?php endforeach ?>
-        <?php if (! $sum['unmatched_book']): ?><tr><td colspan="4" class="muted">Nothing outstanding — every ledger entry on this account is on the statement.</td></tr><?php endif ?>
+        <?php if (! $sum['unmatched_book']): ?><tr><td colspan="4" class="muted"><?= lang('Import.bk_nothing_outstanding') ?></td></tr><?php endif ?>
       </tbody>
     </table>
   </div>
@@ -164,9 +163,9 @@ $tiles = [
 
 <?php if ($canPost): ?>
   <form method="post" action="<?= site_url('banking/reconcile/' . $st['id'] . '/delete') ?>" class="no-print"
-        onsubmit="return confirm('Delete this statement and all its imported lines? Journals already posted stay.');">
+        onsubmit="return confirm('<?= esc(lang('Import.bk_delete_confirm'), 'js') ?>');">
     <?= csrf_field() ?>
-    <button class="btn sm ghost" style="color:var(--c-danger,#b00)">Delete statement</button>
+    <button class="btn sm ghost" style="color:var(--c-danger,#b00)"><?= lang('Import.bk_delete_stmt') ?></button>
   </form>
 <?php endif ?>
 

@@ -2,7 +2,7 @@
 <?= $this->section('content') ?>
 <?php
 $colOpt = static function ($selected) use ($headers) {
-    $h = '<option value="">— not mapped —</option>';
+    $h = '<option value="">' . lang('Import.not_mapped_opt') . '</option>';
     foreach ($headers as $i => $label) {
         $h .= '<option value="' . $i . '"' . ((string) $selected === (string) $i ? ' selected' : '') . '>' . esc($label) . '</option>';
     }
@@ -12,8 +12,8 @@ $colOpt = static function ($selected) use ($headers) {
 ?>
 
 <div class="page-head">
-  <div><h1>Import Jambix jobs · Map columns</h1><div class="muted small"><?= esc($batch['filename']) ?></div></div>
-  <div class="btn-group"><a class="btn ghost" href="<?= site_url('jobs/import') ?>">Cancel</a></div>
+  <div><h1><?= lang('Import.jb_crumb_map') ?></h1><div class="muted small"><?= esc($batch['filename']) ?></div></div>
+  <div class="btn-group"><a class="btn ghost" href="<?= site_url('jobs/import') ?>"><?= lang('App.cancel') ?></a></div>
 </div>
 <?= view('jobs/import/_steps', ['active' => 'map', 'batch' => $batch]) ?>
 
@@ -23,7 +23,7 @@ $colOpt = static function ($selected) use ($headers) {
   <div class="card">
     <div class="row">
       <div class="field" style="max-width:240px">
-        <label>Sheet</label>
+        <label><?= lang('Import.sheet') ?></label>
         <select name="sheet">
           <?php foreach ($sheets as $s): ?>
             <option value="<?= esc($s, 'attr') ?>" <?= $batch['sheet'] === $s ? 'selected' : '' ?>><?= esc($s) ?></option>
@@ -31,7 +31,7 @@ $colOpt = static function ($selected) use ($headers) {
         </select>
       </div>
       <div class="field" style="max-width:130px">
-        <label>Header row</label>
+        <label><?= lang('Import.header_row') ?></label>
         <input type="number" name="header_row" min="1" value="<?= (int) ($opt['headerRow'] ?? 1) ?>">
       </div>
     </div>
@@ -46,7 +46,7 @@ $colOpt = static function ($selected) use ($headers) {
   </div>
 
   <div class="card">
-    <h2>First rows</h2>
+    <h2><?= lang('Import.first_rows') ?></h2>
     <div style="overflow-x:auto">
       <table class="grid tight">
         <thead><tr><th>#</th><?php foreach ($headers as $h): ?><th><?= esc($h) ?></th><?php endforeach ?></tr></thead>
@@ -56,7 +56,7 @@ $colOpt = static function ($selected) use ($headers) {
               <?php foreach ($headers as $i => $_): ?><td><?= esc((string) ($r['cells'][$i] ?? '')) ?></td><?php endforeach ?>
             </tr>
           <?php endforeach ?>
-          <?php if (! $sample): ?><tr><td colspan="<?= count($headers) + 1 ?>" class="muted">No data rows below the header.</td></tr><?php endif ?>
+          <?php if (! $sample): ?><tr><td colspan="<?= count($headers) + 1 ?>" class="muted"><?= lang('Import.no_data_rows') ?></td></tr><?php endif ?>
         </tbody>
       </table>
     </div>
@@ -64,8 +64,8 @@ $colOpt = static function ($selected) use ($headers) {
 
   <div class="card">
     <div class="btn-group">
-      <button class="btn" type="submit">Save &amp; preview</button>
-      <a class="btn ghost" href="<?= site_url('jobs/import') ?>">Cancel</a>
+      <button class="btn" type="submit"><?= lang('Import.save_preview') ?></button>
+      <a class="btn ghost" href="<?= site_url('jobs/import') ?>"><?= lang('App.cancel') ?></a>
     </div>
   </div>
 </form>

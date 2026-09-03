@@ -3,7 +3,7 @@
 <?php
 $map    = $opt['map'] ?? [];
 $colOpt = static function ($selected) use ($headers) {
-    $h = '<option value="">— not mapped —</option>';
+    $h = '<option value="">' . lang('Import.not_mapped_opt') . '</option>';
     foreach ($headers as $i => $label) {
         $sel = (string) $selected === (string) $i ? ' selected' : '';
         $h .= '<option value="' . $i . '"' . $sel . '>' . esc($label) . '</option>';
@@ -15,8 +15,8 @@ $mode = $opt['amountMode'] ?? 'credit_in';
 ?>
 
 <div class="page-head">
-  <div><h1>Statement · Map columns</h1><div class="muted small"><?= esc($st['filename']) ?></div></div>
-  <div class="btn-group"><a class="btn ghost" href="<?= site_url('banking/reconcile') ?>">Cancel</a></div>
+  <div><h1><?= lang('Import.bk_crumb_map') ?></h1><div class="muted small"><?= esc($st['filename']) ?></div></div>
+  <div class="btn-group"><a class="btn ghost" href="<?= site_url('banking/reconcile') ?>"><?= lang('App.cancel') ?></a></div>
 </div>
 
 <form method="post" action="<?= site_url('banking/reconcile/' . $st['id'] . '/map') ?>">
@@ -25,7 +25,7 @@ $mode = $opt['amountMode'] ?? 'credit_in';
   <div class="card">
     <div class="row">
       <div class="field" style="max-width:240px">
-        <label>Sheet</label>
+        <label><?= lang('Import.sheet') ?></label>
         <select name="sheet">
           <?php foreach ($sheets as $s): ?>
             <option value="<?= esc($s, 'attr') ?>" <?= $st['sheet'] === $s ? 'selected' : '' ?>><?= esc($s) ?></option>
@@ -33,26 +33,26 @@ $mode = $opt['amountMode'] ?? 'credit_in';
         </select>
       </div>
       <div class="field" style="max-width:120px">
-        <label>Header row</label>
+        <label><?= lang('Import.header_row') ?></label>
         <input type="number" name="header_row" min="1" value="<?= (int) ($opt['headerRow'] ?? 1) ?>">
       </div>
       <div class="field" style="max-width:170px">
-        <label>Date format</label>
+        <label><?= lang('Import.date_format') ?></label>
         <select name="date_format">
-          <?php foreach (['auto' => 'Auto', 'dmy' => 'D/M/Y', 'mdy' => 'M/D/Y', 'ymd' => 'Y/M/D'] as $k => $v): ?>
+          <?php foreach (['auto' => lang('Import.auto'), 'dmy' => 'D/M/Y', 'mdy' => 'M/D/Y', 'ymd' => 'Y/M/D'] as $k => $v): ?>
             <option value="<?= $k ?>" <?= ($opt['dateFormat'] ?? 'auto') === $k ? 'selected' : '' ?>><?= $v ?></option>
           <?php endforeach ?>
         </select>
       </div>
       <div class="field" style="max-width:240px">
-        <label>Amount convention</label>
+        <label><?= lang('Import.bk_amount_conv') ?></label>
         <select name="amount_mode">
-          <option value="credit_in" <?= $mode === 'credit_in' ? 'selected' : '' ?>>Credit / positive = money IN</option>
-          <option value="debit_in" <?= $mode === 'debit_in' ? 'selected' : '' ?>>Debit / positive = money IN</option>
+          <option value="credit_in" <?= $mode === 'credit_in' ? 'selected' : '' ?>><?= lang('Import.bk_credit_in') ?></option>
+          <option value="debit_in" <?= $mode === 'debit_in' ? 'selected' : '' ?>><?= lang('Import.bk_debit_in') ?></option>
         </select>
       </div>
     </div>
-    <p class="muted small">Map either one signed <b>Amount</b> column, or separate <b>Debit</b> and <b>Credit</b> columns.</p>
+    <p class="muted small"><?= lang('Import.bk_map_note') ?></p>
     <div class="row">
       <?php foreach ($fields as $field => [$label, $required]): ?>
         <div class="field" style="max-width:230px">
@@ -64,7 +64,7 @@ $mode = $opt['amountMode'] ?? 'credit_in';
   </div>
 
   <div class="card">
-    <h2>First rows</h2>
+    <h2><?= lang('Import.first_rows') ?></h2>
     <div style="overflow-x:auto">
       <table class="grid tight">
         <thead><tr><th>#</th><?php foreach ($headers as $h): ?><th><?= esc($h) ?></th><?php endforeach ?></tr></thead>
@@ -75,7 +75,7 @@ $mode = $opt['amountMode'] ?? 'credit_in';
               <?php foreach ($headers as $i => $_): ?><td><?= esc((string) ($r['cells'][$i] ?? '')) ?></td><?php endforeach ?>
             </tr>
           <?php endforeach ?>
-          <?php if (! $sample): ?><tr><td colspan="<?= count($headers) + 1 ?>" class="muted">No data rows found below the header.</td></tr><?php endif ?>
+          <?php if (! $sample): ?><tr><td colspan="<?= count($headers) + 1 ?>" class="muted"><?= lang('Import.bk_no_data_rows') ?></td></tr><?php endif ?>
         </tbody>
       </table>
     </div>
@@ -83,8 +83,8 @@ $mode = $opt['amountMode'] ?? 'credit_in';
 
   <div class="card">
     <div class="btn-group">
-      <button class="btn" type="submit">Import &amp; auto-match</button>
-      <a class="btn ghost" href="<?= site_url('banking/reconcile') ?>">Cancel</a>
+      <button class="btn" type="submit"><?= lang('Import.bk_import_automatch') ?></button>
+      <a class="btn ghost" href="<?= site_url('banking/reconcile') ?>"><?= lang('App.cancel') ?></a>
     </div>
   </div>
 </form>

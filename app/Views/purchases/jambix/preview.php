@@ -7,26 +7,25 @@ $shown = array_slice($rows, 0, 400);
 ?>
 
 <div class="page-head">
-  <div><h1>Import Jambix · Preview</h1><div class="muted small"><?= esc($batch['filename']) ?></div></div>
-  <div class="btn-group"><a class="btn ghost" href="<?= site_url('purchases/jambix/' . $batch['id'] . '/map') ?>">Back to mapping</a></div>
+  <div><h1><?= lang('Import.jx_crumb_prev') ?></h1><div class="muted small"><?= esc($batch['filename']) ?></div></div>
+  <div class="btn-group"><a class="btn ghost" href="<?= site_url('purchases/jambix/' . $batch['id'] . '/map') ?>"><?= lang('Import.back_to_mapping') ?></a></div>
 </div>
 <?= view('purchases/jambix/_steps', ['active' => 'preview', 'batch' => $batch]) ?>
 
 <div class="card">
   <div class="row" style="gap:26px;flex-wrap:wrap">
-    <div><div class="muted small">Source rows</div><div class="mono" style="font-size:1.2rem"><?= $s['lines_total'] + $s['skipped_rows'] ?></div></div>
-    <div><div class="muted small">Invoices — new</div><div class="mono" style="font-size:1.2rem"><?= $s['invoices_new'] ?></div></div>
-    <div><div class="muted small">→ post / draft</div><div class="mono" style="font-size:1.2rem"><?= $s['will_post'] ?> / <?= $s['will_draft'] ?></div></div>
-    <div><div class="muted small">Already imported</div><div class="mono" style="font-size:1.2rem"><?= $s['invoices_exists'] ?></div></div>
-    <div><div class="muted small">Errors</div><div class="mono" style="font-size:1.2rem;<?= $s['invoices_error'] ? 'color:var(--red)' : '' ?>"><?= $s['invoices_error'] ?></div></div>
-    <div><div class="muted small">Lines (dup skipped)</div><div class="mono" style="font-size:1.2rem"><?= $s['lines_total'] - $s['lines_dup'] ?> <span class="muted">(<?= $s['lines_dup'] ?>)</span></div></div>
-    <div><div class="muted small">Zero-cost lines</div><div class="mono" style="font-size:1.2rem"><?= $s['lines_zero'] ?></div></div>
-    <div><div class="muted small">Budget total (<?= base_code() ?>)</div><div class="mono" style="font-size:1.2rem"><?= money($s['amount_total']) ?></div></div>
+    <div><div class="muted small"><?= lang('Import.jx_s_source_rows') ?></div><div class="mono" style="font-size:1.2rem"><?= $s['lines_total'] + $s['skipped_rows'] ?></div></div>
+    <div><div class="muted small"><?= lang('Import.jx_s_invoices_new') ?></div><div class="mono" style="font-size:1.2rem"><?= $s['invoices_new'] ?></div></div>
+    <div><div class="muted small"><?= lang('Import.jx_s_post_draft') ?></div><div class="mono" style="font-size:1.2rem"><?= $s['will_post'] ?> / <?= $s['will_draft'] ?></div></div>
+    <div><div class="muted small"><?= lang('Import.jx_s_already') ?></div><div class="mono" style="font-size:1.2rem"><?= $s['invoices_exists'] ?></div></div>
+    <div><div class="muted small"><?= lang('Import.kpi_errors') ?></div><div class="mono" style="font-size:1.2rem;<?= $s['invoices_error'] ? 'color:var(--red)' : '' ?>"><?= $s['invoices_error'] ?></div></div>
+    <div><div class="muted small"><?= lang('Import.jx_s_lines_dup') ?></div><div class="mono" style="font-size:1.2rem"><?= $s['lines_total'] - $s['lines_dup'] ?> <span class="muted">(<?= $s['lines_dup'] ?>)</span></div></div>
+    <div><div class="muted small"><?= lang('Import.jx_s_lines_zero') ?></div><div class="mono" style="font-size:1.2rem"><?= $s['lines_zero'] ?></div></div>
+    <div><div class="muted small"><?= lang('Import.jx_s_budget_total', [base_code()]) ?></div><div class="mono" style="font-size:1.2rem"><?= money($s['amount_total']) ?></div></div>
   </div>
   <div class="muted small" style="margin-top:10px">
-    Will create <b><?= $s['suppliers_new'] ?></b> supplier(s), <b><?= $s['customers_new'] ?></b> customer(s),
-    <b><?= $s['jobs_new'] ?></b> job(s). Cost account: <b><?= esc($acctLabel) ?></b>.
-    <?php if ($s['skipped_rows']): ?> <?= $s['skipped_rows'] ?> row(s) skipped on status.<?php endif ?>
+    <?= lang('Import.jx_create_note', [$s['suppliers_new'], $s['customers_new'], $s['jobs_new'], esc($acctLabel)]) ?>
+    <?php if ($s['skipped_rows']): ?> <?= lang('Import.jx_skipped_status', [$s['skipped_rows']]) ?><?php endif ?>
   </div>
 </div>
 
@@ -34,19 +33,19 @@ $shown = array_slice($rows, 0, 400);
   <div style="overflow-x:auto">
     <table class="grid tight">
       <thead><tr>
-        <th>External id</th><th>Supplier</th><th>Client</th><th>Dossier</th><th>Inv. date</th>
-        <th class="right">Lines</th><th class="right">Budget</th><th>Result</th>
+        <th><?= lang('Import.jx_c_ext_id') ?></th><th><?= lang('Import.jx_c_supplier') ?></th><th><?= lang('Import.jx_c_client') ?></th><th><?= lang('Import.jx_c_dossier') ?></th><th><?= lang('Import.jx_c_inv_date') ?></th>
+        <th class="right"><?= lang('Import.jx_c_lines') ?></th><th class="right"><?= lang('Import.jx_c_budget') ?></th><th><?= lang('Import.jx_c_result') ?></th>
       </tr></thead>
       <tbody>
         <?php foreach ($shown as $r): ?>
           <tr<?= $r['action'] === 'error' ? ' style="background:var(--red-bg)"' : ($r['action'] === 'exists' ? ' class="muted"' : '') ?>>
             <td class="mono small nowrap"><?= esc($r['external_id']) ?></td>
-            <td><?= esc($r['supplier']) ?><?= $r['supplier_new'] ? ' <span class="badge badge-gray" style="font-size:.7em">new</span>' : '' ?></td>
+            <td><?= esc($r['supplier']) ?><?= $r['supplier_new'] ? ' <span class="badge badge-gray" style="font-size:.7em">' . esc(lang('Import.new_badge')) . '</span>' : '' ?></td>
             <td class="small"><?= esc($r['client']) ?></td>
             <td class="mono small"><?= esc($r['doss_nr']) ?></td>
             <td class="small nowrap"><?= $r['invoice_date'] ? date_id($r['invoice_date']) : '—' ?></td>
             <td class="right mono small">
-              <?= count($r['live_lines']) ?><?php if ($r['lines_dup']): ?> <span class="muted">+<?= $r['lines_dup'] ?> dup</span><?php endif ?>
+              <?= count($r['live_lines']) ?><?php if ($r['lines_dup']): ?> <span class="muted">+<?= $r['lines_dup'] ?> <?= esc(lang('Import.jx_dup')) ?></span><?php endif ?>
               <?php if ($r['lines_zero']): ?> <span class="muted">· <?= $r['lines_zero'] ?> @0</span><?php endif ?>
             </td>
             <td class="right mono"><?= money($r['amount_total']) ?></td>
@@ -54,11 +53,11 @@ $shown = array_slice($rows, 0, 400);
               <?php if ($r['action'] === 'error'): ?>
                 <span class="badge badge-red"><?= esc(implode(' ', $r['errors'])) ?></span>
               <?php elseif ($r['action'] === 'exists'): ?>
-                <span class="badge badge-gray">already imported</span>
+                <span class="badge badge-gray"><?= lang('Import.jx_already_imported') ?></span>
               <?php elseif ($r['will_post']): ?>
-                <span class="badge badge-green">post</span>
+                <span class="badge badge-green"><?= lang('Import.st_post') ?></span>
               <?php else: ?>
-                <span class="badge badge-gray">draft (no cost)</span>
+                <span class="badge badge-gray"><?= lang('Import.jx_draft_no_cost') ?></span>
               <?php endif ?>
             </td>
           </tr>
@@ -67,18 +66,18 @@ $shown = array_slice($rows, 0, 400);
     </table>
   </div>
   <?php if (count($rows) > count($shown)): ?>
-    <p class="muted small">Showing first <?= count($shown) ?> of <?= count($rows) ?> invoices. All of them are committed.</p>
+    <p class="muted small"><?= lang('Import.jx_showing', [count($shown), count($rows)]) ?></p>
   <?php endif ?>
 </div>
 
 <div class="card">
   <form method="post" action="<?= site_url('purchases/jambix/' . $batch['id'] . '/commit') ?>"
-    onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='Importing…';return confirm('Create <?= $s['invoices_new'] ?> purchase invoices (<?= $s['will_post'] ?> posted)?');">
+    onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='<?= esc(lang('Import.importing'), 'js') ?>';return confirm('<?= esc(lang('Import.jx_commit_confirm', [$s['invoices_new'], $s['will_post']]), 'js') ?>');">
     <?= csrf_field() ?>
     <div class="btn-group">
-      <button class="btn" type="submit">Commit import</button>
-      <a class="btn ghost" href="<?= site_url('purchases/jambix') ?>">Cancel</a>
-      <span class="muted small" style="align-self:center">This can take a minute for a large file.</span>
+      <button class="btn" type="submit"><?= lang('Import.commit_import') ?></button>
+      <a class="btn ghost" href="<?= site_url('purchases/jambix') ?>"><?= lang('App.cancel') ?></a>
+      <span class="muted small" style="align-self:center"><?= lang('Import.large_file_note') ?></span>
     </div>
   </form>
 </div>

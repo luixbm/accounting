@@ -5,8 +5,8 @@ $unresolved = array_filter($rows, static fn ($r) => $r['accountId'] === null);
 ?>
 
 <div class="page-head">
-  <div><h1>Import · Match accounts</h1>
-    <div class="muted small"><?= count($rows) ?> distinct account labels · <?= count($unresolved) ?> still unmatched</div>
+  <div><h1><?= lang('Import.crumb') ?> · <?= lang('Import.step_accounts') ?></h1>
+    <div class="muted small"><?= lang('Import.ji_labels_line', [count($rows), count($unresolved)]) ?></div>
   </div>
 </div>
 <?= view('journals/import/_steps', ['active' => 'accounts', 'batch' => $batch]) ?>
@@ -14,21 +14,20 @@ $unresolved = array_filter($rows, static fn ($r) => $r['accountId'] === null);
 <form method="post" action="<?= site_url('journals/import/' . $batch['id'] . '/accounts') ?>">
   <?= csrf_field() ?>
   <div class="card">
-    <p class="muted small">Each label from the spreadsheet is mapped to one account in this chart of accounts.
-      Matches are remembered and reused on future imports. Labels left unmatched will make their journals fail in the preview.</p>
+    <p class="muted small"><?= lang('Import.ji_match_note') ?></p>
     <table class="grid tight">
-      <thead><tr><th style="width:40%">Spreadsheet label</th><th>Account</th></tr></thead>
+      <thead><tr><th style="width:40%"><?= lang('Import.match_label_col') ?></th><th><?= lang('App.account') ?></th></tr></thead>
       <tbody>
         <?php foreach ($rows as $i => $r): ?>
           <tr>
             <td>
               <?= esc($r['label']) ?>
-              <?php if ($r['auto']): ?><span class="badge badge-gray">auto-matched — confirm</span><?php endif ?>
+              <?php if ($r['auto']): ?><span class="badge badge-gray"><?= lang('Import.auto_matched') ?></span><?php endif ?>
               <input type="hidden" name="label[]" value="<?= esc($r['label'], 'attr') ?>">
             </td>
             <td>
               <select name="account_id[]">
-                <option value="">— choose account —</option>
+                <option value=""><?= lang('Import.choose_account_opt') ?></option>
                 <?php foreach ($accounts as $a): ?>
                   <?php if ((int) $a['is_group'] === 1) {
                       continue;
@@ -41,15 +40,15 @@ $unresolved = array_filter($rows, static fn ($r) => $r['accountId'] === null);
             </td>
           </tr>
         <?php endforeach ?>
-        <?php if (! $rows): ?><tr><td colspan="2" class="muted">No account labels found — check the column mapping.</td></tr><?php endif ?>
+        <?php if (! $rows): ?><tr><td colspan="2" class="muted"><?= lang('Import.ji_no_labels') ?></td></tr><?php endif ?>
       </tbody>
     </table>
   </div>
 
   <div class="card">
     <div class="btn-group">
-      <button class="btn" type="submit">Save &amp; preview</button>
-      <a class="btn ghost" href="<?= site_url('journals/import/' . $batch['id'] . '/map') ?>">Back</a>
+      <button class="btn" type="submit"><?= lang('Import.save_preview') ?></button>
+      <a class="btn ghost" href="<?= site_url('journals/import/' . $batch['id'] . '/map') ?>"><?= lang('App.back') ?></a>
     </div>
   </div>
 </form>

@@ -3,13 +3,13 @@
 
 <div class="page-head">
   <div>
-    <h1>Bank Reconciliation</h1>
-    <div class="muted small">Import a bank statement, match it to the ledger, and tie out the balance.</div>
+    <h1><?= lang('Import.bk_h') ?></h1>
+    <div class="muted small"><?= lang('Import.bk_note') ?></div>
   </div>
   <div class="btn-group">
-    <a class="btn ghost" href="<?= site_url('banking') ?>">&lsaquo; Banking</a>
+    <a class="btn ghost" href="<?= site_url('banking') ?>">&lsaquo; <?= lang('Import.bk_banking') ?></a>
     <?php if (user_can('journal.post')): ?>
-      <a class="btn" href="<?= site_url('banking/reconcile/new') ?>">Import statement</a>
+      <a class="btn" href="<?= site_url('banking/reconcile/new') ?>"><?= lang('Import.bk_import_stmt') ?></a>
     <?php endif ?>
   </div>
 </div>
@@ -18,9 +18,9 @@
   <table class="grid tight">
     <thead>
       <tr>
-        <th>Statement date</th><th>Bank account</th>
-        <th class="right">Opening</th><th class="right">Closing</th>
-        <th>Note</th><th>Status</th><th></th>
+        <th><?= lang('Import.bk_c_stmt_date') ?></th><th><?= lang('Import.bk_c_bank_acct') ?></th>
+        <th class="right"><?= lang('Import.bk_c_opening') ?></th><th class="right"><?= lang('Import.bk_c_closing') ?></th>
+        <th><?= lang('Import.bk_c_note') ?></th><th><?= lang('App.status') ?></th><th></th>
       </tr>
     </thead>
     <tbody>
@@ -33,16 +33,16 @@
           <td class="muted small"><?= esc($s['note']) ?></td>
           <td>
             <?php if ($s['status'] === 'reconciled'): ?>
-              <span class="badge badge-green">Reconciled</span>
+              <span class="badge badge-green"><?= lang('Import.bk_reconciled') ?></span>
             <?php else: ?>
-              <span class="badge badge-gray">Draft</span>
+              <span class="badge badge-gray"><?= lang('Import.bk_draft') ?></span>
             <?php endif ?>
           </td>
-          <td class="right"><a class="btn sm ghost" href="<?= site_url('banking/reconcile/' . $s['id']) ?>">Open</a></td>
+          <td class="right"><a class="btn sm ghost" href="<?= site_url('banking/reconcile/' . $s['id']) ?>"><?= lang('Import.open') ?></a></td>
         </tr>
       <?php endforeach ?>
       <?php if (! $statements): ?>
-        <tr><td colspan="7" class="muted">No statements imported yet.</td></tr>
+        <tr><td colspan="7" class="muted"><?= lang('Import.bk_no_stmts') ?></td></tr>
       <?php endif ?>
     </tbody>
   </table>
