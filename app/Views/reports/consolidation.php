@@ -15,7 +15,7 @@ $plSection = static function (array $g): string {
         . '<td class="right mono">' . money($r['amount']) . '</td></tr>';
     }
 
-    return $h . '<tr class="subtotal"><td>Total</td><td class="right mono">' . money($g['total']) . '</td></tr>';
+    return $h . '<tr class="subtotal"><td>' . lang('App.total') . '</td><td class="right mono">' . money($g['total']) . '</td></tr>';
 };
 $bsSection = static function (array $g): string {
     $h = '<tr class="grp-row"><td colspan="2">' . esc($g['label']) . '</td></tr>';
@@ -24,73 +24,74 @@ $bsSection = static function (array $g): string {
         $h .= '<tr><td>' . $lbl . '</td><td class="right mono">' . money($r['amount']) . '</td></tr>';
     }
 
-    return $h . '<tr class="subtotal"><td>Total</td><td class="right mono">' . money($g['total']) . '</td></tr>';
+    return $h . '<tr class="subtotal"><td>' . lang('App.total') . '</td><td class="right mono">' . money($g['total']) . '</td></tr>';
 };
 ?>
 
 <?php
-$coPicker = '<div class="field" style="min-width:220px"><label>Companies</label><div style="display:flex;flex-wrap:wrap;gap:8px">';
+$coPicker = '<div class="field" style="min-width:220px"><label>' . lang('Report.v_companies') . '</label><div style="display:flex;flex-wrap:wrap;gap:8px">';
 foreach ($companies as $c) {
     $coPicker .= '<label class="inline" style="font-weight:400;font-size:13px"><input type="checkbox" name="c[]" value="'
         . $c['id'] . '" style="width:auto"' . (in_array((int) $c['id'], $picked, true) ? ' checked' : '') . '> ' . esc($c['code']) . '</label>';
 }
 $coPicker .= '</div></div>';
 ?>
-<div class="page-head"><h1><?= esc($title) ?></h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; All reports</a></div></div>
+<div class="page-head"><h1><?= esc($title) ?></h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; <?= lang('Report.v_all_reports') ?></a></div></div>
 <?= view('reports/_period', ['f' => $f, 'showAsOf' => true, 'extra' => $coPicker]) ?>
 
 <div class="report-title">
-  <div class="co"><?= esc(company_name()) ?> — Group</div>
+  <div class="co"><?= esc(company_name()) ?> — <?= lang('Report.v_group') ?></div>
   <h1><?= esc($title) ?></h1>
   <div class="muted">
     <?= esc(implode(' + ', array_map(static fn ($c) => $c['code'], array_filter($companies, static fn ($c) => in_array((int) $c['id'], $picked, true))))) ?>
     &middot; <?= date_id($from) ?> – <?= date_id($to) ?>
   </div>
-  <div class="small muted">Straight sum across companies — no inter-company eliminations yet.</div>
+  <div class="small muted"><?= lang('Report.v_consol_note') ?></div>
 </div>
 
 <div class="row">
   <div class="card" style="flex:1;min-width:340px">
-    <h2>Laba Rugi / Income Statement</h2>
+    <h2><?= lang('Report.v_income_statement') ?></h2>
     <table class="grid tight">
       <tbody>
         <?= $plSection($pl['groups']['revenue']) ?>
         <?= $plSection($pl['groups']['cogs']) ?>
-        <tr class="subtotal" style="background:var(--brand-soft)"><td>LABA KOTOR</td><td class="right mono"><?= money($pl['gross_profit']) ?></td></tr>
+        <tr class="subtotal" style="background:var(--brand-soft)"><td><?= lang('Report.v_gross_profit') ?></td><td class="right mono"><?= money($pl['gross_profit']) ?></td></tr>
         <?= $plSection($pl['groups']['expense']) ?>
-        <tr class="subtotal" style="background:var(--brand-soft)"><td>LABA USAHA</td><td class="right mono"><?= money($pl['operating']) ?></td></tr>
+        <tr class="subtotal" style="background:var(--brand-soft)"><td><?= lang('Report.v_operating_profit') ?></td><td class="right mono"><?= money($pl['operating']) ?></td></tr>
         <?= $plSection($pl['groups']['other_income']) ?>
         <?= $plSection($pl['groups']['other_expense']) ?>
       </tbody>
-      <tfoot><tr><td>LABA (RUGI) BERSIH</td><td class="right mono"><?= money($pl['net_income']) ?></td></tr></tfoot>
+      <tfoot><tr><td><?= lang('Report.v_net_income') ?></td><td class="right mono"><?= money($pl['net_income']) ?></td></tr></tfoot>
     </table>
   </div>
 
   <div class="card" style="flex:1;min-width:340px">
-    <h2>Neraca / Balance Sheet <span class="muted small">per <?= date_id($asOf) ?></span></h2>
+    <h2><?= lang('Report.bs') ?> <span class="muted small"><?= lang('App.as_of', [date_id($asOf)]) ?></span></h2>
     <table class="grid tight">
       <tbody>
         <?= $bsSection($bs['groups']['asset']) ?>
-        <tr class="subtotal" style="background:var(--brand-soft)"><td>TOTAL AKTIVA</td><td class="right mono"><?= money($bs['assets']) ?></td></tr>
+        <tr class="subtotal" style="background:var(--brand-soft)"><td><?= lang('Report.v_total_assets') ?></td><td class="right mono"><?= money($bs['assets']) ?></td></tr>
         <?= $bsSection($bs['groups']['liability']) ?>
         <?= $bsSection($bs['groups']['equity']) ?>
-        <tr class="subtotal" style="background:var(--brand-soft)"><td>TOTAL KEWAJIBAN &amp; EKUITAS</td><td class="right mono"><?= money($bs['liab_equity']) ?></td></tr>
+        <tr class="subtotal" style="background:var(--brand-soft)"><td><?= lang('Report.v_total_liab_equity') ?></td><td class="right mono"><?= money($bs['liab_equity']) ?></td></tr>
       </tbody>
     </table>
     <p class="small <?= $bs['balanced'] ? 'muted' : '' ?>" style="<?= $bs['balanced'] ? '' : 'color:var(--red);font-weight:700' ?>">
-      <?= $bs['balanced'] ? 'Balanced.' : 'Out of balance by ' . money($bs['assets'] - $bs['liab_equity']) . ' — check each company individually.' ?>
+      <?= $bs['balanced'] ? lang('Report.v_balanced') . '.' : lang('Report.v_consol_oob', [money($bs['assets'] - $bs['liab_equity'])]) ?>
     </p>
   </div>
 </div>
 
 <div class="card">
-  <h2>Neraca Saldo / Trial Balance</h2>
+  <h2><?= lang('Report.v_trial_balance') ?></h2>
   <table class="grid tight mono">
     <thead>
-      <tr><th>Code</th><th style="font-family:sans-serif">Account</th>
-        <th class="right">Open D</th><th class="right">Open C</th>
-        <th class="right">Mv D</th><th class="right">Mv C</th>
-        <th class="right">End D</th><th class="right">End C</th></tr>
+      <?php $D = mb_substr(lang('Report.v_debit'), 0, 1); $C = mb_substr(lang('Report.v_credit'), 0, 1); ?>
+      <tr><th><?= lang('Report.v_code') ?></th><th style="font-family:sans-serif"><?= lang('App.account') ?></th>
+        <th class="right"><?= lang('Report.v_opening') ?> <?= $D ?></th><th class="right"><?= lang('Report.v_opening') ?> <?= $C ?></th>
+        <th class="right"><?= lang('Report.v_movement') ?> <?= $D ?></th><th class="right"><?= lang('Report.v_movement') ?> <?= $C ?></th>
+        <th class="right"><?= lang('Report.v_ending') ?> <?= $D ?></th><th class="right"><?= lang('Report.v_ending') ?> <?= $C ?></th></tr>
     </thead>
     <tbody>
       <?php foreach ($tb['rows'] as $r): ?>
@@ -105,7 +106,7 @@ $coPicker .= '</div></div>';
           <td class="right"><?= money($r['end_c'], 2, true) ?></td>
         </tr>
       <?php endforeach ?>
-      <?php if (! $tb['rows']): ?><tr><td colspan="8" class="muted" style="font-family:sans-serif">No activity for the selected companies / range.</td></tr><?php endif ?>
+      <?php if (! $tb['rows']): ?><tr><td colspan="8" class="muted" style="font-family:sans-serif"><?= lang('Report.v_empty_activity_co') ?></td></tr><?php endif ?>
     </tbody>
     <tfoot>
       <tr><td colspan="2">TOTAL</td>

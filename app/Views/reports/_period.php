@@ -68,7 +68,7 @@ $isCustom = $f['period'] === 'custom';
   <?php if (! empty($showZeros)): ?>
     <label class="field inline" style="align-self:center;gap:6px;white-space:nowrap">
       <input type="checkbox" name="zeros" value="1" style="width:auto" <?= ! empty($f['zeros']) ? 'checked' : '' ?>>
-      <span class="small">All chart accounts</span>
+      <span class="small"><?= lang('Report.v_all_accounts') ?></span>
     </label>
   <?php endif ?>
 

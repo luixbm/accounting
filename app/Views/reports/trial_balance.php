@@ -2,7 +2,7 @@
 <?= $this->section('content') ?>
 <?php $t = $data['totals']; ?>
 
-<div class="page-head"><h1><?= esc($title) ?></h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; All reports</a></div></div>
+<div class="page-head"><h1><?= esc($title) ?></h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; <?= lang('Report.v_all_reports') ?></a></div></div>
 <?= view('reports/_period', ['f' => $f, 'showZeros' => true]) ?>
 
 <div class="report-title">
@@ -15,15 +15,15 @@
   <table class="grid tight mono">
     <thead>
       <tr>
-        <th rowspan="2">Code</th><th rowspan="2" style="font-family:sans-serif">Account</th>
-        <th colspan="2" class="center">Opening</th>
-        <th colspan="2" class="center">Movement</th>
-        <th colspan="2" class="center">Ending</th>
+        <th rowspan="2"><?= lang('Report.v_code') ?></th><th rowspan="2" style="font-family:sans-serif"><?= lang('App.account') ?></th>
+        <th colspan="2" class="center"><?= lang('Report.v_opening') ?></th>
+        <th colspan="2" class="center"><?= lang('Report.v_movement') ?></th>
+        <th colspan="2" class="center"><?= lang('Report.v_ending') ?></th>
       </tr>
       <tr>
-        <th class="right">Debit</th><th class="right">Credit</th>
-        <th class="right">Debit</th><th class="right">Credit</th>
-        <th class="right">Debit</th><th class="right">Credit</th>
+        <th class="right"><?= lang('Report.v_debit') ?></th><th class="right"><?= lang('Report.v_credit') ?></th>
+        <th class="right"><?= lang('Report.v_debit') ?></th><th class="right"><?= lang('Report.v_credit') ?></th>
+        <th class="right"><?= lang('Report.v_debit') ?></th><th class="right"><?= lang('Report.v_credit') ?></th>
       </tr>
     </thead>
     <tbody>
@@ -46,7 +46,7 @@
         <?php endforeach ?>
         <?php if ($named): $s = $blk['subtotal']; ?>
           <tr class="sub-row">
-            <td colspan="2" class="right" style="font-family:sans-serif">Subtotal — <?= esc($blk['name']) ?></td>
+            <td colspan="2" class="right" style="font-family:sans-serif"><?= lang('Report.v_subtotal_of', [esc($blk['name'])]) ?></td>
             <td class="right"><?= money($s['open_d'], 2, true) ?></td>
             <td class="right"><?= money($s['open_c'], 2, true) ?></td>
             <td class="right"><?= money($s['mv_d'], 2, true) ?></td>
@@ -56,7 +56,7 @@
           </tr>
         <?php endif ?>
       <?php endforeach ?>
-      <?php if (! $data['rows']): ?><tr><td colspan="8" class="muted" style="font-family:sans-serif">No activity in this range.</td></tr><?php endif ?>
+      <?php if (! $data['rows']): ?><tr><td colspan="8" class="muted" style="font-family:sans-serif"><?= lang('Report.v_empty_activity') ?></td></tr><?php endif ?>
     </tbody>
     <tfoot>
       <tr>
@@ -72,7 +72,7 @@
   </table>
   <?php $obal = abs($t['end_d'] - $t['end_c']) < 0.5; ?>
   <p class="small <?= $obal ? 'muted' : '' ?>" style="<?= $obal ? '' : 'color:var(--red);font-weight:700' ?>">
-    <?= $obal ? 'Ending debits and credits agree.' : 'WARNING: ending debits and credits do not agree — investigate unbalanced journals.' ?>
+    <?= $obal ? lang('Report.v_tb_agree') : lang('Report.v_tb_disagree') ?>
   </p>
 </div>
 

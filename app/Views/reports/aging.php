@@ -2,22 +2,22 @@
 <?= $this->section('content') ?>
 <?php $t = $data['totals']; ?>
 
-<div class="page-head"><h1><?= esc($title) ?></h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; All reports</a></div></div>
+<div class="page-head"><h1><?= esc($title) ?></h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; <?= lang('Report.v_all_reports') ?></a></div></div>
 <?= view('reports/_period', ['f' => $f, 'showAsOf' => true]) ?>
 
 <div class="report-title">
   <div class="co"><?= esc(company_name()) ?></div>
-  <h1><?= esc($heading) ?> — Aging</h1>
-  <div class="muted">Per <?= date_id($asOf) ?> · bucketed by journal date</div>
+  <h1><?= esc($heading) ?> — <?= lang('Report.v_aging_suffix') ?></h1>
+  <div class="muted"><?= lang('App.as_of', [date_id($asOf)]) ?> &middot; <?= lang('Report.v_bucketed_note') ?></div>
 </div>
 
 <div class="card">
   <table class="grid tight mono">
     <thead>
       <tr>
-        <th style="font-family:sans-serif"><?= $kind === 'customer' ? 'Customer' : 'Supplier' ?></th>
-        <th class="right">Current</th><th class="right">1–30</th><th class="right">31–60</th>
-        <th class="right">61–90</th><th class="right">&gt; 90</th><th class="right">Total</th>
+        <th style="font-family:sans-serif"><?= $kind === 'customer' ? lang('Report.v_customer') : lang('Report.v_supplier') ?></th>
+        <th class="right"><?= lang('Report.v_current') ?></th><th class="right">1–30</th><th class="right">31–60</th>
+        <th class="right">61–90</th><th class="right"><?= lang('Report.v_over90') ?></th><th class="right"><?= lang('App.total') ?></th>
       </tr>
     </thead>
     <tbody>
@@ -32,7 +32,7 @@
           <td class="right"><strong><?= money($r['total']) ?></strong></td>
         </tr>
       <?php endforeach ?>
-      <?php if (! $data['rows']): ?><tr><td colspan="7" class="muted" style="font-family:sans-serif">Nothing outstanding.</td></tr><?php endif ?>
+      <?php if (! $data['rows']): ?><tr><td colspan="7" class="muted" style="font-family:sans-serif"><?= lang('Report.v_empty_outstanding') ?></td></tr><?php endif ?>
     </tbody>
     <tfoot>
       <tr>

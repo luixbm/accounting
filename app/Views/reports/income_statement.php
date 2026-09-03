@@ -14,17 +14,17 @@ $section = static function (array $group): string {
                 . '<td class="right mono">' . money($r['amount']) . '</td></tr>';
         }
         if ($named) {
-            $h .= '<tr class="sub-row"><td class="right">Subtotal — ' . esc($blk['name']) . '</td>'
+            $h .= '<tr class="sub-row"><td class="right">' . lang('Report.v_subtotal_of', [esc($blk['name'])]) . '</td>'
                 . '<td class="right mono">' . money($blk['subtotal']) . '</td></tr>';
         }
     }
-    $h .= '<tr class="subtotal"><td>Total</td><td class="right mono">' . money($group['total']) . '</td></tr>';
+    $h .= '<tr class="subtotal"><td>' . lang('App.total') . '</td><td class="right mono">' . money($group['total']) . '</td></tr>';
 
     return $h;
 };
 ?>
 
-<div class="page-head"><h1><?= esc($title) ?></h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; All reports</a></div></div>
+<div class="page-head"><h1><?= esc($title) ?></h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; <?= lang('Report.v_all_reports') ?></a></div></div>
 <?= view('reports/_period', ['f' => $f, 'showCompare' => true, 'showZeros' => true]) ?>
 
 <div class="report-title">
@@ -38,14 +38,14 @@ $section = static function (array $group): string {
     <tbody>
       <?= $section($data['groups']['revenue']) ?>
       <?= $section($data['groups']['cogs']) ?>
-      <tr class="subtotal" style="background:#eef4ff"><td>LABA KOTOR / GROSS PROFIT</td><td class="right mono"><?= money($data['gross_profit']) ?></td></tr>
+      <tr class="subtotal" style="background:#eef4ff"><td><?= lang('Report.v_gross_profit') ?></td><td class="right mono"><?= money($data['gross_profit']) ?></td></tr>
       <?= $section($data['groups']['expense']) ?>
-      <tr class="subtotal" style="background:#eef4ff"><td>LABA USAHA / OPERATING PROFIT</td><td class="right mono"><?= money($data['operating']) ?></td></tr>
+      <tr class="subtotal" style="background:#eef4ff"><td><?= lang('Report.v_operating_profit') ?></td><td class="right mono"><?= money($data['operating']) ?></td></tr>
       <?= $section($data['groups']['other_income']) ?>
       <?= $section($data['groups']['other_expense']) ?>
     </tbody>
     <tfoot>
-      <tr><td>LABA (RUGI) BERSIH / NET INCOME</td><td class="right mono"><?= money($data['net_income']) ?></td></tr>
+      <tr><td><?= lang('Report.v_net_income') ?></td><td class="right mono"><?= money($data['net_income']) ?></td></tr>
     </tfoot>
   </table>
 </div>

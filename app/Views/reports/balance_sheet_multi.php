@@ -25,22 +25,22 @@ $section = static function (array $group) use ($cells): string {
             $h  .= '<tr><td' . ($named ? ' style="padding-left:28px"' : '') . '>' . $lbl . '</td>' . $cells($r['amounts']) . '</tr>';
         }
         if ($named) {
-            $h .= '<tr class="sub-row"><td class="right">Subtotal — ' . esc($blk['name']) . '</td>' . $cells($blk['subtotals']) . '</tr>';
+            $h .= '<tr class="sub-row"><td class="right">' . lang('Report.v_subtotal_of', [esc($blk['name'])]) . '</td>' . $cells($blk['subtotals']) . '</tr>';
         }
     }
-    $h .= '<tr class="subtotal"><td>Total</td>' . $cells($group['totals']) . '</tr>';
+    $h .= '<tr class="subtotal"><td>' . lang('App.total') . '</td>' . $cells($group['totals']) . '</tr>';
 
     return $h;
 };
 ?>
 
-<div class="page-head"><h1><?= esc($title) ?></h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; All reports</a></div></div>
+<div class="page-head"><h1><?= esc($title) ?></h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; <?= lang('Report.v_all_reports') ?></a></div></div>
 <?= view('reports/_period', ['f' => $f, 'showAsOf' => true, 'showCompare' => true, 'showZeros' => true]) ?>
 
 <div class="report-title">
   <div class="co"><?= esc(company_name()) ?></div>
   <h1><?= esc($title) ?></h1>
-  <div class="muted">Snapshot per period end · <?= date_id($from) ?> — <?= date_id($to) ?> · per <?= esc($compare) ?></div>
+  <div class="muted"><?= lang('Report.v_snapshot_end') ?> · <?= date_id($from) ?> — <?= date_id($to) ?> · <?= lang('App.' . $compare) ?></div>
 </div>
 
 <div class="card">
@@ -48,20 +48,20 @@ $section = static function (array $group) use ($cells): string {
     <table class="grid tight">
       <thead>
         <tr>
-          <th style="min-width:220px">Account</th>
+          <th style="min-width:220px"><?= lang('App.account') ?></th>
           <?php foreach ($cols as $c): ?><th class="right nowrap"><?= esc($c) ?></th><?php endforeach ?>
         </tr>
       </thead>
       <tbody>
         <?= $section($data['groups']['asset']) ?>
-        <tr class="subtotal" style="background:#eef4ff"><td>TOTAL AKTIVA / ASSETS</td><?= $cells($data['assets']) ?></tr>
+        <tr class="subtotal" style="background:#eef4ff"><td><?= lang('Report.v_total_assets') ?></td><?= $cells($data['assets']) ?></tr>
         <?= $section($data['groups']['liability']) ?>
         <?= $section($data['groups']['equity']) ?>
-        <tr class="subtotal" style="background:#eef4ff"><td>TOTAL KEWAJIBAN &amp; EKUITAS</td><?= $cells($data['liab_equity']) ?></tr>
+        <tr class="subtotal" style="background:#eef4ff"><td><?= lang('Report.v_total_liab_equity') ?></td><?= $cells($data['liab_equity']) ?></tr>
       </tbody>
       <tfoot>
         <tr>
-          <td>Selisih / Difference</td>
+          <td><?= lang('Report.v_difference') ?></td>
           <?php foreach ($cols as $i => $_): ?>
             <?php $diff = $data['assets'][$i] - $data['liab_equity'][$i]; ?>
             <td class="right mono" style="<?= abs($diff) < 0.5 ? '' : 'color:var(--red);font-weight:700' ?>"><?= money($diff, 2, true) ?></td>

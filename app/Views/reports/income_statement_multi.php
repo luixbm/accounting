@@ -27,22 +27,22 @@ $section = static function (array $group) use ($cells): string {
             $h  .= '<tr><td' . ($named ? ' style="padding-left:28px"' : '') . '>' . $lbl . '</td>' . $cells($r['amounts']) . '</tr>';
         }
         if ($named) {
-            $h .= '<tr class="sub-row"><td class="right">Subtotal — ' . esc($blk['name']) . '</td>' . $cells($blk['subtotals']) . '</tr>';
+            $h .= '<tr class="sub-row"><td class="right">' . lang('Report.v_subtotal_of', [esc($blk['name'])]) . '</td>' . $cells($blk['subtotals']) . '</tr>';
         }
     }
-    $h .= '<tr class="subtotal"><td>Total</td>' . $cells($group['totals']) . '</tr>';
+    $h .= '<tr class="subtotal"><td>' . lang('App.total') . '</td>' . $cells($group['totals']) . '</tr>';
 
     return $h;
 };
 ?>
 
-<div class="page-head"><h1><?= esc($title) ?></h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; All reports</a></div></div>
+<div class="page-head"><h1><?= esc($title) ?></h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; <?= lang('Report.v_all_reports') ?></a></div></div>
 <?= view('reports/_period', ['f' => $f, 'showCompare' => true, 'showZeros' => true]) ?>
 
 <div class="report-title">
   <div class="co"><?= esc(company_name()) ?></div>
   <h1><?= esc($title) ?></h1>
-  <div class="muted"><?= date_id($from) ?> — <?= date_id($to) ?> · per <?= esc($compare) ?></div>
+  <div class="muted"><?= date_id($from) ?> — <?= date_id($to) ?> · <?= lang('App.' . $compare) ?></div>
 </div>
 
 <div class="card">
@@ -50,27 +50,27 @@ $section = static function (array $group) use ($cells): string {
     <table class="grid tight">
       <thead>
         <tr>
-          <th style="min-width:220px">Account</th>
+          <th style="min-width:220px"><?= lang('App.account') ?></th>
           <?php foreach ($cols as $c): ?><th class="right nowrap"><?= esc($c) ?></th><?php endforeach ?>
-          <th class="right nowrap col-tot">Total</th>
+          <th class="right nowrap col-tot"><?= lang('App.total') ?></th>
         </tr>
       </thead>
       <tbody>
         <?= $section($data['groups']['revenue']) ?>
         <?= $section($data['groups']['cogs']) ?>
-        <tr class="subtotal" style="background:#eef4ff"><td>LABA KOTOR / GROSS PROFIT</td><?= $cells($data['subtotals']['gross_profit']) ?></tr>
+        <tr class="subtotal" style="background:#eef4ff"><td><?= lang('Report.v_gross_profit') ?></td><?= $cells($data['subtotals']['gross_profit']) ?></tr>
         <?= $section($data['groups']['expense']) ?>
-        <tr class="subtotal" style="background:#eef4ff"><td>LABA USAHA / OPERATING PROFIT</td><?= $cells($data['subtotals']['operating']) ?></tr>
+        <tr class="subtotal" style="background:#eef4ff"><td><?= lang('Report.v_operating_profit') ?></td><?= $cells($data['subtotals']['operating']) ?></tr>
         <?= $section($data['groups']['other_income']) ?>
         <?= $section($data['groups']['other_expense']) ?>
       </tbody>
       <tfoot>
-        <tr><td>LABA (RUGI) BERSIH / NET INCOME</td><?= $cells($data['subtotals']['net_income']) ?></tr>
+        <tr><td><?= lang('Report.v_net_income') ?></td><?= $cells($data['subtotals']['net_income']) ?></tr>
       </tfoot>
     </table>
   </div>
 </div>
 
-<?php if ($nc === 0): ?><p class="muted">The date range produced no periods — widen From/To.</p><?php endif ?>
+<?php if ($nc === 0): ?><p class="muted"><?= lang('Report.v_empty_periods') ?></p><?php endif ?>
 
 <?= $this->endSection() ?>

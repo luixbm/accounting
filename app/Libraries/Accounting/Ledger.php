@@ -141,7 +141,7 @@ class Ledger
             }
             $rows[] = $row;
 
-            $g   = $headerMeta[(int) ($a['parent_id'] ?? 0)] ?? ['code' => '', 'name' => 'Lainnya / Other'];
+            $g   = $headerMeta[(int) ($a['parent_id'] ?? 0)] ?? ['code' => '', 'name' => lang('Report.grp_uncategorised')];
             $key = $g['code'] !== '' ? $g['code'] : '~';
             $blocks[$key] ??= ['code' => $g['code'], 'name' => $g['name'], 'rows' => [], 'subtotal' => $zero6()];
             $blocks[$key]['rows'][] = $row;
@@ -240,11 +240,11 @@ class Ledger
         [$headersByType, $headerName] = $this->headerIndex($accts, AccountModel::PNL_TYPES);
 
         $groups = [
-            'revenue'       => ['label' => 'Pendapatan / Revenue', 'rows' => [], 'blocks' => [], 'total' => 0.0],
-            'cogs'          => ['label' => 'Beban Pokok / Cost of Sales', 'rows' => [], 'blocks' => [], 'total' => 0.0],
-            'expense'       => ['label' => 'Beban Operasional / Operating Expenses', 'rows' => [], 'blocks' => [], 'total' => 0.0],
-            'other_income'  => ['label' => 'Pendapatan Lain-lain / Other Income', 'rows' => [], 'blocks' => [], 'total' => 0.0],
-            'other_expense' => ['label' => 'Beban Lain-lain / Other Expenses', 'rows' => [], 'blocks' => [], 'total' => 0.0],
+            'revenue'       => ['label' => lang('Report.grp_revenue'), 'rows' => [], 'blocks' => [], 'total' => 0.0],
+            'cogs'          => ['label' => lang('Report.grp_cogs'), 'rows' => [], 'blocks' => [], 'total' => 0.0],
+            'expense'       => ['label' => lang('Report.grp_expense'), 'rows' => [], 'blocks' => [], 'total' => 0.0],
+            'other_income'  => ['label' => lang('Report.grp_other_income'), 'rows' => [], 'blocks' => [], 'total' => 0.0],
+            'other_expense' => ['label' => lang('Report.grp_other_expense'), 'rows' => [], 'blocks' => [], 'total' => 0.0],
         ];
         $leafRows = []; // parent id => shown rows
         $leafSub  = []; // parent id => subtotal (every leaf, shown or not)
@@ -292,7 +292,7 @@ class Ledger
                 ];
             }
             if (isset($ungrp[$type]) && ($ungrp[$type]['rows'] || abs($ungrp[$type]['subtotal']) >= 0.005)) {
-                $groups[$type]['blocks'][] = ['code' => '', 'name' => 'Lainnya / Other', 'rows' => $ungrp[$type]['rows'], 'subtotal' => $ungrp[$type]['subtotal']];
+                $groups[$type]['blocks'][] = ['code' => '', 'name' => lang('Report.grp_uncategorised'), 'rows' => $ungrp[$type]['rows'], 'subtotal' => $ungrp[$type]['subtotal']];
             }
         }
 
@@ -333,9 +333,9 @@ class Ledger
         [$headersByType, $headerName] = $this->headerIndex($accts, AccountModel::BS_TYPES);
 
         $groups = [
-            'asset'     => ['label' => 'AKTIVA / Assets', 'rows' => [], 'blocks' => [], 'total' => 0.0],
-            'liability' => ['label' => 'KEWAJIBAN / Liabilities', 'rows' => [], 'blocks' => [], 'total' => 0.0],
-            'equity'    => ['label' => 'EKUITAS / Equity', 'rows' => [], 'blocks' => [], 'total' => 0.0],
+            'asset'     => ['label' => lang('Report.grp_assets'), 'rows' => [], 'blocks' => [], 'total' => 0.0],
+            'liability' => ['label' => lang('Report.grp_liabilities'), 'rows' => [], 'blocks' => [], 'total' => 0.0],
+            'equity'    => ['label' => lang('Report.grp_equity'), 'rows' => [], 'blocks' => [], 'total' => 0.0],
         ];
         $leafRows = [];
         $leafSub  = [];
@@ -383,7 +383,7 @@ class Ledger
                 ];
             }
             if (isset($ungrp[$bucket]) && ($ungrp[$bucket]['rows'] || abs($ungrp[$bucket]['subtotal']) >= 0.005)) {
-                $groups[$bucket]['blocks'][] = ['code' => '', 'name' => 'Lainnya / Other', 'rows' => $ungrp[$bucket]['rows'], 'subtotal' => $ungrp[$bucket]['subtotal']];
+                $groups[$bucket]['blocks'][] = ['code' => '', 'name' => lang('Report.grp_uncategorised'), 'rows' => $ungrp[$bucket]['rows'], 'subtotal' => $ungrp[$bucket]['subtotal']];
             }
         }
 
@@ -770,11 +770,11 @@ class Ledger
 
         // --- income statement (period movement)
         $plGroups = [
-            'revenue'       => ['label' => 'Pendapatan / Revenue', 'rows' => [], 'total' => 0.0],
-            'cogs'          => ['label' => 'Beban Pokok / Cost of Sales', 'rows' => [], 'total' => 0.0],
-            'expense'       => ['label' => 'Beban Operasional / Operating Expenses', 'rows' => [], 'total' => 0.0],
-            'other_income'  => ['label' => 'Pendapatan Lain-lain / Other Income', 'rows' => [], 'total' => 0.0],
-            'other_expense' => ['label' => 'Beban Lain-lain / Other Expenses', 'rows' => [], 'total' => 0.0],
+            'revenue'       => ['label' => lang('Report.grp_revenue'), 'rows' => [], 'total' => 0.0],
+            'cogs'          => ['label' => lang('Report.grp_cogs'), 'rows' => [], 'total' => 0.0],
+            'expense'       => ['label' => lang('Report.grp_expense'), 'rows' => [], 'total' => 0.0],
+            'other_income'  => ['label' => lang('Report.grp_other_income'), 'rows' => [], 'total' => 0.0],
+            'other_expense' => ['label' => lang('Report.grp_other_expense'), 'rows' => [], 'total' => 0.0],
         ];
         foreach ($period as $code => $m) {
             if ($m['is_group'] === 1 || ! isset($plGroups[$m['type']])) {
@@ -798,9 +798,9 @@ class Ledger
 
         // --- balance sheet (cumulative as of date)
         $bsGroups = [
-            'asset'     => ['label' => 'AKTIVA / Assets', 'rows' => [], 'total' => 0.0],
-            'liability' => ['label' => 'KEWAJIBAN / Liabilities', 'rows' => [], 'total' => 0.0],
-            'equity'    => ['label' => 'EKUITAS / Equity', 'rows' => [], 'total' => 0.0],
+            'asset'     => ['label' => lang('Report.grp_assets'), 'rows' => [], 'total' => 0.0],
+            'liability' => ['label' => lang('Report.grp_liabilities'), 'rows' => [], 'total' => 0.0],
+            'equity'    => ['label' => lang('Report.grp_equity'), 'rows' => [], 'total' => 0.0],
         ];
         foreach ($cum as $code => $m) {
             if ($m['is_group'] === 1 || ! in_array($m['type'], AccountModel::BS_TYPES, true)) {
@@ -880,9 +880,9 @@ class Ledger
             ->get()->getResultArray();
 
         $groups = [
-            'operating' => ['label' => 'Aktivitas Operasi / Operating Activities', 'rows' => [], 'total' => 0.0],
-            'investing' => ['label' => 'Aktivitas Investasi / Investing Activities', 'rows' => [], 'total' => 0.0],
-            'financing' => ['label' => 'Aktivitas Pendanaan / Financing Activities', 'rows' => [], 'total' => 0.0],
+            'operating' => ['label' => lang('Report.grp_cf_operating'), 'rows' => [], 'total' => 0.0],
+            'investing' => ['label' => lang('Report.grp_cf_investing'), 'rows' => [], 'total' => 0.0],
+            'financing' => ['label' => lang('Report.grp_cf_financing'), 'rows' => [], 'total' => 0.0],
         ];
         foreach ($rows as $r) {
             $cls = isset($groups[$r['cashflow']]) ? $r['cashflow'] : 'operating';
@@ -967,7 +967,7 @@ class Ledger
             ->get()->getResultArray();
 
         $groups = [
-            'revenue'       => ['label' => 'Pendapatan / Revenue', 'rows' => [], 'total' => 0.0],
+            'revenue'       => ['label' => lang('Report.grp_revenue'), 'rows' => [], 'total' => 0.0],
             'cogs'          => ['label' => 'Beban Pokok / Direct Cost', 'rows' => [], 'total' => 0.0],
             'expense'       => ['label' => 'Beban Operasional / Expense', 'rows' => [], 'total' => 0.0],
             'other_income'  => ['label' => 'Pendapatan Lain / Other Income', 'rows' => [], 'total' => 0.0],

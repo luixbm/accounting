@@ -16,34 +16,34 @@ $section = static function (array $g) use ($cells): string {
         $h .= '<tr><td><span class="mono small">' . esc($r['code']) . '</span> ' . esc($r['name']) . '</td>' . $cells($r['amounts']) . '</tr>';
     }
 
-    return $h . '<tr class="subtotal"><td>Total</td>' . $cells($g['totals']) . '</tr>';
+    return $h . '<tr class="subtotal"><td>' . lang('App.total') . '</td>' . $cells($g['totals']) . '</tr>';
 };
 ?>
 
-<div class="page-head"><h1><?= esc($title) ?></h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; All reports</a></div></div>
+<div class="page-head"><h1><?= esc($title) ?></h1><div class="btn-group no-print"><a class="btn ghost" href="<?= site_url('reports') ?>">&lsaquo; <?= lang('Report.v_all_reports') ?></a></div></div>
 <?= view('reports/_period', ['f' => $f, 'showCompare' => true]) ?>
 
 <div class="report-title">
   <div class="co"><?= esc(company_name()) ?></div>
   <h1><?= esc($title) ?></h1>
-  <div class="muted"><?= date_id($f['from']) ?> — <?= date_id($f['to']) ?> · per <?= esc($f['compare']) ?></div>
+  <div class="muted"><?= date_id($f['from']) ?> — <?= date_id($f['to']) ?> · <?= lang('App.' . $f['compare']) ?></div>
 </div>
 
 <div class="card">
   <div style="overflow-x:auto">
     <table class="grid tight">
       <thead>
-        <tr><th style="min-width:220px">Account</th><?php foreach ($cols as $c): ?><th class="right nowrap"><?= esc($c) ?></th><?php endforeach ?></tr>
+        <tr><th style="min-width:220px"><?= lang('App.account') ?></th><?php foreach ($cols as $c): ?><th class="right nowrap"><?= esc($c) ?></th><?php endforeach ?></tr>
       </thead>
       <tbody>
         <?= $section($data['groups']['operating']) ?>
         <?= $section($data['groups']['investing']) ?>
         <?= $section($data['groups']['financing']) ?>
-        <tr class="subtotal" style="background:var(--brand-soft)"><td>NET CHANGE IN CASH</td><?= $cells($data['net_change']) ?></tr>
-        <tr><td>Cash — beginning</td><?= $cells($data['opening']) ?></tr>
+        <tr class="subtotal" style="background:var(--brand-soft)"><td><?= lang('Report.v_net_change_cash') ?></td><?= $cells($data['net_change']) ?></tr>
+        <tr><td><?= lang('Report.v_cash_beginning') ?></td><?= $cells($data['opening']) ?></tr>
       </tbody>
       <tfoot>
-        <tr><td>CASH — END</td><?= $cells($data['closing']) ?></tr>
+        <tr><td><?= lang('Report.v_cash_end') ?></td><?= $cells($data['closing']) ?></tr>
       </tfoot>
     </table>
   </div>
