@@ -18,13 +18,15 @@ class CompanyController extends BaseController
         return user_can('settings.manage');
     }
 
-    /** Switch the active company for this session (any logged-in user). */
+    /** Switch the active company for this session (within the user's branches). */
     public function switch()
     {
         $id = (int) $this->request->getPost('company_id');
         $c  = $this->companies->find($id);
-        if ($c && (int) $c['is_active'] === 1) {
+        if ($c && (int) $c['is_active'] === 1 && user_can_company($id)) {
             session()->set('active_company_id', $id);
+        } elseif ($c && ! user_can_company($id)) {
+            session()->setFlashdata('error', lang('App.not_allowed'));
         }
 
         return redirect()->to($this->request->getPost('return') ?: '/');

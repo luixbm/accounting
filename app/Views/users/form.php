@@ -49,6 +49,21 @@
       <?php endforeach ?>
       <p class="small muted"><a href="<?= site_url('roles') ?>">Manage roles &amp; permissions</a></p>
     </fieldset>
+
+    <?php if (count($companies) > 1): ?>
+      <fieldset>
+        <legend>Branch access</legend>
+        <p class="small muted" style="margin-top:0">Leave all unticked = access to every branch.</p>
+        <?php foreach ($companies as $c): ?>
+          <label class="inline" style="font-weight:400">
+            <input type="checkbox" name="companies[]" value="<?= (int) $c['id'] ?>" style="width:auto"
+              <?= in_array((int) $c['id'], array_map('intval', $userCompanies), true) ? 'checked' : '' ?>>
+            <span><?= esc($c['name']) ?> <span class="muted mono small"><?= esc($c['code']) ?></span></span>
+          </label>
+        <?php endforeach ?>
+      </fieldset>
+    <?php endif ?>
+
     <?php if ($isEdit): ?>
       <label class="inline" style="font-weight:400">
         <input type="checkbox" name="active" value="1" style="width:auto" <?= $user->active ? 'checked' : '' ?>> Active

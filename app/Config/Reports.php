@@ -71,4 +71,39 @@ class Reports extends BaseConfig
         'job-list'       => ['job', 'Job List', 'Revenue, cost &amp; margin per job', 'job', 'reports/job-list', true],
         'job-detail'     => ['job', 'Job P&amp;L — Sales vs Purchase', 'Sales &amp; purchase per customer / supplier for jobs in an arrival window', 'job', 'reports/job-pnl', true],
     ];
+
+    /**
+     * Per-report permission overrides: report key => permission string.
+     *
+     * A report not listed here needs only `reports.view` (the group gate) — so
+     * every existing report is unchanged and every NEW report is covered by
+     * default. To restrict one, add a line here, e.g.
+     *   'consolidation' => 'reports.consolidated',
+     * then add that permission string in Setup → Roles.
+     *
+     * Enforced by App\Filters\ReportGate on the /reports route group and honoured
+     * by the Reports hub (a card the user can't open is hidden).
+     */
+    public array $perms = [
+        // key => 'permission.string'
+    ];
+
+    /** The permission required to open a report, defaulting to reports.view. */
+    public function permFor(string $key): string
+    {
+        return $this->perms[$key] ?? 'reports.view';
+    }
+
+    /** Reverse-lookup: the report key whose route matches a URI path, or null. */
+    public function keyForPath(string $path): ?string
+    {
+        $path = trim($path, '/');
+        foreach ($this->items as $key => $row) {
+            if (trim(explode('?', (string) $row[4])[0], '/') === $path) {
+                return $key;
+            }
+        }
+
+        return null;
+    }
 }

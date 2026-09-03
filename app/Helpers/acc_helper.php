@@ -81,10 +81,50 @@ if (! function_exists('rupiah')) {
     }
 }
 
+if (! function_exists('allowed_company_ids')) {
+    /**
+     * Company ids the current user may switch into, or null when unrestricted
+     * (no `user_companies` rows, or no logged-in user / API request). Cached
+     * for the request. Never calls active_company_id() — no recursion.
+     *
+     * @return list<int>|null
+     */
+    function allowed_company_ids(): ?array
+    {
+        static $cache = false;
+
+        if ($cache !== false) {
+            return $cache;
+        }
+        $uid = (int) (function_exists('auth') && auth()->loggedIn() ? auth()->id() : 0);
+        if ($uid <= 0) {
+            return $cache = null;
+        }
+        try {
+            $ids = model(\App\Models\UserCompanyModel::class)->idsFor($uid);
+        } catch (\Throwable $e) {
+            return $cache = null; // table not migrated yet
+        }
+
+        return $cache = ($ids === [] ? null : $ids);
+    }
+}
+
+if (! function_exists('user_can_company')) {
+    /** May the current user work in this company id? */
+    function user_can_company(int $companyId): bool
+    {
+        $ids = allowed_company_ids();
+
+        return $ids === null || in_array($companyId, $ids, true);
+    }
+}
+
 if (! function_exists('active_company_id')) {
     /**
      * The company the current request is working in. On an authenticated API
-     * request this is the token's company; otherwise it is the session's.
+     * request this is the token's company; otherwise it is the session's,
+     * constrained to the user's allowed branches.
      */
     function active_company_id(): int
     {
@@ -93,13 +133,20 @@ if (! function_exists('active_company_id')) {
             return $api;
         }
 
-        $s  = session();
-        $id = (int) $s->get('active_company_id');
-        if ($id > 0) {
+        $s       = session();
+        $allowed = allowed_company_ids();
+        $id      = (int) $s->get('active_company_id');
+        if ($id > 0 && ($allowed === null || in_array($id, $allowed, true))) {
             return $id;
         }
-        $first = model(\App\Models\CompanyModel::class)->where('is_active', 1)->orderBy('id', 'ASC')->first();
-        $id    = $first ? (int) $first['id'] : 1;
+
+        // pick the first active company the user is allowed into
+        $q = model(\App\Models\CompanyModel::class)->where('is_active', 1)->orderBy('id', 'ASC');
+        if ($allowed !== null) {
+            $q->whereIn('id', $allowed ?: [0]);
+        }
+        $first = $q->first();
+        $id    = $first ? (int) $first['id'] : ($allowed[0] ?? 1);
         $s->set('active_company_id', $id);
 
         return $id;

@@ -34,6 +34,9 @@ $setup = [
 ];
 
 $allCompanies = model(\App\Models\CompanyModel::class)->where('is_active', 1)->orderBy('code')->findAll();
+if (($allowedCo = allowed_company_ids()) !== null) {
+    $allCompanies = array_values(array_filter($allCompanies, static fn ($c) => in_array((int) $c['id'], $allowedCo, true)));
+}
 
 $renderGroup = static function (string $heading, array $links) use ($navFor) {
     $visible = array_filter($links, static fn ($l) => $l[4]);

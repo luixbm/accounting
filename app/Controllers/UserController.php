@@ -3,6 +3,8 @@
 namespace App\Controllers;
 
 use App\Libraries\AvatarStore;
+use App\Models\CompanyModel;
+use App\Models\UserCompanyModel;
 use CodeIgniter\Shield\Entities\User;
 use CodeIgniter\Shield\Models\UserModel;
 
@@ -44,13 +46,21 @@ class UserController extends BaseController
         return view('users/index', ['title' => 'Users', 'rows' => $rows]);
     }
 
+    /** @return list<array<string,mixed>> active companies (for the branch picker) */
+    private function companies(): array
+    {
+        return model(CompanyModel::class)->active();
+    }
+
     public function new()
     {
         return view('users/form', [
-            'title'     => 'New User',
-            'user'      => null,
-            'roles'     => $this->roleTitles(),
-            'userRoles' => [setting('AuthGroups.defaultGroup') ?? 'staff'],
+            'title'         => 'New User',
+            'user'          => null,
+            'roles'         => $this->roleTitles(),
+            'userRoles'     => [setting('AuthGroups.defaultGroup') ?? 'staff'],
+            'companies'     => $this->companies(),
+            'userCompanies' => [],
         ]);
     }
 
@@ -83,6 +93,7 @@ class UserController extends BaseController
             $user->addGroup($r);
         }
         $this->handlePhoto((int) $user->id);
+        model(UserCompanyModel::class)->setFor((int) $user->id, (array) $this->request->getPost('companies'));
 
         return redirect()->to('users')->with('message', 'User created.');
     }
@@ -95,10 +106,12 @@ class UserController extends BaseController
         }
 
         return view('users/form', [
-            'title'     => 'Edit ' . $user->username,
-            'user'      => $user,
-            'roles'     => $this->roleTitles(),
-            'userRoles' => $user->getGroups(),
+            'title'         => 'Edit ' . $user->username,
+            'user'          => $user,
+            'roles'         => $this->roleTitles(),
+            'userRoles'     => $user->getGroups(),
+            'companies'     => $this->companies(),
+            'userCompanies' => model(UserCompanyModel::class)->idsFor((int) $user->id),
         ]);
     }
 
@@ -141,6 +154,7 @@ class UserController extends BaseController
         }
         $users->save($user);
         $this->handlePhoto((int) $user->id);
+        model(UserCompanyModel::class)->setFor((int) $user->id, (array) $this->request->getPost('companies'));
 
         return redirect()->to('users')->with('message', 'User updated.');
     }

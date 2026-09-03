@@ -123,6 +123,10 @@ class ReportController extends BaseController
             if ($key === 'consolidation' && ! $multiCompany) {
                 continue;
             }
+            $perm = $cfg->permFor($key);
+            if ($perm !== 'reports.view' && ! auth()->user()->can($perm)) {
+                continue;
+            }
             $ttl  = $this->rlang($key, $ttl);
             $desc = $this->rlang($key . '_d', $desc);
             $byCat[$cat][] = compact('key', 'ttl', 'desc', 'icon', 'route', 'exists');

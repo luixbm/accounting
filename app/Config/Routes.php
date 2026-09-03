@@ -302,7 +302,7 @@ $routes->group('', ['filter' => 'session'], static function (RouteCollection $ro
     });
 
     // --- Reports -----------------------------------------------------------
-    $routes->group('reports', ['filter' => 'permission:reports.view'], static function (RouteCollection $routes): void {
+    $routes->group('reports', ['filter' => ['permission:reports.view', 'reportgate']], static function (RouteCollection $routes): void {
         $routes->get('/', 'ReportController::index');
         $routes->get('consolidation', 'ReportController::consolidation');
         $routes->get('cash-flow', 'ReportController::cashFlow');

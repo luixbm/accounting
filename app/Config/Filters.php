@@ -13,6 +13,7 @@ use CodeIgniter\Filters\PageCache;
 use CodeIgniter\Filters\PerformanceMetrics;
 use CodeIgniter\Filters\SecureHeaders;
 use App\Filters\ApiAuth;
+use App\Filters\ReportGate;
 use App\Filters\SetLocale;
 
 class Filters extends BaseFilters
@@ -38,6 +39,7 @@ class Filters extends BaseFilters
         'performance'   => PerformanceMetrics::class,
         'setlocale'     => SetLocale::class,
         'apiauth'       => ApiAuth::class,
+        'reportgate'    => ReportGate::class,
     ];
 
     /**
