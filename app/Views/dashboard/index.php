@@ -28,6 +28,30 @@ $sCash     = array_column($series, 'cash');
   </div>
 </div>
 
+<?php $anns = current_announcements(); ?>
+<?php if ($anns): ?>
+  <div class="card announce-card">
+    <div class="announce-card-head">
+      <h3><?= lang('Announce.card_title') ?></h3>
+      <?php if (user_can('settings.manage')): ?>
+        <a class="btn sm ghost no-print" href="<?= site_url('announcements') ?>"><?= lang('Announce.manage') ?></a>
+      <?php endif ?>
+    </div>
+    <ul class="announce-list">
+      <?php foreach ($anns as $a): ?>
+        <?php $lvl = in_array($a['level'], ['info', 'warning', 'success'], true) ? $a['level'] : 'info'; ?>
+        <li class="announce-item announce-<?= $lvl ?>">
+          <div class="announce-text">
+            <strong><?= esc($a['title']) ?></strong>
+            <?php if (! empty($a['body'])): ?><span><?= nl2br(esc($a['body'])) ?></span><?php endif ?>
+          </div>
+          <span class="small muted announce-meta"><?= esc(date_id($a['starts_on'] ?? substr((string) ($a['created_at'] ?? ''), 0, 10))) ?></span>
+        </li>
+      <?php endforeach ?>
+    </ul>
+  </div>
+<?php endif ?>
+
 <div class="kpis">
   <div class="kpi">
     <div class="k-label"><?= lang('Dashboard.cash_bank') ?></div>

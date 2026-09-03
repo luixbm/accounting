@@ -275,6 +275,7 @@ if (! function_exists('nav_icon')) {
             'period'    => '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/>',
             'settings'  => '<circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.5-2.4 1a7 7 0 0 0-1.7-1L14.5 2h-4l-.3 2.5a7 7 0 0 0-1.7 1l-2.4-1-2 3.5 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7 7 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5a7 7 0 0 0 .1-1z"/>',
             'users'     => '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M15 14.5c2.5.4 4.5 2.6 4.5 5.5"/>',
+            'megaphone' => '<path d="M3 11v2a1 1 0 0 0 1 1h2l9 5V6L6 11H4a1 1 0 0 0-1 0z"/><path d="M15 8a4 4 0 0 1 0 8"/><path d="M7 14v4a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-3"/>',
         ];
 
         return '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
@@ -356,5 +357,33 @@ if (! function_exists('user_avatar_tag')) {
         }
 
         return '<span class="' . esc($cls, 'attr') . ' is-fallback">' . esc(user_avatar_initials($seed)) . '</span>';
+    }
+}
+
+if (! function_exists('current_announcements')) {
+    /**
+     * Live announcements for the active company (active + inside their date
+     * window), most prominent first. Empty when signed out. Cached per request.
+     *
+     * @return list<array<string,mixed>>
+     */
+    function current_announcements(): array
+    {
+        static $cache = null;
+
+        if ($cache !== null) {
+            return $cache;
+        }
+        if (! function_exists('auth') || ! auth()->loggedIn()) {
+            return $cache = [];
+        }
+
+        try {
+            $cache = model(\App\Models\AnnouncementModel::class)->current();
+        } catch (\Throwable $e) {
+            $cache = []; // table not migrated yet, etc. - never break the layout
+        }
+
+        return $cache;
     }
 }

@@ -254,6 +254,17 @@ $routes->group('', ['filter' => 'session'], static function (RouteCollection $ro
         $routes->post('(:num)', 'CompanyController::update/$1');
     });
 
+    // --- Announcements (notice board) ------------------------------------
+    $routes->group('announcements', ['filter' => 'permission:settings.manage'], static function (RouteCollection $routes): void {
+        $routes->get('/', 'AnnouncementController::index');
+        $routes->get('new', 'AnnouncementController::new');
+        $routes->post('/', 'AnnouncementController::create');
+        $routes->get('(:num)/edit', 'AnnouncementController::edit/$1');
+        $routes->post('(:num)', 'AnnouncementController::update/$1');
+        $routes->post('(:num)/toggle', 'AnnouncementController::toggle/$1');
+        $routes->post('(:num)/delete', 'AnnouncementController::delete/$1');
+    });
+
     $routes->group('jobs', static function (RouteCollection $routes): void {
         $routes->get('/', 'JobController::index');
 

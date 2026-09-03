@@ -30,6 +30,7 @@ return [
     'control_accounts' => 'Akun Kontrol',
 
     'profile'  => 'Profil Saya',
+    'announcements' => 'Pengumuman',
     'logout'   => 'Keluar',
     'theme'    => 'Tema',
     'language' => 'Bahasa',

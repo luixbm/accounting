@@ -30,6 +30,7 @@ return [
     'control_accounts' => 'Control Accounts',
 
     'profile'  => 'My Profile',
+    'announcements' => 'Announcements',
     'logout'   => 'Log out',
     'theme'    => 'Theme',
     'language' => 'Language',

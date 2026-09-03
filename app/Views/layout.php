@@ -23,6 +23,7 @@ $transactions = [
 ];
 $setup = [
     ['periods', 'periods', 'period', 'periods', true],
+    ['announcements', 'announcements', 'megaphone', 'announcements', user_can('settings.manage')],
     ['companies', 'companies', 'accounts', 'companies', user_can('settings.manage')],
     ['settings', 'settings', 'settings', 'settings', user_can('settings.manage')],
     ['control-accounts', 'control-accounts', 'accounts', 'control_accounts', user_can('settings.manage')],
@@ -135,6 +136,34 @@ $renderGroup = static function (string $heading, array $links) use ($navFor) {
 
   <div class="content">
     <main class="wrap">
+      <?php $pinned = array_filter(current_announcements(), static fn ($a) => (int) $a['pinned'] === 1); ?>
+      <?php if ($pinned): ?>
+        <div class="announce-stack no-print" id="announceStack">
+          <?php foreach ($pinned as $a): ?>
+            <?php $lvl = in_array($a['level'], ['info', 'warning', 'success'], true) ? $a['level'] : 'info'; ?>
+            <div class="announce announce-<?= $lvl ?>" data-ann="<?= (int) $a['id'] ?>-<?= strtotime((string) ($a['updated_at'] ?? $a['created_at'] ?? '')) ?>">
+              <div class="announce-text">
+                <strong><?= esc($a['title']) ?></strong>
+                <?php if (! empty($a['body'])): ?><span><?= nl2br(esc($a['body'])) ?></span><?php endif ?>
+              </div>
+              <button type="button" class="announce-x" aria-label="<?= lang('Announce.dismiss') ?>">&times;</button>
+            </div>
+          <?php endforeach ?>
+        </div>
+        <script>
+          // Hide already-dismissed banners at parse time (no flash on reload).
+          (function () {
+            try {
+              var seen = JSON.parse(localStorage.getItem('sa-ann-dismissed') || '[]') || [],
+                  st = document.getElementById('announceStack');
+              st.querySelectorAll('.announce').forEach(function (el) {
+                if (seen.indexOf(el.getAttribute('data-ann')) !== -1) el.hidden = true;
+              });
+              if (!st.querySelector('.announce:not([hidden])')) st.hidden = true;
+            } catch (e) {}
+          })();
+        </script>
+      <?php endif ?>
       <?php if (session()->getFlashdata('message')): ?>
         <div class="alert alert-success"><?= esc(session()->getFlashdata('message')) ?></div>
       <?php endif ?>
@@ -179,6 +208,25 @@ $renderGroup = static function (string $heading, array $links) use ($navFor) {
       mark();
     });
     mark();
+
+    // Dismissible announcement banners - remembered per browser, keyed by
+    // id + last-updated so an edited announcement re-appears.
+    var stack = document.getElementById('announceStack');
+    if (stack) {
+      var KEY = 'sa-ann-dismissed', seen = [];
+      try { seen = JSON.parse(localStorage.getItem(KEY) || '[]') || []; } catch (e) { seen = []; }
+      stack.querySelectorAll('.announce').forEach(function (el) {
+        var k = el.getAttribute('data-ann');
+        if (seen.indexOf(k) !== -1) { el.hidden = true; return; }
+        el.querySelector('.announce-x').addEventListener('click', function () {
+          el.hidden = true;
+          if (seen.indexOf(k) === -1) seen.push(k);
+          try { localStorage.setItem(KEY, JSON.stringify(seen.slice(-100))); } catch (e) {}
+          if (!stack.querySelector('.announce:not([hidden])')) stack.hidden = true;
+        });
+      });
+      if (!stack.querySelector('.announce:not([hidden])')) stack.hidden = true;
+    }
   })();
 </script>
 </body>
