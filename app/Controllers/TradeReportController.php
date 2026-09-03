@@ -28,14 +28,16 @@ class TradeReportController extends BaseController
                 'pay' => 'purchase_payments', 'alloc' => 'purchase_payment_allocations', 'allocFk' => 'payment_id',
                 'party' => 'suppliers', 'pid' => 'supplier_id', 'ref' => 'supplier_ref',
                 'paid' => 'paid_base', 'payNo' => 'payment_no', 'payDate' => 'payment_date',
-                'pLabel' => 'Supplier', 'noun' => 'Purchase', 'payNoun' => 'Payment', 'k' => 'p',
+                'pLabel' => $this->rlang('col_supplier', 'Supplier'), 'noun' => $this->rlang('noun_purchase', 'Purchase'),
+                'payNoun' => $this->rlang('noun_payment', 'Payment'), 'k' => 'p',
             ]
             : [
                 'inv' => 'sales_invoices', 'line' => 'sales_invoice_lines',
                 'pay' => 'sales_receipts', 'alloc' => 'sales_receipt_allocations', 'allocFk' => 'receipt_id',
                 'party' => 'customers', 'pid' => 'customer_id', 'ref' => 'customer_ref',
                 'paid' => 'received_base', 'payNo' => 'receipt_no', 'payDate' => 'receipt_date',
-                'pLabel' => 'Customer', 'noun' => 'Sales', 'payNoun' => 'Receipt', 'k' => 's',
+                'pLabel' => $this->rlang('col_customer', 'Customer'), 'noun' => $this->rlang('noun_sales', 'Sales'),
+                'payNoun' => $this->rlang('noun_receipt', 'Receipt'), 'k' => 's',
             ];
     }
 
@@ -107,11 +109,11 @@ class TradeReportController extends BaseController
         $out[] = ['_style' => 'total', 'no' => 'GRAND TOTAL', 'total' => $grand];
 
         return $this->respond($this->rlang($c['k'] . '-register', $c['noun'] . ' Register'), $f, [
-            ['key' => 'no', 'label' => 'No.'], ['key' => 'date', 'label' => 'Date'], ['key' => 'ref', 'label' => 'Ref'],
-            ['key' => 'st', 'label' => 'Subtotal', 'money' => true, 'blankZero' => true],
+            ['key' => 'no', 'label' => $this->rlang('col_no', 'No.')], ['key' => 'date', 'label' => $this->rlang('col_date', 'Date')], ['key' => 'ref', 'label' => $this->rlang('col_ref', 'Ref')],
+            ['key' => 'st', 'label' => $this->rlang('col_subtotal', 'Subtotal'), 'money' => true, 'blankZero' => true],
             ['key' => 'ppn', 'label' => 'PPN', 'money' => true, 'blankZero' => true],
             ['key' => 'pph', 'label' => 'PPh', 'money' => true, 'blankZero' => true],
-            ['key' => 'total', 'label' => 'Total (Rp)', 'money' => true],
+            ['key' => 'total', 'label' => $this->rlang('col_total', 'Total') . ' (' . base_code() . ')', 'money' => true],
         ], $out);
     }
 
@@ -144,7 +146,7 @@ class TradeReportController extends BaseController
         for ($m = 1; $m <= 12; $m++) {
             $cols[] = ['key' => 'm' . $m, 'label' => date('M', mktime(0, 0, 0, $m, 1)), 'money' => true, 'blankZero' => true];
         }
-        $cols[] = ['key' => 't', 'label' => 'Total', 'money' => true];
+        $cols[] = ['key' => 't', 'label' => $this->rlang('col_total', 'Total'), 'money' => true];
 
         $out    = [];
         $totRow = ['_style' => 'total', 'party' => 'TOTAL', 't' => 0.0];
@@ -194,12 +196,12 @@ class TradeReportController extends BaseController
         $out[] = ['_style' => 'total', 'party' => 'TOTAL OUTSTANDING', 'os' => $tot];
 
         return $this->respond($this->rlang('outstanding_' . $c['k'], 'Outstanding ' . $c['noun'] . ' Invoices'), $f, [
-            ['key' => 'no', 'label' => 'No.'], ['key' => 'date', 'label' => 'Date'], ['key' => 'due', 'label' => 'Due'],
+            ['key' => 'no', 'label' => $this->rlang('col_no', 'No.')], ['key' => 'date', 'label' => $this->rlang('col_date', 'Date')], ['key' => 'due', 'label' => $this->rlang('col_due', 'Due')],
             ['key' => 'party', 'label' => $c['pLabel']],
-            ['key' => 'total', 'label' => 'Total', 'money' => true],
-            ['key' => 'paid', 'label' => $kind === 'purchase' ? 'Paid' : 'Received', 'money' => true, 'blankZero' => true],
-            ['key' => 'os', 'label' => 'Outstanding', 'money' => true],
-            ['key' => 'days', 'label' => 'Overdue', 'align' => 'right'],
+            ['key' => 'total', 'label' => $this->rlang('col_total', 'Total'), 'money' => true],
+            ['key' => 'paid', 'label' => $kind === 'purchase' ? $this->rlang('col_paid', 'Paid') : $this->rlang('col_received', 'Received'), 'money' => true, 'blankZero' => true],
+            ['key' => 'os', 'label' => $this->rlang('col_outstanding', 'Outstanding'), 'money' => true],
+            ['key' => 'days', 'label' => $this->rlang('col_overdue', 'Overdue'), 'align' => 'right'],
         ], $out, ['showAsOf' => false]);
     }
 
@@ -234,9 +236,9 @@ class TradeReportController extends BaseController
         $out[] = ['_style' => 'total', 'desc' => 'TOTAL', 'amt' => $tot];
 
         return $this->respond($this->rlang($c['k'] . '-detail', $c['noun'] . ' Invoice Detail'), $f, [
-            ['key' => 'no', 'label' => 'Invoice'], ['key' => 'date', 'label' => 'Date'], ['key' => 'party', 'label' => $c['pLabel']],
-            ['key' => 'acc', 'label' => 'Account'], ['key' => 'job', 'label' => 'Job'],
-            ['key' => 'desc', 'label' => 'Description'], ['key' => 'amt', 'label' => 'Amount (Rp)', 'money' => true],
+            ['key' => 'no', 'label' => $this->rlang('col_invoice', 'Invoice')], ['key' => 'date', 'label' => $this->rlang('col_date', 'Date')], ['key' => 'party', 'label' => $c['pLabel']],
+            ['key' => 'acc', 'label' => $this->rlang('col_account', 'Account')], ['key' => 'job', 'label' => $this->rlang('col_job', 'Job')],
+            ['key' => 'desc', 'label' => $this->rlang('col_description', 'Description')], ['key' => 'amt', 'label' => 'Amount (Rp)', 'money' => true],
         ], $out);
     }
 
@@ -269,9 +271,9 @@ class TradeReportController extends BaseController
         $out[] = ['_style' => 'total', 'party' => 'TOTAL (excl. void)', 'amt' => $tot];
 
         return $this->respond($this->rlang($c['k'] === 'p' ? 'p-payments' : 's-receipts', $c['payNoun'] . ' List'), $f, [
-            ['key' => 'no', 'label' => 'No.'], ['key' => 'date', 'label' => 'Date'], ['key' => 'party', 'label' => $c['pLabel']],
-            ['key' => 'bank', 'label' => 'Bank'], ['key' => 'amt', 'label' => 'Amount (Rp)', 'money' => true],
-            ['key' => 'ref', 'label' => 'Reference'], ['key' => 'status', 'label' => 'Status'],
+            ['key' => 'no', 'label' => $this->rlang('col_no', 'No.')], ['key' => 'date', 'label' => $this->rlang('col_date', 'Date')], ['key' => 'party', 'label' => $c['pLabel']],
+            ['key' => 'bank', 'label' => $this->rlang('col_bank', 'Bank')], ['key' => 'amt', 'label' => 'Amount (Rp)', 'money' => true],
+            ['key' => 'ref', 'label' => $this->rlang('col_reference', 'Reference')], ['key' => 'status', 'label' => $this->rlang('col_status', 'Status')],
         ], $out);
     }
 
@@ -366,13 +368,13 @@ class TradeReportController extends BaseController
             if (! $r['job_id']) {
                 $clientPayment = '';                       // operational cost - no dossier
             } elseif ((int) $r['cp_inv_count'] === 0) {
-                $clientPayment = 'No sales invoice';
+                $clientPayment = $this->rlang('pl_no_sales_invoice', 'No sales invoice');
             } elseif ((int) $r['cp_inv_received'] > 0) {
-                $clientPayment = 'Paid';
+                $clientPayment = $this->rlang('col_paid', 'Paid');
             } elseif ((float) $r['cp_dep_unapplied'] > 0.005) {
-                $clientPayment = 'Deposit unapplied';
+                $clientPayment = $this->rlang('pl_deposit_unapplied', 'Deposit unapplied');
             } else {
-                $clientPayment = 'Not paid';
+                $clientPayment = $this->rlang('pl_not_paid', 'Not paid');
             }
 
             $out[] = [
@@ -398,36 +400,36 @@ class TradeReportController extends BaseController
                 'notes'           => $r['notes'],
                 'promise_date'    => $r['promise_date'],
                 'booking_id'      => $r['booking_id'],
-                'category'        => $r['job_id'] ? 'COS' : 'Operational',
+                'category'        => $r['job_id'] ? 'COS' : $this->rlang('pl_operational', 'Operational'),
                 'client_payment'  => $clientPayment,
             ];
         }
 
         $cols = [
-            ['key' => 'date', 'label' => 'Date'],
-            ['key' => 'po_no', 'label' => 'PO No'],
-            ['key' => 'number', 'label' => 'Number'],
-            ['key' => 'supplier', 'label' => 'Supplier'],
-            ['key' => 'supplier_code', 'label' => 'Supplier ID'],
-            ['key' => 'dossier_code', 'label' => 'Code#'],
-            ['key' => 'description', 'label' => 'Description'],
-            ['key' => 'currency', 'label' => 'Code Currency'],
-            ['key' => 'remarks', 'label' => 'Remarks'],
-            ['key' => 'budget', 'label' => 'Budget', 'money' => true, 'blankZero' => true],
-            ['key' => 'paid', 'label' => 'Payment', 'money' => true, 'blankZero' => true],
-            ['key' => 'balance', 'label' => 'Balance', 'money' => true],
-            ['key' => 'service_date', 'label' => 'Service Date'],
-            ['key' => 'dossier_name', 'label' => 'Dossier Name'],
-            ['key' => 'client_name', 'label' => 'Client Name'],
-            ['key' => 'bank_name', 'label' => 'Bank Name'],
-            ['key' => 'bank_account_nr', 'label' => 'Bank Account Nr'],
-            ['key' => 'account_name', 'label' => 'Account Name'],
-            ['key' => 'email', 'label' => 'Email Contact Info Supplier'],
-            ['key' => 'notes', 'label' => 'Notes'],
-            ['key' => 'promise_date', 'label' => 'Promise Date'],
-            ['key' => 'booking_id', 'label' => 'Booking ID'],
-            ['key' => 'category', 'label' => 'Category'],
-            ['key' => 'client_payment', 'label' => 'Client Payment'],
+            ['key' => 'date', 'label' => $this->rlang('col_date', 'Date')],
+            ['key' => 'po_no', 'label' => $this->rlang('col_pl_po_no', 'PO No')],
+            ['key' => 'number', 'label' => $this->rlang('col_pl_number', 'Number')],
+            ['key' => 'supplier', 'label' => $this->rlang('col_supplier', 'Supplier')],
+            ['key' => 'supplier_code', 'label' => $this->rlang('col_pl_supplier_code', 'Supplier ID')],
+            ['key' => 'dossier_code', 'label' => $this->rlang('col_pl_dossier_code', 'Code#')],
+            ['key' => 'description', 'label' => $this->rlang('col_description', 'Description')],
+            ['key' => 'currency', 'label' => $this->rlang('col_pl_currency', 'Currency Code')],
+            ['key' => 'remarks', 'label' => $this->rlang('col_pl_remarks', 'Remarks')],
+            ['key' => 'budget', 'label' => $this->rlang('col_pl_budget', 'Budget'), 'money' => true, 'blankZero' => true],
+            ['key' => 'paid', 'label' => $this->rlang('col_pl_payment', 'Payment'), 'money' => true, 'blankZero' => true],
+            ['key' => 'balance', 'label' => $this->rlang('col_balance', 'Balance'), 'money' => true],
+            ['key' => 'service_date', 'label' => $this->rlang('col_pl_service_date', 'Service Date')],
+            ['key' => 'dossier_name', 'label' => $this->rlang('col_pl_dossier_name', 'Dossier Name')],
+            ['key' => 'client_name', 'label' => $this->rlang('col_pl_client_name', 'Client Name')],
+            ['key' => 'bank_name', 'label' => $this->rlang('col_pl_bank_name', 'Bank Name')],
+            ['key' => 'bank_account_nr', 'label' => $this->rlang('col_pl_bank_acc_nr', 'Bank Account Nr')],
+            ['key' => 'account_name', 'label' => $this->rlang('col_pl_account_name', 'Account Name')],
+            ['key' => 'email', 'label' => $this->rlang('col_pl_email', 'Supplier Contact Email')],
+            ['key' => 'notes', 'label' => $this->rlang('col_pl_notes', 'Notes')],
+            ['key' => 'promise_date', 'label' => $this->rlang('col_pl_promise_date', 'Promise Date')],
+            ['key' => 'booking_id', 'label' => $this->rlang('col_pl_booking_id', 'Booking ID')],
+            ['key' => 'category', 'label' => $this->rlang('col_pl_category', 'Category')],
+            ['key' => 'client_payment', 'label' => $this->rlang('col_pl_client_payment', 'Client Payment')],
         ];
 
         // the promise-date range replaces the year/period widget for this report
@@ -475,9 +477,9 @@ class TradeReportController extends BaseController
         $out[] = ['_style' => 'total', 'party' => 'TOTAL', 'amt' => $tot];
 
         return $this->respond($this->rlang($c['k'] . '-invoice-paid', $c['noun'] . ' Invoice Paid'), $f, [
-            ['key' => 'payno', 'label' => $c['payNoun'] . ' No.'], ['key' => 'date', 'label' => 'Date'],
-            ['key' => 'inv', 'label' => 'Invoice'], ['key' => 'party', 'label' => $c['pLabel']],
-            ['key' => 'amt', 'label' => 'Applied (Rp)', 'money' => true],
+            ['key' => 'payno', 'label' => $c['payNoun'] . ' No.'], ['key' => 'date', 'label' => $this->rlang('col_date', 'Date')],
+            ['key' => 'inv', 'label' => $this->rlang('col_invoice', 'Invoice')], ['key' => 'party', 'label' => $c['pLabel']],
+            ['key' => 'amt', 'label' => $this->rlang('col_applied', 'Applied') . ' (' . base_code() . ')', 'money' => true],
         ], $out);
     }
 
@@ -507,10 +509,10 @@ class TradeReportController extends BaseController
         $out[] = ['_style' => 'total', 'name' => 'TOTAL', 'bal' => $tot];
 
         return $this->respond($this->rlang($c['k'] === 'p' ? 'p-suppliers' : 's-customers', $c['pLabel'] . ' List'), $f, [
-            ['key' => 'code', 'label' => 'Code'], ['key' => 'name', 'label' => 'Name'],
-            ['key' => 'email', 'label' => 'Email'], ['key' => 'phone', 'label' => 'Phone'],
-            ['key' => 'npwp', 'label' => 'NPWP'], ['key' => 'status', 'label' => 'Status'],
-            ['key' => 'bal', 'label' => ($kind === 'purchase' ? 'Payable' : 'Receivable') . ' (Rp)', 'money' => true],
+            ['key' => 'code', 'label' => $this->rlang('col_code', 'Code')], ['key' => 'name', 'label' => $this->rlang('col_name', 'Name')],
+            ['key' => 'email', 'label' => 'Email'], ['key' => 'phone', 'label' => $this->rlang('col_phone', 'Phone')],
+            ['key' => 'npwp', 'label' => 'NPWP'], ['key' => 'status', 'label' => $this->rlang('col_status', 'Status')],
+            ['key' => 'bal', 'label' => ($kind === 'purchase' ? $this->rlang('col_payable', 'Payable') : $this->rlang('col_receivable', 'Receivable')) . ' (' . base_code() . ')', 'money' => true],
         ], $out, ['showCompare' => false]);
     }
 
@@ -570,13 +572,13 @@ class TradeReportController extends BaseController
         $out[] = $emit('GRAND TOTAL', $grand) + ['_style' => 'total'];
 
         return $this->respond($this->rlang(($kind === 'purchase' ? 'p' : 's') . '-aging', ($kind === 'purchase' ? 'AP' : 'AR') . ' Aging (detail)'), $f, [
-            ['key' => 'inv', 'label' => 'Invoice'], ['key' => 'date', 'label' => 'Date'], ['key' => 'due', 'label' => 'Due'],
-            ['key' => 'cur', 'label' => 'Current', 'money' => true, 'blankZero' => true],
+            ['key' => 'inv', 'label' => $this->rlang('col_invoice', 'Invoice')], ['key' => 'date', 'label' => $this->rlang('col_date', 'Date')], ['key' => 'due', 'label' => $this->rlang('col_due', 'Due')],
+            ['key' => 'cur', 'label' => $this->rlang('v_current', 'Current'), 'money' => true, 'blankZero' => true],
             ['key' => 'b30', 'label' => '1-30', 'money' => true, 'blankZero' => true],
             ['key' => 'b60', 'label' => '31-60', 'money' => true, 'blankZero' => true],
             ['key' => 'b90', 'label' => '61-90', 'money' => true, 'blankZero' => true],
-            ['key' => 'b90p', 'label' => '> 90', 'money' => true, 'blankZero' => true],
-            ['key' => 'tot', 'label' => 'Total', 'money' => true],
+            ['key' => 'b90p', 'label' => $this->rlang('v_over90', '> 90'), 'money' => true, 'blankZero' => true],
+            ['key' => 'tot', 'label' => $this->rlang('col_total', 'Total'), 'money' => true],
         ], $out, ['showAsOf' => true]);
     }
 }

@@ -129,11 +129,11 @@ class LedgerReportController extends BaseController
             . $this->selectField('Status', 'status', ['' => 'Posted + Void', 'posted' => 'Posted', 'void' => 'Void', 'draft' => 'Draft'], $status);
 
         return $this->respond($this->rlang('journal-list', 'Journal List'), $f, [
-            ['key' => 'no', 'label' => 'Journal No.'], ['key' => 'date', 'label' => 'Date'],
-            ['key' => 'ref', 'label' => 'Reference'], ['key' => 'desc', 'label' => 'Description'],
-            ['key' => 'src', 'label' => 'Source'], ['key' => 'status', 'label' => 'Status'],
-            ['key' => 'd', 'label' => 'Debit (Rp)', 'money' => true],
-            ['key' => 'c', 'label' => 'Credit (Rp)', 'money' => true],
+            ['key' => 'no', 'label' => $this->rlang('col_journal_no', 'Journal No.')], ['key' => 'date', 'label' => $this->rlang('col_date', 'Date')],
+            ['key' => 'ref', 'label' => $this->rlang('col_reference', 'Reference')], ['key' => 'desc', 'label' => $this->rlang('col_description', 'Description')],
+            ['key' => 'src', 'label' => $this->rlang('col_source', 'Source')], ['key' => 'status', 'label' => $this->rlang('col_status', 'Status')],
+            ['key' => 'd', 'label' => $this->rlang('col_debit', 'Debit') . ' (' . base_code() . ')', 'money' => true],
+            ['key' => 'c', 'label' => $this->rlang('col_credit', 'Credit') . ' (' . base_code() . ')', 'money' => true],
         ], $out, ['extra' => $extra]);
     }
 
@@ -180,12 +180,12 @@ class LedgerReportController extends BaseController
         $bc  = base_code();
 
         return $this->respond($this->rlang('realized-fx', 'Realized Gain / Loss'), $f, [
-            ['key' => 'date', 'label' => 'Date'], ['key' => 'no', 'label' => 'Journal'],
-            ['key' => 'ref', 'label' => 'Reference'], ['key' => 'memo', 'label' => 'Memo'],
-            ['key' => 'acc', 'label' => 'Account'],
-            ['key' => 'gain', 'label' => "Gain ({$bc})", 'money' => true, 'blankZero' => true],
-            ['key' => 'loss', 'label' => "Loss ({$bc})", 'money' => true, 'blankZero' => true],
-            ['key' => 'net', 'label' => "Net ({$bc})", 'money' => true],
+            ['key' => 'date', 'label' => $this->rlang('col_date', 'Date')], ['key' => 'no', 'label' => $this->rlang('col_journal', 'Journal')],
+            ['key' => 'ref', 'label' => $this->rlang('col_reference', 'Reference')], ['key' => 'memo', 'label' => $this->rlang('col_memo', 'Memo')],
+            ['key' => 'acc', 'label' => $this->rlang('col_account', 'Account')],
+            ['key' => 'gain', 'label' => $this->rlang('col_gain', 'Gain') . " ({$bc})", 'money' => true, 'blankZero' => true],
+            ['key' => 'loss', 'label' => $this->rlang('col_loss', 'Loss') . " ({$bc})", 'money' => true, 'blankZero' => true],
+            ['key' => 'net', 'label' => $this->rlang('col_net', 'Net') . " ({$bc})", 'money' => true],
         ], $out, [], $sub);
     }
 
@@ -239,11 +239,11 @@ class LedgerReportController extends BaseController
         $extra = $this->selectField('Accounts (none = all with movement)', 'account_id', $accOpts, $picked, true);
 
         return $this->respond($this->rlang('gl-details', 'General Ledger Details'), $f, [
-            ['key' => 'date', 'label' => 'Date'], ['key' => 'no', 'label' => 'Journal'],
-            ['key' => 'memo', 'label' => 'Memo'], ['key' => 'party', 'label' => 'Party'],
-            ['key' => 'd', 'label' => 'Debit (Rp)', 'money' => true, 'blankZero' => true],
-            ['key' => 'c', 'label' => 'Credit (Rp)', 'money' => true, 'blankZero' => true],
-            ['key' => 'bal', 'label' => 'Balance (Rp)', 'money' => true],
+            ['key' => 'date', 'label' => $this->rlang('col_date', 'Date')], ['key' => 'no', 'label' => $this->rlang('col_journal', 'Journal')],
+            ['key' => 'memo', 'label' => $this->rlang('col_memo', 'Memo')], ['key' => 'party', 'label' => $this->rlang('col_party', 'Party')],
+            ['key' => 'd', 'label' => $this->rlang('col_debit', 'Debit') . ' (' . base_code() . ')', 'money' => true, 'blankZero' => true],
+            ['key' => 'c', 'label' => $this->rlang('col_credit', 'Credit') . ' (' . base_code() . ')', 'money' => true, 'blankZero' => true],
+            ['key' => 'bal', 'label' => $this->rlang('col_balance', 'Balance') . ' (' . base_code() . ')', 'money' => true],
         ], $out, ['extra' => $extra]);
     }
 
@@ -319,13 +319,13 @@ class LedgerReportController extends BaseController
         $out[] = ['_style' => 'total', 'no' => 'GRAND TOTAL', 'in' => $gIn, 'out' => $gOut, 'net' => $gIn - $gOut];
 
         return $this->respond($this->rlang('payment-bank', 'Payment by Bank'), $f, [
-            ['key' => 'date', 'label' => 'Date'], ['key' => 'no', 'label' => 'No.'],
-            ['key' => 'typ', 'label' => 'Type'], ['key' => 'party', 'label' => 'Party'],
-            ['key' => 'ref', 'label' => 'Reference'],
-            ['key' => 'in', 'label' => 'Money In (Rp)', 'money' => true, 'blankZero' => true],
-            ['key' => 'out', 'label' => 'Money Out (Rp)', 'money' => true, 'blankZero' => true],
-            ['key' => 'net', 'label' => 'Net (Rp)', 'money' => true, 'blankZero' => true],
-            ['key' => 'status', 'label' => 'Status'],
+            ['key' => 'date', 'label' => $this->rlang('col_date', 'Date')], ['key' => 'no', 'label' => $this->rlang('col_no', 'No.')],
+            ['key' => 'typ', 'label' => $this->rlang('col_type', 'Type')], ['key' => 'party', 'label' => $this->rlang('col_party', 'Party')],
+            ['key' => 'ref', 'label' => $this->rlang('col_reference', 'Reference')],
+            ['key' => 'in', 'label' => $this->rlang('col_money_in', 'Money In') . ' (' . base_code() . ')', 'money' => true, 'blankZero' => true],
+            ['key' => 'out', 'label' => $this->rlang('col_money_out', 'Money Out') . ' (' . base_code() . ')', 'money' => true, 'blankZero' => true],
+            ['key' => 'net', 'label' => $this->rlang('col_net', 'Net') . ' (' . base_code() . ')', 'money' => true, 'blankZero' => true],
+            ['key' => 'status', 'label' => $this->rlang('col_status', 'Status')],
         ], $out);
     }
 
@@ -389,15 +389,15 @@ class LedgerReportController extends BaseController
             . $this->selectField('Job status', 'job_status', ['' => 'All', 'open' => 'Open', 'closed' => 'Closed'], $status);
 
         return $this->respond($this->rlang('job-list', 'Job List'), $f, [
-            ['key' => 'code', 'label' => 'Code'], ['key' => 'job', 'label' => 'Job'],
-            ['key' => 'customer', 'label' => 'Customer'], ['key' => 'arrival', 'label' => 'Arrival'],
-            ['key' => 'status', 'label' => 'Status'],
-            ['key' => 'rev', 'label' => 'Revenue', 'money' => true, 'blankZero' => true],
-            ['key' => 'dc', 'label' => 'Direct Cost', 'money' => true, 'blankZero' => true],
-            ['key' => 'gp', 'label' => 'Gross Profit', 'money' => true, 'blankZero' => true],
-            ['key' => 'exp', 'label' => 'Expense', 'money' => true, 'blankZero' => true],
-            ['key' => 'net', 'label' => 'Net (Rp)', 'money' => true],
-            ['key' => 'margin', 'label' => 'Margin', 'align' => 'right'],
+            ['key' => 'code', 'label' => $this->rlang('col_code', 'Code')], ['key' => 'job', 'label' => $this->rlang('col_job', 'Job')],
+            ['key' => 'customer', 'label' => $this->rlang('col_customer', 'Customer')], ['key' => 'arrival', 'label' => $this->rlang('col_arrival', 'Arrival')],
+            ['key' => 'status', 'label' => $this->rlang('col_status', 'Status')],
+            ['key' => 'rev', 'label' => $this->rlang('col_revenue', 'Revenue'), 'money' => true, 'blankZero' => true],
+            ['key' => 'dc', 'label' => $this->rlang('col_direct_cost', 'Direct Cost'), 'money' => true, 'blankZero' => true],
+            ['key' => 'gp', 'label' => $this->rlang('col_gross_profit', 'Gross Profit'), 'money' => true, 'blankZero' => true],
+            ['key' => 'exp', 'label' => $this->rlang('col_expense', 'Expense'), 'money' => true, 'blankZero' => true],
+            ['key' => 'net', 'label' => $this->rlang('col_net', 'Net') . ' (' . base_code() . ')', 'money' => true],
+            ['key' => 'margin', 'label' => $this->rlang('col_margin', 'Margin'), 'align' => 'right'],
         ], $out, ['extra' => $extra],
             $shown . ($plFilter === 'loss' ? ' loss-making' : ($plFilter === 'profit' ? ' profitable' : '')) . ' job(s) arriving ' . date_id($f['from']) . ' – ' . date_id($f['to']));
     }
@@ -496,11 +496,11 @@ class LedgerReportController extends BaseController
         }
 
         $cols = [
-            ['key' => 'party', 'label' => 'Customer / Supplier'],
-            ['key' => 'sales', 'label' => 'Sales', 'money' => true, 'blankZero' => true],
-            ['key' => 'purchase', 'label' => 'Purchase', 'money' => true, 'blankZero' => true],
-            ['key' => 'net', 'label' => 'Net', 'money' => true, 'blankZero' => true],
-            ['key' => 'margin', 'label' => 'Margin', 'align' => 'right'],
+            ['key' => 'party', 'label' => $this->rlang('col_cust_supp', 'Customer / Supplier')],
+            ['key' => 'sales', 'label' => $this->rlang('col_sales', 'Sales'), 'money' => true, 'blankZero' => true],
+            ['key' => 'purchase', 'label' => $this->rlang('col_purchase', 'Purchase'), 'money' => true, 'blankZero' => true],
+            ['key' => 'net', 'label' => $this->rlang('col_net', 'Net'), 'money' => true, 'blankZero' => true],
+            ['key' => 'margin', 'label' => $this->rlang('col_margin', 'Margin'), 'align' => 'right'],
         ];
 
         $extra = $this->textField('Search job', 'job_q', $q);
