@@ -49,6 +49,10 @@ $routes->group('', ['filter' => 'session'], static function (RouteCollection $ro
 
     $routes->get('dashboard', 'Dashboard::index', ['filter' => 'permission:reports.view']);
 
+    // Self-service profile (photo) - any logged-in user
+    $routes->get('profile', 'ProfileController::index');
+    $routes->post('profile', 'ProfileController::update');
+
     // --- Journal import wizard ----------------------------------------------
     $routes->group('journals/import', static function (RouteCollection $routes): void {
         $routes->get('/', 'ImportController::index');

@@ -292,3 +292,69 @@ if (! function_exists('date_id')) {
         return date('d/m/Y', strtotime($date));
     }
 }
+
+if (! function_exists('user_avatar_url')) {
+    /**
+     * Public URL of a user's profile photo, or null if none / missing on disk.
+     * Defaults to the logged-in user. Results are cached per request.
+     *
+     * @see \App\Libraries\AvatarStore
+     */
+    function user_avatar_url(?int $userId = null): ?string
+    {
+        static $cache = [];
+
+        $userId ??= (int) (auth()->id() ?? 0);
+        if ($userId <= 0) {
+            return null;
+        }
+        if (! array_key_exists($userId, $cache)) {
+            $row  = db_connect()->table('users')->select('avatar_path')->where('id', $userId)->get()->getRowArray();
+            $path = (string) ($row['avatar_path'] ?? '');
+            $cache[$userId] = ($path !== '' && is_file(FCPATH . ltrim($path, '/'))) ? base_url($path) : null;
+        }
+
+        return $cache[$userId];
+    }
+}
+
+if (! function_exists('user_avatar_initials')) {
+    /** 1-2 uppercase letters for the fallback avatar chip. */
+    function user_avatar_initials(?string $seed = null): string
+    {
+        $seed ??= (string) (auth()->user()->username ?? auth()->user()->email ?? '');
+        $seed = trim($seed);
+        if ($seed === '') {
+            return '?';
+        }
+        $seed  = explode('@', $seed)[0];
+        $words = preg_split('/[\s._-]+/', $seed, -1, PREG_SPLIT_NO_EMPTY) ?: [$seed];
+        $ini   = '';
+        foreach (array_slice($words, 0, 2) as $w) {
+            $ini .= mb_substr($w, 0, 1);
+        }
+        if (mb_strlen($ini) < 2) {
+            $ini = mb_substr($seed, 0, 2);
+        }
+
+        return mb_strtoupper($ini);
+    }
+}
+
+if (! function_exists('user_avatar_tag')) {
+    /**
+     * <img> when the user has a photo, otherwise an initials chip. $class is
+     * appended to the base ".avatar" class (e.g. "avatar-sm").
+     */
+    function user_avatar_tag(?int $userId = null, string $class = '', ?string $seed = null): string
+    {
+        $userId ??= (int) (auth()->id() ?? 0);
+        $cls = trim('avatar ' . $class);
+        $url = user_avatar_url($userId);
+        if ($url) {
+            return '<img class="' . esc($cls, 'attr') . '" src="' . esc($url, 'attr') . '" alt="">';
+        }
+
+        return '<span class="' . esc($cls, 'attr') . ' is-fallback">' . esc(user_avatar_initials($seed)) . '</span>';
+    }
+}

@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\AvatarStore;
 use CodeIgniter\Shield\Entities\User;
 use CodeIgniter\Shield\Models\UserModel;
 
@@ -36,6 +37,7 @@ class UserController extends BaseController
                 'active'   => $u->active,
                 'groups'   => implode(', ', $u->getGroups()),
                 'last'     => $u->last_active,
+                'avatar'   => user_avatar_tag((int) $u->id, 'avatar-sm', (string) ($u->username ?? $u->email)),
             ];
         }
 
@@ -80,6 +82,7 @@ class UserController extends BaseController
         foreach ($roles as $r) {
             $user->addGroup($r);
         }
+        $this->handlePhoto((int) $user->id);
 
         return redirect()->to('users')->with('message', 'User created.');
     }
@@ -137,8 +140,26 @@ class UserController extends BaseController
             $user->deactivate();
         }
         $users->save($user);
+        $this->handlePhoto((int) $user->id);
 
         return redirect()->to('users')->with('message', 'User updated.');
+    }
+
+    /** Apply a photo upload / removal from the user form. */
+    private function handlePhoto(int $userId): void
+    {
+        if ($this->request->getPost('remove_photo')) {
+            AvatarStore::remove($userId);
+
+            return;
+        }
+        $file = $this->request->getFile('photo');
+        if ($file && $file->isValid() && $file->getError() !== UPLOAD_ERR_NO_FILE) {
+            $res = AvatarStore::save($userId, $file);
+            if (! $res['ok']) {
+                session()->setFlashdata('error', $res['error']);
+            }
+        }
     }
 
     /** @return list<string> */

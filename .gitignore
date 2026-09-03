@@ -11,3 +11,8 @@ writable/**/*
 !writable/**/.gitkeep
 !writable/**/index.html
 !writable/**/.htaccess
+
+# user-uploaded profile photos (runtime data) - keep the folder, not the files
+public/assets/avatars/*
+!public/assets/avatars/
+!public/assets/avatars/index.html

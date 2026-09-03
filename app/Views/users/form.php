@@ -5,8 +5,26 @@
 <div class="page-head"><h1><?= esc($title) ?></h1></div>
 
 <div class="card" style="max-width:520px">
-  <form method="post" action="<?= $isEdit ? site_url('users/' . $user->id) : site_url('users') ?>">
+  <form method="post" action="<?= $isEdit ? site_url('users/' . $user->id) : site_url('users') ?>" enctype="multipart/form-data">
     <?= csrf_field() ?>
+
+    <div class="field">
+      <label>Photo</label>
+      <div class="avatar-field">
+        <?= $isEdit
+            ? user_avatar_tag((int) $user->id, 'avatar-lg', (string) ($user->username ?? $user->email))
+            : '<span class="avatar avatar-lg is-fallback">?</span>' ?>
+        <div>
+          <input type="file" name="photo" accept="image/png,image/jpeg,image/webp,image/gif">
+          <p class="small muted">PNG, JPG, WebP or GIF, under 2 MB.</p>
+          <?php if ($isEdit && user_avatar_url((int) $user->id)): ?>
+            <label class="inline small" style="font-weight:400">
+              <input type="checkbox" name="remove_photo" value="1" style="width:auto"> Remove current photo
+            </label>
+          <?php endif ?>
+        </div>
+      </div>
+    </div>
 
     <div class="field">
       <label>Username</label>

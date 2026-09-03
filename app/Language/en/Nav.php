@@ -29,6 +29,7 @@ return [
     'api_tokens'    => 'API Tokens',
     'control_accounts' => 'Control Accounts',
 
+    'profile'  => 'My Profile',
     'logout'   => 'Log out',
     'theme'    => 'Theme',
     'language' => 'Language',

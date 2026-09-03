@@ -8,11 +8,12 @@
 
 <div class="card">
   <table class="grid tight">
-    <thead><tr><th>#</th><th>Username</th><th>Email</th><th>Role</th><th>Status</th><th>Last active</th><th></th></tr></thead>
+    <thead><tr><th>#</th><th></th><th>Username</th><th>Email</th><th>Role</th><th>Status</th><th>Last active</th><th></th></tr></thead>
     <tbody>
       <?php foreach ($rows as $u): ?>
         <tr>
           <td><?= esc($u['id']) ?></td>
+          <td class="avatar-cell"><?= $u['avatar'] ?></td>
           <td><?= esc($u['username']) ?></td>
           <td><?= esc($u['email']) ?></td>
           <td><?= esc($u['groups']) ?: '<span class="muted">none</span>' ?></td>

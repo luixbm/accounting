@@ -115,7 +115,10 @@ $renderGroup = static function (string $heading, array $links) use ($navFor) {
     </nav>
 
     <div class="side-foot">
-      <div class="who"><?= esc(auth()->user()->username ?? auth()->user()->email) ?></div>
+      <a class="who" href="<?= site_url('profile') ?>" title="<?= lang('Nav.profile') ?>">
+        <?= user_avatar_tag(null, 'avatar-sm') ?>
+        <span><?= esc(auth()->user()->username ?? auth()->user()->email) ?></span>
+      </a>
       <a href="<?= site_url('logout') ?>"><?= lang('Nav.logout') ?></a>
       <div class="theme-picker" id="themePicker" title="<?= lang('Nav.theme') ?>">
         <button type="button" class="sw-light" data-theme="light" aria-label="Modern light"></button>

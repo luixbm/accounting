@@ -29,6 +29,7 @@ return [
     'api_tokens'    => 'Token API',
     'control_accounts' => 'Akun Kontrol',
 
+    'profile'  => 'Profil Saya',
     'logout'   => 'Keluar',
     'theme'    => 'Tema',
     'language' => 'Bahasa',
