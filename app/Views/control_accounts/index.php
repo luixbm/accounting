@@ -15,20 +15,16 @@ $opt = static function (string $sel) use ($accounts): string {
 
 <div class="page-head">
   <div>
-    <h1>Control Accounts</h1>
-    <div class="muted small">
-      For <b><?= esc(company_name()) ?></b> (base <b><?= esc(base_code()) ?></b>).
-      An invoice books its receivable / payable to the account for its currency; a
-      settlement at a different rate books the difference to the realized FX account.
-    </div>
+    <h1><?= lang('Setup.ctl_accounts_h') ?></h1>
+    <div class="muted small"><?= lang('Setup.ctl_note', ['<b>' . esc(company_name()) . '</b>', '<b>' . esc(base_code()) . '</b>']) ?></div>
   </div>
 </div>
 
 <?php if ($gaps): ?>
   <div class="alert alert-error">
-    Not mapped yet:
+    <?= lang('Setup.ctl_not_mapped') ?>
     <?php foreach ($gaps as $g): ?><span class="mono"><?= esc($roles[$g['role']] . ' / ' . $g['ccy']) ?></span><?= ! ($g === end($gaps)) ? ', ' : '' ?><?php endforeach ?>.
-    Posting invoices in those currencies will fail until these are set.
+    <?= lang('Setup.ctl_not_mapped_tail') ?>
   </div>
 <?php endif ?>
 
@@ -39,7 +35,7 @@ $opt = static function (string $sel) use ($accounts): string {
       <table class="grid tight">
         <thead>
           <tr>
-            <th>Role</th>
+            <th><?= lang('Setup.ctl_role') ?></th>
             <?php foreach ($currencies as $c): ?><th><?= esc($c['code']) ?><?= $c['code'] === base_code() ? ' <span class="badge badge-green">base</span>' : '' ?></th><?php endforeach ?>
           </tr>
         </thead>
@@ -55,16 +51,13 @@ $opt = static function (string $sel) use ($accounts): string {
         </tbody>
       </table>
     </div>
-    <p class="muted small" style="margin-top:10px">
-      Saving flags the chosen <b>Trade A/R</b> accounts as customer subledgers and <b>Trade A/P</b> as supplier
-      subledgers, so aging and statements pick them up. Accounts dropped from those two rows are un-flagged.
-    </p>
+    <p class="muted small" style="margin-top:10px"><?= lang('Setup.ctl_save_note') ?></p>
   </div>
 
   <div class="card">
     <div class="btn-group">
-      <button class="btn" type="submit">Save</button>
-      <a class="btn ghost" href="<?= site_url('settings') ?>">Back to settings</a>
+      <button class="btn" type="submit"><?= lang('App.save') ?></button>
+      <a class="btn ghost" href="<?= site_url('settings') ?>"><?= lang('Setup.back_to_settings') ?></a>
     </div>
   </div>
 </form>

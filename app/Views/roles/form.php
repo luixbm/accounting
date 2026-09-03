@@ -12,22 +12,22 @@ $action = $isEdit ? site_url('roles/' . urlencode($key)) : site_url('roles');
     <?= csrf_field() ?>
     <div class="row">
       <div class="field" style="max-width:220px">
-        <label>Role key</label>
+        <label><?= lang('Setup.role_key') ?></label>
         <input name="key" class="mono" value="<?= esc($isEdit ? $key : old('key')) ?>" <?= $isEdit ? 'readonly' : 'required' ?>
-          placeholder="e.g. approver">
+          placeholder="<?= esc(lang('Setup.role_key_ph'), 'attr') ?>">
       </div>
       <div class="field">
-        <label>Display title</label>
+        <label><?= lang('Setup.display_title') ?></label>
         <input name="title" value="<?= esc(old('title', $role['title'] ?? '')) ?>" required>
       </div>
     </div>
     <div class="field">
-      <label>Description</label>
+      <label><?= lang('App.description') ?></label>
       <input name="description" value="<?= esc(old('description', $role['description'] ?? '')) ?>">
     </div>
 
     <fieldset>
-      <legend>Permissions</legend>
+      <legend><?= lang('Setup.permissions_h') ?></legend>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:6px">
         <?php foreach ($permissions as $pk => $pl): ?>
           <label class="inline" style="font-weight:400">
@@ -38,13 +38,13 @@ $action = $isEdit ? site_url('roles/' . urlencode($key)) : site_url('roles');
         <?php endforeach ?>
       </div>
       <?php if ($isEdit && $key === 'admin'): ?>
-        <p class="small muted">The admin role always keeps “manage users” and “manage roles”.</p>
+        <p class="small muted"><?= lang('Setup.admin_keeps_note') ?></p>
       <?php endif ?>
     </fieldset>
 
     <div class="btn-group">
-      <button class="btn" type="submit">Save</button>
-      <a class="btn ghost" href="<?= site_url('roles') ?>">Cancel</a>
+      <button class="btn" type="submit"><?= lang('App.save') ?></button>
+      <a class="btn ghost" href="<?= site_url('roles') ?>"><?= lang('App.cancel') ?></a>
     </div>
   </form>
 </div>

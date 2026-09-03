@@ -2,8 +2,8 @@
 <?= $this->section('content') ?>
 
 <div class="page-head">
-  <div><h1>Custom Fields</h1><div class="muted small">Add your own fields to records — activate or hide them anytime. Values are also settable via the API.</div></div>
-  <div class="btn-group"><a class="btn" href="<?= site_url('custom-fields/new?entity=' . $entity) ?>">+ New Field</a></div>
+  <div><h1><?= lang('Setup.cf_h') ?></h1><div class="muted small"><?= lang('Setup.cf_note') ?></div></div>
+  <div class="btn-group"><a class="btn" href="<?= site_url('custom-fields/new?entity=' . $entity) ?>"><?= lang('Setup.new_field') ?></a></div>
 </div>
 
 <div class="pill-nav">
@@ -14,7 +14,7 @@
 
 <div class="card">
   <table class="grid tight">
-    <thead><tr><th>#</th><th>Key</th><th>Label</th><th>Type</th><th>Required</th><th>In list</th><th>Status</th><th></th></tr></thead>
+    <thead><tr><th>#</th><th><?= lang('Setup.cf_key') ?></th><th><?= lang('Setup.cf_label') ?></th><th><?= lang('Report.col_type') ?></th><th><?= lang('Setup.cf_required') ?></th><th><?= lang('Setup.cf_in_list') ?></th><th><?= lang('App.status') ?></th><th></th></tr></thead>
     <tbody>
       <?php foreach ($fields as $f): ?>
         <tr>
@@ -24,20 +24,20 @@
           <td class="small"><?= esc($f['type']) ?></td>
           <td class="center"><?= $f['is_required'] ? '✓' : '' ?></td>
           <td class="center"><?= $f['show_in_list'] ? '✓' : '' ?></td>
-          <td><?= $f['is_active'] ? '<span class="badge badge-green">active</span>' : '<span class="badge badge-gray">hidden</span>' ?></td>
+          <td><?= $f['is_active'] ? '<span class="badge badge-green">' . esc(lang('App.active')) . '</span>' : '<span class="badge badge-gray">' . esc(lang('App.inactive')) . '</span>' ?></td>
           <td class="right nowrap">
             <form method="post" action="<?= site_url('custom-fields/' . $f['id'] . '/toggle') ?>" style="display:inline">
-              <?= csrf_field() ?><button class="btn sm ghost" type="submit"><?= $f['is_active'] ? 'Hide' : 'Activate' ?></button>
+              <?= csrf_field() ?><button class="btn sm ghost" type="submit"><?= $f['is_active'] ? lang('Setup.cf_hide') : lang('Setup.cf_activate') ?></button>
             </form>
-            <a class="btn sm ghost" href="<?= site_url('custom-fields/' . $f['id'] . '/edit') ?>">Edit</a>
+            <a class="btn sm ghost" href="<?= site_url('custom-fields/' . $f['id'] . '/edit') ?>"><?= lang('App.edit') ?></a>
           </td>
         </tr>
       <?php endforeach ?>
-      <?php if (! $fields): ?><tr><td colspan="8" class="muted">No custom fields for <?= esc($entities[$entity]) ?> yet.</td></tr><?php endif ?>
+      <?php if (! $fields): ?><tr><td colspan="8" class="muted"><?= lang('Setup.cf_none_yet', [esc($entities[$entity])]) ?></td></tr><?php endif ?>
     </tbody>
   </table>
 </div>
 
-<p class="muted small">Example: add a <strong>date</strong> field <code>promise_date</code> on Purchase Invoice — later a payment-list screen can sort and filter suppliers by it.</p>
+<p class="muted small"><?= lang('Setup.cf_example') ?></p>
 
 <?= $this->endSection() ?>
