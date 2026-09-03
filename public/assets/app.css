@@ -200,7 +200,8 @@ h2{font-size:16px;margin:24px 0 10px}
 /* --- user avatars -------------------------------------------------------- */
 .avatar{
   display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;
-  width:32px;height:32px;border-radius:50%;object-fit:cover;
+  width:32px;height:32px;border-radius:50%;
+  object-fit:cover;object-position:center 28%; /* bias the circular crop toward the face */
   background:var(--field-bg);overflow:hidden;vertical-align:middle;
 }
 .avatar.is-fallback{
