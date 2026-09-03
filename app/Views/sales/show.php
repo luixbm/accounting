@@ -9,46 +9,46 @@ $statusLabel = ['draft' => 'draft', 'posted' => 'posted', 'partial' => 'draft', 
 <div class="page-head">
   <div>
     <h1><?= esc($inv['internal_no']) ?> <?= status_badge($statusLabel) ?>
-      <?php if ($inv['status'] === 'partial'): ?><span class="badge badge-gray">partial</span><?php endif ?>
-      <?php if ($inv['status'] === 'paid'): ?><span class="badge badge-green">paid</span><?php endif ?>
+      <?php if ($inv['status'] === 'partial'): ?><span class="badge badge-gray"><?= lang('App.partial') ?></span><?php endif ?>
+      <?php if ($inv['status'] === 'paid'): ?><span class="badge badge-green"><?= lang('App.paid') ?></span><?php endif ?>
     </h1>
     <div class="muted small">
       <?= esc($inv['customer_name']) ?> · <?= date_id($inv['invoice_date']) ?>
-      <?php if ($inv['due_date']): ?> · due <?= date_id($inv['due_date']) ?><?php endif ?>
+      <?php if ($inv['due_date']): ?> · <?= lang('Txn.due_prefix', [date_id($inv['due_date'])]) ?><?php endif ?>
       · <?= esc($inv['currency_code']) ?><?= $foreign ? ' @ ' . money($inv['exchange_rate'], 4) : '' ?>
-      <?php if ($inv['customer_ref']): ?> · ref <?= esc($inv['customer_ref']) ?><?php endif ?>
+      <?php if ($inv['customer_ref']): ?> · <?= lang('Txn.ref_prefix', [esc($inv['customer_ref'])]) ?><?php endif ?>
     </div>
   </div>
   <div class="btn-group no-print">
     <?php $unpaidPosted = $inv['status'] === 'posted' && (float) $inv['received_base'] <= 0.005; ?>
     <?php if ($inv['status'] === 'draft'): ?>
-      <?php if (user_can('journal.create')): ?><a class="btn ghost" href="<?= site_url('sales/' . $inv['id'] . '/edit') ?>">Edit</a><?php endif ?>
+      <?php if (user_can('journal.create')): ?><a class="btn ghost" href="<?= site_url('sales/' . $inv['id'] . '/edit') ?>"><?= lang('App.edit') ?></a><?php endif ?>
       <?php if (user_can('journal.post')): ?>
-        <form method="post" action="<?= site_url('sales/' . $inv['id'] . '/post') ?>" onsubmit="return confirm('Post this invoice?')">
-          <?= csrf_field() ?><button class="btn" type="submit">Post</button>
+        <form method="post" action="<?= site_url('sales/' . $inv['id'] . '/post') ?>" onsubmit="return confirm('<?= esc(lang('Txn.post_invoice_confirm'), 'js') ?>')">
+          <?= csrf_field() ?><button class="btn" type="submit"><?= lang('App.post') ?></button>
         </form>
       <?php endif ?>
       <?php if (user_can('journal.delete')): ?>
-        <form method="post" action="<?= site_url('sales/' . $inv['id'] . '/delete') ?>" onsubmit="return confirm('Delete this draft?')">
-          <?= csrf_field() ?><button class="btn danger" type="submit">Delete</button>
+        <form method="post" action="<?= site_url('sales/' . $inv['id'] . '/delete') ?>" onsubmit="return confirm('<?= esc(lang('Txn.delete_draft_confirm'), 'js') ?>')">
+          <?= csrf_field() ?><button class="btn danger" type="submit"><?= lang('App.delete') ?></button>
         </form>
       <?php endif ?>
     <?php elseif ($unpaidPosted): ?>
       <?php if (user_can('journal.create') && user_can('journal.void')): ?>
-        <a class="btn ghost" href="<?= site_url('sales/' . $inv['id'] . '/edit') ?>">Edit</a>
+        <a class="btn ghost" href="<?= site_url('sales/' . $inv['id'] . '/edit') ?>"><?= lang('App.edit') ?></a>
       <?php endif ?>
       <?php if (user_can('journal.delete') && user_can('journal.void')): ?>
-        <form method="post" action="<?= site_url('sales/' . $inv['id'] . '/delete') ?>" onsubmit="return confirm('Delete this posted invoice? Its ledger journal is removed (no reversing entry).')">
-          <?= csrf_field() ?><button class="btn danger" type="submit">Delete</button>
+        <form method="post" action="<?= site_url('sales/' . $inv['id'] . '/delete') ?>" onsubmit="return confirm('<?= esc(lang('Txn.delete_posted_confirm'), 'js') ?>')">
+          <?= csrf_field() ?><button class="btn danger" type="submit"><?= lang('App.delete') ?></button>
         </form>
       <?php endif ?>
     <?php endif ?>
     <?php if (in_array($inv['status'], ['posted', 'partial'], true) && user_can('journal.post')): ?>
-      <a class="btn" href="<?= site_url('sales/receipts/new?customer_id=' . $inv['customer_id']) ?>">Receive</a>
+      <a class="btn" href="<?= site_url('sales/receipts/new?customer_id=' . $inv['customer_id']) ?>"><?= lang('Txn.receive') ?></a>
     <?php endif ?>
-    <?php if ($inv['journal_id']): ?><a class="btn ghost" href="<?= site_url('journals/' . $inv['journal_id']) ?>">Journal</a><?php endif ?>
-    <button class="btn secondary" onclick="window.print()">Print</button>
-    <a class="btn ghost" href="<?= site_url('sales') ?>">Back</a>
+    <?php if ($inv['journal_id']): ?><a class="btn ghost" href="<?= site_url('journals/' . $inv['journal_id']) ?>"><?= lang('Txn.journal') ?></a><?php endif ?>
+    <button class="btn secondary" onclick="window.print()"><?= lang('App.print') ?></button>
+    <a class="btn ghost" href="<?= site_url('sales') ?>"><?= lang('App.back') ?></a>
   </div>
 </div>
 
@@ -68,9 +68,9 @@ $foot = $hasDetail ? 5 : 3;
     <div style="overflow-x:auto">
     <table class="grid tight mono">
       <thead><tr>
-        <th>Account</th><th style="font-family:sans-serif">Description</th><th>Job</th>
-        <?php if ($hasDetail): ?><th>Service</th><th>Booking name</th><?php endif ?>
-        <th class="right">Amount<?= $foreign ? ' (' . esc($inv['currency_code']) . ')' : '' ?></th>
+        <th><?= lang('App.account') ?></th><th style="font-family:sans-serif"><?= lang('App.description') ?></th><th><?= lang('Txn.job') ?></th>
+        <?php if ($hasDetail): ?><th><?= lang('Txn.service') ?></th><th><?= lang('Txn.booking_name') ?></th><?php endif ?>
+        <th class="right"><?= lang('App.amount') ?><?= $foreign ? ' (' . esc($inv['currency_code']) . ')' : '' ?></th>
       </tr></thead>
       <tbody>
         <?php foreach ($lines as $l): ?>
@@ -87,8 +87,8 @@ $foot = $hasDetail ? 5 : 3;
                 <?= esc($l['party_name']) ?>
                 <?php
                     $bits = array_filter([
-                        ! empty($l['pax']) ? $l['pax'] . ' pax' : '',
-                        ! empty($l['duration']) ? $l['duration'] . ' days' : '',
+                        ! empty($l['pax']) ? lang('Txn.pax_suffix', [$l['pax']]) : '',
+                        ! empty($l['duration']) ? lang('Txn.days_suffix', [$l['duration']]) : '',
                         trim($l['nights'] . ' ' . $l['units']),
                     ]);
                 ?>
@@ -100,27 +100,27 @@ $foot = $hasDetail ? 5 : 3;
         <?php endforeach ?>
       </tbody>
       <tfoot>
-        <tr><td colspan="<?= $foot ?>" class="right">Subtotal</td><td class="right"><?= money($inv['subtotal']) ?></td></tr>
-        <?php if ((float) $inv['ppn_amount'] > 0): ?><tr><td colspan="<?= $foot ?>" class="right">PPN Keluaran</td><td class="right"><?= money($inv['ppn_amount']) ?></td></tr><?php endif ?>
-        <?php if ((float) $inv['pph_amount'] > 0): ?><tr><td colspan="<?= $foot ?>" class="right">PPh 23 dipotong pelanggan</td><td class="right">(<?= money($inv['pph_amount']) ?>)</td></tr><?php endif ?>
-        <tr><td colspan="<?= $foot ?>" class="right">Receivable</td><td class="right"><?= money($inv['total']) ?></td></tr>
+        <tr><td colspan="<?= $foot ?>" class="right"><?= lang('Txn.subtotal') ?></td><td class="right"><?= money($inv['subtotal']) ?></td></tr>
+        <?php if ((float) $inv['ppn_amount'] > 0): ?><tr><td colspan="<?= $foot ?>" class="right"><?= lang('Txn.ppn_out') ?></td><td class="right"><?= money($inv['ppn_amount']) ?></td></tr><?php endif ?>
+        <?php if ((float) $inv['pph_amount'] > 0): ?><tr><td colspan="<?= $foot ?>" class="right"><?= lang('Txn.pph_deducted_cust') ?></td><td class="right">(<?= money($inv['pph_amount']) ?>)</td></tr><?php endif ?>
+        <tr><td colspan="<?= $foot ?>" class="right"><?= lang('Txn.receivable') ?></td><td class="right"><?= money($inv['total']) ?></td></tr>
       </tfoot>
     </table>
     </div>
   </div>
 
   <div class="card" style="flex:1;min-width:240px">
-    <h2>Receipts</h2>
+    <h2><?= lang('Txn.receipts_h') ?></h2>
     <table class="grid tight">
       <tbody>
-        <tr><td class="muted">Total (<?= base_code() ?>)</td><td class="right mono"><?= money($inv['total_base']) ?></td></tr>
-        <tr><td class="muted">Paid</td><td class="right mono"><?= money($inv['received_base']) ?></td></tr>
-        <tr class="subtotal"><td>Outstanding</td><td class="right mono"><?= money($outstanding) ?></td></tr>
+        <tr><td class="muted"><?= lang('App.total') ?> (<?= base_code() ?>)</td><td class="right mono"><?= money($inv['total_base']) ?></td></tr>
+        <tr><td class="muted"><?= lang('Txn.paid') ?></td><td class="right mono"><?= money($inv['received_base']) ?></td></tr>
+        <tr class="subtotal"><td><?= lang('Txn.outstanding') ?></td><td class="right mono"><?= money($outstanding) ?></td></tr>
       </tbody>
     </table>
     <?php if ($allocs): ?>
       <table class="grid tight" style="margin-top:10px">
-        <thead><tr><th>Receipt</th><th>Date</th><th class="right">Amount</th></tr></thead>
+        <thead><tr><th><?= lang('Txn.receipt') ?></th><th><?= lang('App.date') ?></th><th class="right"><?= lang('App.amount') ?></th></tr></thead>
         <tbody>
           <?php foreach ($allocs as $a): ?>
             <tr>
@@ -137,7 +137,7 @@ $foot = $hasDetail ? 5 : 3;
 
 <?php if ($cfDefs && array_filter($cfValues)): ?>
   <div class="card" style="max-width:520px">
-    <h2>Additional information</h2>
+    <h2><?= lang('App.additional_info') ?></h2>
     <table class="grid tight">
       <tbody>
         <?php foreach ($cfDefs as $d): ?>
@@ -153,13 +153,13 @@ $foot = $hasDetail ? 5 : 3;
 
 <?php if (in_array($inv['status'], ['posted', 'partial'], true) && user_can('journal.void')): ?>
   <div class="card">
-    <h2>Void this invoice</h2>
+    <h2><?= lang('Txn.void_invoice') ?></h2>
     <form method="post" action="<?= site_url('sales/' . $inv['id'] . '/void') ?>" class="inline"
-      onsubmit="return confirm('Void this invoice? Its journal will be reversed.')">
+      onsubmit="return confirm('<?= esc(lang('Txn.void_invoice_confirm'), 'js') ?>')">
       <?= csrf_field() ?>
-      <input name="reason" placeholder="Reason" required style="max-width:340px">
-      <button class="btn danger" type="submit">Void</button>
-      <span class="muted small">Void any payments first.</span>
+      <input name="reason" placeholder="<?= esc(lang('Txn.reason'), 'attr') ?>" required style="max-width:340px">
+      <button class="btn danger" type="submit"><?= lang('App.void') ?></button>
+      <span class="muted small"><?= lang('Txn.void_payments_first') ?></span>
     </form>
   </div>
 <?php endif ?>

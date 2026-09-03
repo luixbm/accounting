@@ -131,6 +131,18 @@ return [
     'reconcile'        => 'Reconcile',
     'bank_book'        => 'Bank book',
 
+    'customer_inv_no' => 'Customer invoice no.',
+    'ref_hint_booking' => 'e.g. booking name',
+    'booking_name' => 'Booking name',
+    'duration' => 'Duration',
+    'receive_payment_btn' => '+ Receive payment',
+    'receive' => 'Receive',
+    'receipts_h' => 'Receipts',
+    'ppn_out' => 'PPN Keluaran',
+    'pph_deducted_cust' => 'PPh 23 withheld by customer',
+    'receivable' => 'Receivable',
+    'pax_suffix' => '{0} pax',
+    'days_suffix' => '{0} days',
     // jobs
     'job'              => 'Job',
     'dossier'          => 'Dossier',

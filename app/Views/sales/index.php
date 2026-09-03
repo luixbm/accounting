@@ -3,38 +3,38 @@
 <?php $f = $filters; ?>
 
 <div class="page-head">
-  <div><h1>Sales</h1><div class="muted small">Customer invoices &amp; their payments</div></div>
+  <div><h1><?= lang('Nav.sales') ?></h1><div class="muted small"><?= lang('Txn.sales_sub') ?></div></div>
   <div class="btn-group">
-    <a class="btn ghost" href="<?= site_url('sales/import') ?>">Import</a>
-    <a class="btn ghost" href="<?= site_url('sales/receipts') ?>">Receipts</a>
-    <?php if (user_can('journal.post')): ?><a class="btn ghost" href="<?= site_url('sales/receipts/new') ?>">+ Receive payment</a><?php endif ?>
-    <?php if (user_can('journal.create')): ?><a class="btn" href="<?= site_url('sales/new') ?>">+ New Invoice</a><?php endif ?>
+    <a class="btn ghost" href="<?= site_url('sales/import') ?>"><?= lang('App.import') ?></a>
+    <a class="btn ghost" href="<?= site_url('sales/receipts') ?>"><?= lang('Txn.receipts') ?></a>
+    <?php if (user_can('journal.post')): ?><a class="btn ghost" href="<?= site_url('sales/receipts/new') ?>"><?= lang('Txn.receive_payment_btn') ?></a><?php endif ?>
+    <?php if (user_can('journal.create')): ?><a class="btn" href="<?= site_url('sales/new') ?>"><?= lang('Txn.new_invoice_btn') ?></a><?php endif ?>
   </div>
 </div>
 
 <form class="filterbar" method="get">
-  <div class="field"><label>Search</label><input name="q" value="<?= esc($f['q']) ?>" placeholder="no. / ref / desc"></div>
+  <div class="field"><label><?= lang('App.search') ?></label><input name="q" value="<?= esc($f['q']) ?>" placeholder="no. / ref / desc"></div>
   <div class="field">
-    <label>Status</label>
+    <label><?= lang('App.status') ?></label>
     <select name="status">
-      <option value="">All</option>
+      <option value=""><?= lang('App.all') ?></option>
       <?php foreach (['draft', 'posted', 'partial', 'paid', 'void'] as $s): ?>
-        <option value="<?= $s ?>" <?= $f['status'] === $s ? 'selected' : '' ?>><?= ucfirst($s) ?></option>
+        <option value="<?= $s ?>" <?= $f['status'] === $s ? 'selected' : '' ?>><?= lang('App.' . $s) ?></option>
       <?php endforeach ?>
     </select>
   </div>
   <div class="field">
-    <label>Customer</label>
+    <label><?= lang('Txn.customer') ?></label>
     <select name="customer_id">
-      <option value="">All</option>
+      <option value=""><?= lang('App.all') ?></option>
       <?php foreach ($customers as $s): ?>
         <option value="<?= $s['id'] ?>" <?= (string) $f['customer_id'] === (string) $s['id'] ? 'selected' : '' ?>><?= esc($s['name']) ?></option>
       <?php endforeach ?>
     </select>
   </div>
-  <div class="field"><label>From</label><input type="date" name="from" value="<?= esc($f['from']) ?>"></div>
-  <div class="field"><label>To</label><input type="date" name="to" value="<?= esc($f['to']) ?>"></div>
-  <button class="btn" type="submit">Filter</button>
+  <div class="field"><label><?= lang('App.from') ?></label><input type="date" name="from" value="<?= esc($f['from']) ?>"></div>
+  <div class="field"><label><?= lang('App.to') ?></label><input type="date" name="to" value="<?= esc($f['to']) ?>"></div>
+  <button class="btn" type="submit"><?= lang('App.filter') ?></button>
   <?= view('partials/filter_clear') ?>
 </form>
 
@@ -42,9 +42,9 @@
   <table class="grid tight">
     <thead>
       <tr>
-        <th>No.</th><th>Date</th><th>Customer</th><th>Ref</th><th>Description</th>
+        <th><?= lang('Report.col_no') ?></th><th><?= lang('App.date') ?></th><th><?= lang('Txn.customer') ?></th><th><?= lang('Report.col_ref') ?></th><th><?= lang('App.description') ?></th>
         <?php foreach ($cfDefs as $d): ?><th><?= esc($d['label']) ?></th><?php endforeach ?>
-        <th class="right">Total (<?= base_code() ?>)</th><th class="right">Outstanding</th><th>Status</th>
+        <th class="right"><?= lang('App.total') ?> (<?= base_code() ?>)</th><th class="right"><?= lang('Txn.outstanding') ?></th><th><?= lang('App.status') ?></th>
       </tr>
     </thead>
     <tbody>
@@ -61,12 +61,12 @@
           <td class="right mono"><?= money($r['total_base']) ?></td>
           <td class="right mono"><?= money($r['outstanding_base'], 2, true) ?></td>
           <td><?= status_badge($r['status'] === 'partial' ? 'draft' : ($r['status'] === 'paid' ? 'posted' : $r['status'])) ?>
-            <?php if ($r['status'] === 'partial'): ?><span class="small muted">partial</span><?php endif ?>
-            <?php if ($r['status'] === 'paid'): ?><span class="small muted">paid</span><?php endif ?>
+            <?php if ($r['status'] === 'partial'): ?><span class="small muted"><?= lang('App.partial') ?></span><?php endif ?>
+            <?php if ($r['status'] === 'paid'): ?><span class="small muted"><?= lang('App.paid') ?></span><?php endif ?>
           </td>
         </tr>
       <?php endforeach ?>
-      <?php if (! $rows): ?><tr><td colspan="9" class="muted">No invoices.</td></tr><?php endif ?>
+      <?php if (! $rows): ?><tr><td colspan="9" class="muted"><?= lang('Txn.no_invoices') ?></td></tr><?php endif ?>
     </tbody>
   </table>
   <?= $pager->links('default', 'default_full') ?>

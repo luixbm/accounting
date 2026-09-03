@@ -131,6 +131,18 @@ return [
     'reconcile'        => 'Rekonsiliasi',
     'bank_book'        => 'Buku bank',
 
+    'customer_inv_no' => 'No. faktur pelanggan',
+    'ref_hint_booking' => 'mis. nama booking',
+    'booking_name' => 'Nama booking',
+    'duration' => 'Durasi',
+    'receive_payment_btn' => '+ Terima pembayaran',
+    'receive' => 'Terima',
+    'receipts_h' => 'Penerimaan',
+    'ppn_out' => 'PPN Keluaran',
+    'pph_deducted_cust' => 'PPh 23 dipotong pelanggan',
+    'receivable' => 'Piutang',
+    'pax_suffix' => '{0} pax',
+    'days_suffix' => '{0} hari',
     // job
     'job'              => 'Job',
     'dossier'          => 'Dosir',
