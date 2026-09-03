@@ -8,13 +8,13 @@ foreach ($open as $i) {
 ksort($ccyOptions);
 ?>
 
-<div class="page-head"><h1>Receive from Customer</h1></div>
+<div class="page-head"><h1><?= lang('Txn.receive_from_customer_h') ?></h1></div>
 
 <form class="filterbar no-print" method="get" action="<?= site_url('sales/receipts/new') ?>">
   <div class="field" style="min-width:240px">
-    <label>Customer</label>
+    <label><?= lang('Txn.customer') ?></label>
     <select name="customer_id" onchange="this.form.submit()">
-      <option value="">— choose a customer —</option>
+      <option value=""><?= lang('Txn.choose_customer') ?></option>
       <?php foreach ($customers as $s): ?>
         <option value="<?= $s['id'] ?>" <?= $customerId === (int) $s['id'] ? 'selected' : '' ?>><?= esc($s['name']) ?></option>
       <?php endforeach ?>
@@ -23,7 +23,7 @@ ksort($ccyOptions);
 </form>
 
 <?php if ($customerId && ! $open): ?>
-  <div class="card"><p class="muted">No open invoices for this customer.</p></div>
+  <div class="card"><p class="muted"><?= lang('Txn.no_open_inv_customer') ?></p></div>
 <?php elseif ($customerId): ?>
   <form method="post" action="<?= site_url('sales/receipts') ?>" id="payform">
     <?= csrf_field() ?>
@@ -31,9 +31,9 @@ ksort($ccyOptions);
 
     <div class="card">
       <div class="row">
-        <div class="field" style="max-width:160px"><label>Receipt date</label><input type="date" name="receipt_date" value="<?= date('Y-m-d') ?>" required></div>
+        <div class="field" style="max-width:160px"><label><?= lang('Txn.receipt_date') ?></label><input type="date" name="receipt_date" value="<?= date('Y-m-d') ?>" required></div>
         <div class="field" style="max-width:130px">
-          <label>Currency</label>
+          <label><?= lang('App.currency') ?></label>
           <select name="currency_id" id="ccySel" data-base="<?= esc($baseCode, 'attr') ?>">
             <?php foreach ($ccyOptions as $code => $cid): ?>
               <option value="<?= $cid ?>" data-code="<?= esc($code, 'attr') ?>" data-rate="<?= esc((string) ($rates[$code] ?? 1), 'attr') ?>"><?= esc($code) ?></option>
@@ -41,27 +41,27 @@ ksort($ccyOptions);
           </select>
         </div>
         <div class="field" style="max-width:170px" id="rateWrap">
-          <label>Rate <span class="muted small">(<?= esc($baseCode) ?> per 1)</span></label>
+          <label><?= lang('Txn.rate_per_1') ?> <span class="muted small"><?= lang('Txn.per_1_note', [esc($baseCode)]) ?></span></label>
           <input name="exchange_rate" id="rateInp" class="mono right" inputmode="decimal" value="1">
         </div>
         <div class="field" style="max-width:240px">
-          <label>Receive into</label>
+          <label><?= lang('Txn.receive_into') ?></label>
           <select name="bank_account_id" required>
-            <option value="">— bank / cash —</option>
+            <option value=""><?= lang('Txn.bank_cash_choose') ?></option>
             <?php foreach ($banks as $b): ?>
               <option value="<?= $b['id'] ?>"><?= esc($b['code'] . ' · ' . $b['name']) ?></option>
             <?php endforeach ?>
           </select>
         </div>
-        <div class="field"><label>Reference</label><input name="reference"></div>
+        <div class="field"><label><?= lang('App.reference') ?></label><input name="reference"></div>
       </div>
-      <p class="muted small">A receipt settles one currency at a time. A/R clears at each invoice's rate; the rate difference posts to realized FX.</p>
+      <p class="muted small"><?= lang('Txn.settle_note_ar') ?></p>
     </div>
 
     <div class="card">
-      <h2>Open invoices</h2>
+      <h2><?= lang('Txn.open_invoices_h') ?></h2>
       <table class="grid tight">
-        <thead><tr><th>No.</th><th>Date</th><th>Ref</th><th>Cur</th><th class="right">Outstanding</th><th class="right">Receive this</th></tr></thead>
+        <thead><tr><th><?= lang('Report.col_no') ?></th><th><?= lang('App.date') ?></th><th><?= lang('Report.col_ref') ?></th><th><?= lang('Txn.cur') ?></th><th class="right"><?= lang('Txn.outstanding') ?></th><th class="right"><?= lang('Txn.receive_this') ?></th></tr></thead>
         <tbody>
           <?php foreach ($open as $inv): ?>
             <?php $code = $inv['currency_code'] ?: $baseCode; $out = round((float) $inv['outstanding'], 2); ?>
@@ -71,23 +71,23 @@ ksort($ccyOptions);
               <td class="small"><?= esc($inv['customer_ref']) ?></td>
               <td class="mono small"><?= esc($code) ?></td>
               <td class="right mono"><?= money($out) ?></td>
-              <td><input class="right mono alloc" name="alloc[<?= $inv['id'] ?>]" inputmode="decimal" data-max="<?= $out ?>" value="" title="Click to fill with the outstanding amount, then edit if needed"></td>
+              <td><input class="right mono alloc" name="alloc[<?= $inv['id'] ?>]" inputmode="decimal" data-max="<?= $out ?>" value="" title="<?= esc(lang('Txn.pay_this_hint'), 'attr') ?>"></td>
             </tr>
           <?php endforeach ?>
         </tbody>
         <tfoot>
-          <tr class="subtotal"><td colspan="5" class="right">Total received <span id="totCcy" class="muted"></span></td><td class="right mono" id="payTot">0.00</td></tr>
+          <tr class="subtotal"><td colspan="5" class="right"><?= lang('Txn.total_receipt') ?> <span id="totCcy" class="muted"></span></td><td class="right mono" id="payTot">0.00</td></tr>
         </tfoot>
       </table>
       <div class="btn-group" style="margin-top:10px">
-        <button type="button" class="btn sm ghost" id="fillAll">Receive all in full</button>
-        <button type="button" class="btn sm ghost" id="clearAll">Clear</button>
+        <button type="button" class="btn sm ghost" id="fillAll"><?= lang('Txn.receive_all_full') ?></button>
+        <button type="button" class="btn sm ghost" id="clearAll"><?= lang('Txn.clear') ?></button>
       </div>
     </div>
 
     <div class="card">
-      <button class="btn" type="submit">Record &amp; post receipt</button>
-      <a class="btn ghost" href="<?= site_url('sales/receipts') ?>">Cancel</a>
+      <button class="btn" type="submit"><?= lang('Txn.record_post_receipt') ?></button>
+      <a class="btn ghost" href="<?= site_url('sales/receipts') ?>"><?= lang('App.cancel') ?></a>
     </div>
   </form>
 

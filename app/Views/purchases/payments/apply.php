@@ -3,23 +3,23 @@
 
 <div class="page-head">
   <div>
-    <h1>Apply <?= esc($dep['payment_no']) ?></h1>
-    <div class="muted small">Unapplied: <span class="mono"><?= money($dep['unapplied']) ?></span> · rate <?= money($dep['exchange_rate'], 4) ?></div>
+    <h1><?= lang('Txn.apply_h', [esc($dep['payment_no'])]) ?></h1>
+    <div class="muted small"><?= lang('Txn.unapplied_prefix', ['<span class="mono">' . money($dep['unapplied']) . '</span>']) ?> · <?= lang('Txn.rate_prefix', [money($dep['exchange_rate'], 4)]) ?></div>
   </div>
-  <div class="btn-group"><a class="btn ghost" href="<?= site_url('purchases/payments/' . $dep['id']) ?>">Back</a></div>
+  <div class="btn-group"><a class="btn ghost" href="<?= site_url('purchases/payments/' . $dep['id']) ?>"><?= lang('App.back') ?></a></div>
 </div>
 
 <?php if (! $open): ?>
-  <div class="card"><p class="muted">No open invoices for this supplier in the deposit's currency.</p></div>
+  <div class="card"><p class="muted"><?= lang('Txn.no_open_inv_dep_ccy') ?></p></div>
 <?php else: ?>
   <form method="post" action="<?= site_url('purchases/payments/' . $dep['id'] . '/apply') ?>" id="af">
     <?= csrf_field() ?>
     <div class="card">
       <div class="row">
-        <div class="field" style="max-width:170px"><label>Apply date</label><input type="date" name="apply_date" value="<?= date('Y-m-d') ?>" required></div>
+        <div class="field" style="max-width:170px"><label><?= lang('Txn.apply_date') ?></label><input type="date" name="apply_date" value="<?= date('Y-m-d') ?>" required></div>
       </div>
       <table class="grid tight">
-        <thead><tr><th>No.</th><th>Date</th><th>Ref</th><th class="right">Outstanding</th><th class="right">Apply this</th></tr></thead>
+        <thead><tr><th><?= lang('Report.col_no') ?></th><th><?= lang('App.date') ?></th><th><?= lang('Report.col_ref') ?></th><th class="right"><?= lang('Txn.outstanding') ?></th><th class="right"><?= lang('Txn.apply_this') ?></th></tr></thead>
         <tbody>
           <?php foreach ($open as $inv): $out = round((float) $inv['outstanding'], 2); ?>
             <tr>
@@ -31,16 +31,16 @@
             </tr>
           <?php endforeach ?>
         </tbody>
-        <tfoot><tr class="subtotal"><td colspan="4" class="right">Total to apply</td><td class="right mono" id="tot">0.00</td></tr></tfoot>
+        <tfoot><tr class="subtotal"><td colspan="4" class="right"><?= lang('Txn.total_to_apply') ?></td><td class="right mono" id="tot">0.00</td></tr></tfoot>
       </table>
       <div class="btn-group" style="margin-top:10px">
-        <button type="button" class="btn sm ghost" id="fill">Use full deposit</button>
-        <button type="button" class="btn sm ghost" id="clr">Clear</button>
+        <button type="button" class="btn sm ghost" id="fill"><?= lang('Txn.use_full_deposit') ?></button>
+        <button type="button" class="btn sm ghost" id="clr"><?= lang('Txn.clear') ?></button>
       </div>
     </div>
     <div class="card">
-      <button class="btn" type="submit">Apply &amp; post</button>
-      <a class="btn ghost" href="<?= site_url('purchases/payments/' . $dep['id']) ?>">Cancel</a>
+      <button class="btn" type="submit"><?= lang('Txn.apply_post') ?></button>
+      <a class="btn ghost" href="<?= site_url('purchases/payments/' . $dep['id']) ?>"><?= lang('App.cancel') ?></a>
     </div>
   </form>
 
