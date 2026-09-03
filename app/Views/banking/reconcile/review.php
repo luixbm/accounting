@@ -15,7 +15,7 @@ $bookOpt = static function ($rows) {
     $h = '<option value="">— match to book entry —</option>';
     foreach ($rows as $b) {
         $h .= '<option value="' . (int) $b['id'] . '">'
-            . esc(date_id($b['entry_date']) . '  ' . $b['journal_no'] . '  ' . rupiah($b['effect'])
+            . esc(date_id($b['entry_date']) . '  ' . $b['journal_no'] . '  ' . money_c($b['effect'])
                   . ($b['memo'] ? '  · ' . mb_substr((string) $b['memo'], 0, 40) : ''))
             . '</option>';
     }
@@ -39,7 +39,7 @@ $accOpt = static function ($rows) {
     </h1>
     <div class="muted small">
       Statement to <?= date_id($st['statement_date']) ?> ·
-      opening <?= rupiah($st['opening_balance']) ?> · closing <?= rupiah($st['closing_balance']) ?>
+      opening <?= money_c($st['opening_balance']) ?> · closing <?= money_c($st['closing_balance']) ?>
       <?= $st['note'] ? ' · ' . esc($st['note']) : '' ?>
     </div>
   </div>
@@ -55,11 +55,11 @@ $accOpt = static function ($rows) {
 
 <?php
 $tiles = [
-    ['Book balance @ date', rupiah($sum['book_balance']), ''],
-    ['Statement closing', rupiah($st['closing_balance']), ''],
-    ['Unmatched on bank', rupiah($sum['unmatched_stmt_total']) . ' · ' . $sum['counts']['stmt_unmatched'], 'warn'],
-    ['Outstanding in books', rupiah($sum['unmatched_book_total']) . ' · ' . $sum['counts']['book_unmatched'], 'warn'],
-    ['Difference', rupiah($sum['difference']), $sum['reconciled'] ? 'ok' : 'bad'],
+    ['Book balance @ date', money_c($sum['book_balance']), ''],
+    ['Statement closing', money_c($st['closing_balance']), ''],
+    ['Unmatched on bank', money_c($sum['unmatched_stmt_total']) . ' · ' . $sum['counts']['stmt_unmatched'], 'warn'],
+    ['Outstanding in books', money_c($sum['unmatched_book_total']) . ' · ' . $sum['counts']['book_unmatched'], 'warn'],
+    ['Difference', money_c($sum['difference']), $sum['reconciled'] ? 'ok' : 'bad'],
 ];
 ?>
 <div class="kpi-row">
@@ -70,7 +70,7 @@ $tiles = [
 
 <?php if (abs((float) $sum['import_check']) >= 0.5): ?>
   <div class="alert alert-error no-print">
-    Imported lines don't tie to the statement: closing − opening − Σlines = <?= rupiah($sum['import_check']) ?>.
+    Imported lines don't tie to the statement: closing − opening − Σlines = <?= money_c($sum['import_check']) ?>.
     Re-map the columns (wrong amount convention or a missed column?).
   </div>
 <?php endif ?>
@@ -102,7 +102,7 @@ $tiles = [
             <td class="nowrap"><?= date_id($sl['txn_date']) ?></td>
             <td><?= esc($sl['description']) ?></td>
             <td class="muted small"><?= esc($sl['reference']) ?></td>
-            <td class="right mono"><?= rupiah($sl['amount']) ?></td>
+            <td class="right mono"><?= money_c($sl['amount']) ?></td>
             <td>
               <?php if ($mid !== null): ?>
                 <span class="badge badge-green">Matched</span>
@@ -153,7 +153,7 @@ $tiles = [
             <td class="nowrap"><?= date_id($b['entry_date']) ?></td>
             <td class="mono"><a href="<?= site_url('journals/' . $b['journal_id']) ?>"><?= esc($b['journal_no']) ?></a></td>
             <td><?= esc($b['memo'] ?: $b['jdesc']) ?></td>
-            <td class="right mono"><?= rupiah($b['effect']) ?></td>
+            <td class="right mono"><?= money_c($b['effect']) ?></td>
           </tr>
         <?php endforeach ?>
         <?php if (! $sum['unmatched_book']): ?><tr><td colspan="4" class="muted">Nothing outstanding — every ledger entry on this account is on the statement.</td></tr><?php endif ?>

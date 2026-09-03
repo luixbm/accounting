@@ -22,7 +22,7 @@
         foreach ($cash as $c): $tot += $c['balance']; ?>
           <tr>
             <td><?= esc($c['name']) ?></td>
-            <td class="right mono nowrap"><?= rupiah($c['balance']) ?></td>
+            <td class="right mono nowrap"><?= money_c($c['balance']) ?></td>
             <?php if (user_can('reports.view')): ?>
               <td class="right nowrap" style="width:1%"><a class="btn sm ghost" href="<?= site_url('reports/bank-book?account_id=' . $c['id']) ?>">Bank book</a></td>
             <?php endif ?>
@@ -30,7 +30,7 @@
         <?php endforeach ?>
         <?php if (! $cash): ?><tr><td class="muted">No accounts flagged as cash/bank.</td></tr><?php endif ?>
       </tbody>
-      <tfoot><tr><td>Total</td><td class="right mono nowrap"><?= rupiah($tot) ?></td><?php if (user_can('reports.view')): ?><td></td><?php endif ?></tr></tfoot>
+      <tfoot><tr><td>Total</td><td class="right mono nowrap"><?= money_c($tot) ?></td><?php if (user_can('reports.view')): ?><td></td><?php endif ?></tr></tfoot>
     </table>
   </div>
 
@@ -44,7 +44,7 @@
             <td class="mono nowrap"><a href="<?= site_url('journals/' . $j['id']) ?>"><?= esc($j['journal_no']) ?></a></td>
             <td class="nowrap"><?= date_id($j['entry_date']) ?></td>
             <td><?= esc($j['description']) ?></td>
-            <td class="right mono"><?= rupiah($j['total_debit']) ?></td>
+            <td class="right mono"><?= money_c($j['total_debit']) ?></td>
             <td><?= status_badge($j['status']) ?></td>
           </tr>
         <?php endforeach ?>

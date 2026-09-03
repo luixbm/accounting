@@ -41,10 +41,10 @@ $section = static function (array $g): string {
 </form>
 
 <div class="kpis">
-  <div class="kpi"><div class="k-label">Revenue</div><div class="k-value mono"><?= rupiah($pl['revenue'], false, 0) ?></div></div>
-  <div class="kpi"><div class="k-label">Direct cost</div><div class="k-value mono"><?= rupiah($pl['direct_cost'], false, 0) ?></div></div>
-  <div class="kpi <?= $pl['gross_profit'] < 0 ? 'neg' : 'pos' ?>"><div class="k-label">Gross profit</div><div class="k-value mono"><?= rupiah($pl['gross_profit'], false, 0) ?></div></div>
-  <div class="kpi <?= $pl['net'] < 0 ? 'neg' : 'pos' ?>"><div class="k-label">Net profit</div><div class="k-value mono"><?= rupiah($pl['net'], false, 0) ?></div></div>
+  <div class="kpi"><div class="k-label">Revenue</div><div class="k-value mono"><?= money_c($pl['revenue'], false, 0) ?></div></div>
+  <div class="kpi"><div class="k-label">Direct cost</div><div class="k-value mono"><?= money_c($pl['direct_cost'], false, 0) ?></div></div>
+  <div class="kpi <?= $pl['gross_profit'] < 0 ? 'neg' : 'pos' ?>"><div class="k-label">Gross profit</div><div class="k-value mono"><?= money_c($pl['gross_profit'], false, 0) ?></div></div>
+  <div class="kpi <?= $pl['net'] < 0 ? 'neg' : 'pos' ?>"><div class="k-label">Net profit</div><div class="k-value mono"><?= money_c($pl['net'], false, 0) ?></div></div>
   <div class="kpi"><div class="k-label">Margin</div><div class="k-value mono"><?= number_format($pl['margin'], 1) ?>%</div></div>
 </div>
 

@@ -239,7 +239,7 @@ class InvoiceImporter
                 $errors[] = "Unknown currency '{$curCode}'.";
                 $currency = $this->currencies->base();
             }
-            $isBase = (int) $currency['is_base'] === 1;
+            $isBase = $this->currencies->isBase((int) $currency['id']);
             $rateRaw = (string) $firstOf('rate');
             $rate    = $isBase ? 1.0 : ($rateRaw !== '' ? SpreadsheetReader::toNumber($rateRaw) : $this->rates->rateFor((int) $currency['id'], $date));
             if ($rate <= 0) {

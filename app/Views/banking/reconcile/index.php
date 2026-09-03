@@ -28,8 +28,8 @@
         <tr>
           <td class="nowrap"><?= date_id($s['statement_date']) ?></td>
           <td><?= esc($accts[(int) $s['bank_account_id']] ?? ('#' . $s['bank_account_id'])) ?></td>
-          <td class="right mono"><?= rupiah($s['opening_balance']) ?></td>
-          <td class="right mono"><?= rupiah($s['closing_balance']) ?></td>
+          <td class="right mono"><?= money_c($s['opening_balance']) ?></td>
+          <td class="right mono"><?= money_c($s['closing_balance']) ?></td>
           <td class="muted small"><?= esc($s['note']) ?></td>
           <td>
             <?php if ($s['status'] === 'reconciled'): ?>

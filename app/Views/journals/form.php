@@ -36,7 +36,7 @@ if (is_array($oldAcc)) {
 $curDefault = old('currency_id', $journal['currency_id'] ?? $baseId);
 
 $accOptions = static function ($selected) use ($accounts) {
-    $out = '<option value="">— account —</option>';
+    $out = '<option value="">' . lang('Txn.choose_account') . '</option>';
     foreach ($accounts as $a) {
         $sel = (string) $selected === (string) $a['id'] ? ' selected' : '';
         $out .= '<option value="' . $a['id'] . '" data-sub="' . esc($a['subledger'], 'attr') . '"' . $sel . '>'
@@ -73,11 +73,11 @@ $jobOptions = static function ($selected) use ($jobs) {
   <div class="card">
     <div class="row">
       <div class="field" style="max-width:170px">
-        <label>Date</label>
+        <label><?= lang('App.date') ?></label>
         <input type="date" name="entry_date" value="<?= esc(old('entry_date', $journal['entry_date'] ?? date('Y-m-d'))) ?>" required>
       </div>
       <div class="field" style="max-width:230px">
-        <label>Source</label>
+        <label><?= lang('Txn.source') ?></label>
         <select name="source">
           <?php foreach ($sources as $k => $lbl): ?>
             <option value="<?= $k ?>" <?= old('source', $journal['source'] ?? 'general') === $k ? 'selected' : '' ?>><?= esc($lbl) ?></option>
@@ -85,7 +85,7 @@ $jobOptions = static function ($selected) use ($jobs) {
         </select>
       </div>
       <div class="field" style="max-width:150px">
-        <label>Currency</label>
+        <label><?= lang('App.currency') ?></label>
         <select name="currency_id" id="curSel" data-base="<?= $baseId ?>">
           <?php foreach ($currencies as $c): ?>
             <option value="<?= $c['id'] ?>" data-rate="<?= esc($lastRates[$c['id']] ?? 1, 'attr') ?>"
@@ -94,33 +94,33 @@ $jobOptions = static function ($selected) use ($jobs) {
         </select>
       </div>
       <div class="field" style="max-width:200px" id="rateWrap">
-        <label>Exchange rate (to Rp)</label>
+        <label><?= lang('Txn.exchange_rate_to', [base_code()]) ?></label>
         <input name="exchange_rate" id="rateInp" type="number" step="0.00000001" min="0"
           value="<?= esc(old('exchange_rate', $journal['exchange_rate'] ?? 1)) ?>">
       </div>
     </div>
     <div class="field">
-      <label>Description</label>
+      <label><?= lang('App.description') ?></label>
       <input name="description" value="<?= esc(old('description', $journal['description'] ?? '')) ?>" required>
     </div>
     <div class="row">
-      <div class="field"><label>Reference / Invoice No.</label>
+      <div class="field"><label><?= lang('Txn.reference_invoice') ?></label>
         <input name="reference" value="<?= esc(old('reference', $journal['reference'] ?? '')) ?>">
       </div>
     </div>
   </div>
 
   <div class="card">
-    <h2>Lines</h2>
+    <h2><?= lang('Txn.lines') ?></h2>
     <table class="grid tight" id="lineTable">
       <thead>
         <tr>
-          <th style="width:24%">Account</th>
-          <th>Memo</th>
-          <th style="width:15%">Customer / Supplier</th>
-          <th style="width:9%">Job</th>
-          <th style="width:13%" class="right">Debit</th>
-          <th style="width:13%" class="right">Credit</th>
+          <th style="width:24%"><?= lang('App.account') ?></th>
+          <th><?= lang('App.memo') ?></th>
+          <th style="width:15%"><?= lang('Txn.cust_supp') ?></th>
+          <th style="width:9%"><?= lang('Txn.job') ?></th>
+          <th style="width:13%" class="right"><?= lang('Txn.debit') ?></th>
+          <th style="width:13%" class="right"><?= lang('Txn.credit') ?></th>
           <th></th>
         </tr>
       </thead>
@@ -143,18 +143,18 @@ $jobOptions = static function ($selected) use ($jobs) {
       </tbody>
       <tfoot>
         <tr>
-          <td colspan="4" class="right"><button type="button" class="btn sm secondary" id="addRow">+ Add line</button></td>
+          <td colspan="4" class="right"><button type="button" class="btn sm secondary" id="addRow"><?= lang('App.add_line') ?></button></td>
           <td class="right mono" id="sumDr">0.00</td>
           <td class="right mono" id="sumCr">0.00</td>
           <td></td>
         </tr>
         <tr id="diffRow">
-          <td colspan="4" class="right muted">Difference</td>
+          <td colspan="4" class="right muted"><?= lang('Txn.difference') ?></td>
           <td colspan="2" class="right mono" id="diff">0.00</td>
           <td></td>
         </tr>
         <tr id="baseRow" style="display:none">
-          <td colspan="4" class="right muted">In base currency (<?= base_code() ?>)</td>
+          <td colspan="4" class="right muted"><?= lang('Txn.in_base', [base_code()]) ?></td>
           <td colspan="2" class="right mono" id="baseTot">0.00</td>
           <td></td>
         </tr>
@@ -164,12 +164,12 @@ $jobOptions = static function ($selected) use ($jobs) {
 
   <div class="card">
     <div class="btn-group">
-      <button class="btn ghost" type="submit" name="action" value="draft">Save draft</button>
+      <button class="btn ghost" type="submit" name="action" value="draft"><?= lang('Txn.save_draft') ?></button>
       <?php if ($canPost): ?>
-        <button class="btn" type="submit" name="action" value="post">Save &amp; post</button>
+        <button class="btn" type="submit" name="action" value="post"><?= lang('Txn.save_post') ?></button>
       <?php endif ?>
-      <a class="btn ghost" href="<?= site_url('journals') ?>">Cancel</a>
-      <span class="muted small" style="align-self:center">Debits must equal credits before posting.</span>
+      <a class="btn ghost" href="<?= site_url('journals') ?>"><?= lang('App.cancel') ?></a>
+      <span class="muted small" style="align-self:center"><?= lang('Txn.must_balance') ?></span>
     </div>
   </div>
 </form>

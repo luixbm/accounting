@@ -136,8 +136,9 @@ class InvoiceIngest
         if (! $currency) {
             return ['status' => 'error', 'code' => 422, 'errors' => ["Unknown currency '{$curCode}'."]];
         }
-        $rate = (int) $currency['is_base'] === 1 ? 1.0 : (float) ($body['exchange_rate'] ?? 0);
-        if ((int) $currency['is_base'] === 0 && $rate <= 0) {
+        $isBaseCcy = $curModel->isBase((int) $currency['id']);
+        $rate      = $isBaseCcy ? 1.0 : (float) ($body['exchange_rate'] ?? 0);
+        if (! $isBaseCcy && $rate <= 0) {
             return ['status' => 'error', 'code' => 422, 'errors' => ['exchange_rate is required for a non-base currency.']];
         }
 

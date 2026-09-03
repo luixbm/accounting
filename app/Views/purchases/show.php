@@ -1,7 +1,7 @@
 <?= $this->extend('layout') ?>
 <?= $this->section('content') ?>
 <?php
-$foreign     = (int) ($inv['currency_is_base'] ?? 1) === 0;
+$foreign     = strtoupper((string) ($inv['currency_code'] ?? base_code())) !== base_code();
 $outstanding = (float) $inv['total_base'] - (float) $inv['paid_base'];
 $statusLabel = ['draft' => 'draft', 'posted' => 'posted', 'partial' => 'draft', 'paid' => 'posted', 'void' => 'void'][$inv['status']] ?? 'draft';
 ?>

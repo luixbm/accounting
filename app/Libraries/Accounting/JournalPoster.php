@@ -209,7 +209,7 @@ class JournalPoster
         if (! $currency) {
             return ['ok' => false, 'errors' => ['Unknown currency.']];
         }
-        $rate    = (int) $currency['is_base'] === 1 ? 1.0 : max(0.0, (float) ($header['exchange_rate'] ?? 1));
+        $rate    = $this->currencies->isBase((int) $currency['id']) ? 1.0 : max(0.0, (float) ($header['exchange_rate'] ?? 1));
         $prepared = $this->prepareLines($rawLines, $rate);
 
         if ($prepared['lines'] === []) {

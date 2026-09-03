@@ -52,7 +52,7 @@ $pctText = static fn (float $f): string => number_format($f * 100, 1) . '%';
 <div class="kpis">
   <div class="kpi">
     <div class="k-label"><?= lang('Dashboard.revenue') ?> <span class="muted">YTD</span></div>
-    <div class="k-value mono"><?= rupiah($k['revenue'], false, 0) ?></div>
+    <div class="k-value mono"><?= money_c($k['revenue'], false, 0) ?></div>
     <?php if ($k['revLyPct'] !== null): ?>
       <div class="small muted"><?= number_format($k['revLyPct'] * 100) ?>% <?= lang('Dashboard.of_ly', [$prev]) ?></div>
     <?php endif ?>
@@ -63,19 +63,19 @@ $pctText = static fn (float $f): string => number_format($f * 100, 1) . '%';
   </div>
   <div class="kpi <?= $k['ebitda'] < 0 ? 'neg' : 'pos' ?>">
     <div class="k-label"><?= lang('Dashboard.ebitda') ?> <span class="muted">YTD</span></div>
-    <div class="k-value mono"><?= rupiah($k['ebitda'], false, 0) ?></div>
+    <div class="k-value mono"><?= money_c($k['ebitda'], false, 0) ?></div>
   </div>
   <div class="kpi <?= $k['net'] < 0 ? 'neg' : 'pos' ?>">
     <div class="k-label"><?= lang('Dashboard.net_income') ?> <span class="muted">YTD</span></div>
-    <div class="k-value mono"><?= rupiah($k['net'], false, 0) ?></div>
+    <div class="k-value mono"><?= money_c($k['net'], false, 0) ?></div>
   </div>
   <div class="kpi">
     <div class="k-label"><?= lang('Dashboard.ar') ?></div>
-    <div class="k-value mono"><?= rupiah($k['ar'], false, 0) ?></div>
+    <div class="k-value mono"><?= money_c($k['ar'], false, 0) ?></div>
   </div>
   <div class="kpi">
     <div class="k-label"><?= lang('Dashboard.ap') ?></div>
-    <div class="k-value mono"><?= rupiah($k['ap'], false, 0) ?></div>
+    <div class="k-value mono"><?= money_c($k['ap'], false, 0) ?></div>
   </div>
 </div>
 
@@ -129,7 +129,7 @@ $pctText = static fn (float $f): string => number_format($f * 100, 1) . '%';
           <td class="nowrap"><a href="<?= site_url('journals/' . $j['id']) ?>"><?= esc($j['journal_no']) ?></a></td>
           <td class="nowrap"><?= date_id($j['entry_date']) ?></td>
           <td><?= esc($j['description']) ?></td>
-          <td class="right mono"><?= rupiah($j['total_debit']) ?></td>
+          <td class="right mono"><?= money_c($j['total_debit']) ?></td>
           <td><?= status_badge($j['status']) ?></td>
         </tr>
       <?php endforeach ?>
