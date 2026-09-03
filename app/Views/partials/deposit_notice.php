@@ -19,22 +19,21 @@ $totParts = [];
 foreach ($byCcy as $code => $sum) {
     $totParts[] = money($sum, 2) . ' ' . $code;
 }
+$partyWord = $noun === 'supplier' ? lang('Txn.supplier') : lang('Txn.customer');
+$depWord   = $depositWord === 'deposit' ? lang('Txn.deposit') : lang('Txn.down_payment');
+$txnWord   = $noun === 'supplier' ? lang('Txn.payment') : lang('Txn.receipt');
 ?>
 <div class="alert alert-info">
-  <strong>
-    This <?= esc($noun) ?> has an unapplied <?= esc($depositWord) ?> —
-    <?= esc(implode(' + ', $totParts)) ?> still to settle.
-  </strong>
+  <strong><?= lang('Txn.dep_notice_title', [mb_strtolower($partyWord), mb_strtolower($depWord), esc(implode(' + ', $totParts))]) ?></strong>
   <ul>
     <?php foreach ($deposits as $d): ?>
       <li>
         <span class="mono"><?= esc($d['no']) ?></span>
         · <?= $d['date'] ? date_id($d['date']) : '' ?>
-        · <?= money((float) $d['unapplied'], 2) ?> <?= esc($d['currency_code']) ?> unapplied
-        &nbsp;<a href="<?= site_url($applyBase . '/' . $d['id'] . '/apply') ?>">apply to invoices &rsaquo;</a>
+        · <?= lang('Txn.dep_notice_unapplied', [money((float) $d['unapplied'], 2) . ' ' . esc($d['currency_code'])]) ?>
+        &nbsp;<a href="<?= site_url($applyBase . '/' . $d['id'] . '/apply') ?>"><?= lang('Txn.dep_notice_apply') ?> &rsaquo;</a>
       </li>
     <?php endforeach ?>
   </ul>
-  <span class="small">Apply the <?= esc($depositWord) ?> to the invoices below <em>before</em> recording this
-    <?= $noun === 'supplier' ? 'payment' : 'receipt' ?>, so the same amount isn't settled twice.</span>
+  <span class="small"><?= lang('Txn.dep_notice_warn', [mb_strtolower($depWord), mb_strtolower($txnWord)]) ?></span>
 </div>

@@ -285,4 +285,8 @@ return [
     'record_customer_dp_h' => 'Catat Uang Muka Pelanggan',
     'deposit_books_note' => 'Jurnal <b>Dr Deposit dibayar ke pemasok / Cr Bank</b>. Terapkan ke faktur nanti dari halaman deposit.',
     'dp_books_note' => 'Jurnal <b>Dr Bank / Cr Uang muka dari pelanggan</b>. Terapkan ke faktur nanti dari halaman uang muka.',
+    'dep_notice_title' => '{0} ini punya {1} yang belum diterapkan — {2} masih perlu dilunasi.',
+    'dep_notice_unapplied' => '{0} belum diterapkan',
+    'dep_notice_apply' => 'terapkan ke faktur',
+    'dep_notice_warn' => 'Terapkan {0} ke faktur di bawah sebelum mencatat {1} ini, agar jumlah yang sama tidak dilunasi dua kali.',
 ];

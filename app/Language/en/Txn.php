@@ -285,4 +285,8 @@ return [
     'record_customer_dp_h' => 'Record Customer Down Payment',
     'deposit_books_note' => "Books <b>Dr Deposit paid to supplier / Cr Bank</b>. Apply it to invoices later from the deposit's page.",
     'dp_books_note' => "Books <b>Dr Bank / Cr Down payment from customer</b>. Apply it to invoices later from the down payment's page.",
+    'dep_notice_title' => 'This {0} has an unapplied {1} — {2} still to settle.',
+    'dep_notice_unapplied' => '{0} unapplied',
+    'dep_notice_apply' => 'apply to invoices',
+    'dep_notice_warn' => "Apply the {0} to the invoices below before recording this {1}, so the same amount isn't settled twice.",
 ];
