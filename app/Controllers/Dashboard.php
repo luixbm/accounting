@@ -14,75 +14,74 @@ class Dashboard extends BaseController
         $accounts = model(AccountModel::class);
         $journals = model(JournalModel::class);
 
-        // Editable reporting window
-        $to   = $this->request->getGet('to') ?: date('Y-m-d');
-        $from = $this->request->getGet('from') ?: date('Y-01-01', strtotime($to));
-        if ($from > $to) {
-            [$from, $to] = [$to, $from];
+        // The dashboard is year-oriented (monthly charts + YTD KPIs).
+        $today = date('Y-m-d');
+        $year  = (int) ($this->request->getGet('year') ?: date('Y'));
+        $from  = $year . '-01-01';
+        $ytdTo = min($today, $year . '-12-31');
+        if ($ytdTo < $from) {
+            $ytdTo = $year . '-12-31';   // viewing a past year → whole year
         }
 
-        // Cash & bank position as of $to
-        $cashTotal = 0.0;
-        $cashRows  = [];
-        $cashIds   = [];
-        foreach ($accounts->cashAccounts() as $c) {
-            $bal        = $ledger->accountBalance((int) $c['id'], $to);
-            $cashTotal += $bal;
-            $cashIds[]  = (int) $c['id'];
-            $cashRows[] = ['name' => $c['name'], 'balance' => $bal];
-        }
+        // 12 monthly columns
+        $cols   = $ledger->periodColumns('month', $from, $year . '-12-31');
+        $labels = array_map(static fn ($c) => substr((string) $c['label'], 0, 3), $cols);
 
+        // Monthly P&L series (one pass)
+        $ism    = $ledger->incomeStatementMulti($cols);
+        $revM   = $ism['subtotals']['revenue'];
+        $gopM   = $ism['subtotals']['gross_profit'];
+        $ebitM  = $ism['subtotals']['operating'];               // EBITDA = Revenue − COGS − Opex
+        $cosM   = $ism['groups']['cogs']['totals'];
+        $gopPct = array_map(
+            static fn ($g, $r) => abs($r) > 0.005 ? $g / $r : 0.0,
+            $gopM,
+            $revM
+        );
+
+        $cashMoveM  = $ledger->cashMovementByPeriod($cols);
+        $topClients = $ledger->topCustomers($from, $ytdTo, 10);
+
+        // YTD KPIs
+        $ytd   = $ledger->incomeStatement($from, $ytdTo);
         $arIds = array_map(static fn ($a) => (int) $a['id'], $accounts->where('subledger', 'customer')->findAll());
         $apIds = array_map(static fn ($a) => (int) $a['id'], $accounts->where('subledger', 'supplier')->findAll());
         $ar    = 0.0;
         foreach ($arIds as $id) {
-            $ar += $ledger->accountBalance($id, $to);
+            $ar += $ledger->accountBalance($id, $ytdTo);
         }
-        $ap    = 0.0;
+        $ap = 0.0;
         foreach ($apIds as $id) {
-            $ap += $ledger->accountBalance($id, $to);
+            $ap += $ledger->accountBalance($id, $ytdTo);
         }
-
-        $pl = $ledger->incomeStatement($from, $to);
-
-        // Monthly series for the charts (cap at 24 columns)
-        $cols   = $ledger->periodColumns('month', $from, $to);
-        if (count($cols) > 24) {
-            $cols = array_slice($cols, -24);
-        }
-        $series = $ledger->dashboardSeries($cols, $cashIds, $arIds, $apIds);
-
-        // Expense breakdown for the window (COGS + opex + other expense)
-        $breakdown = [];
-        foreach (['cogs', 'expense', 'other_expense'] as $g) {
-            foreach ($pl['groups'][$g]['rows'] as $r) {
-                $breakdown[] = ['label' => $r['name'], 'value' => $r['amount']];
-            }
-        }
-        usort($breakdown, static fn ($a, $b) => $b['value'] <=> $a['value']);
-        $breakdown = array_slice($breakdown, 0, 8);
 
         $recent = $journals
             ->select('journals.*, currencies.code AS currency_code')
             ->join('currencies', 'currencies.id = journals.currency_id', 'left')
             ->orderBy('journals.id', 'DESC')
             ->findAll(10);
-
         $draftCount = $journals->where('status', 'draft')->countAllResults();
 
         return view('dashboard/index', [
             'title'      => 'Dashboard',
-            'from'       => $from,
-            'to'         => $to,
-            'cashTotal'  => $cashTotal,
-            'cashRows'   => $cashRows,
-            'ar'         => $ar,
-            'ap'         => $ap,
-            'revenue'    => $pl['revenue'],
-            'netIncome'  => $pl['net_income'],
-            'grossProfit'=> $pl['gross_profit'],
-            'series'     => $series,
-            'breakdown'  => $breakdown,
+            'year'       => $year,
+            'years'      => range((int) date('Y') + 1, (int) date('Y') - 4),
+            'ytdTo'      => $ytdTo,
+            'labels'     => $labels,
+            'revM'       => $revM,
+            'cosM'       => $cosM,
+            'gopPctM'    => $gopPct,
+            'ebitdaM'    => $ebitM,
+            'cashMoveM'  => $cashMoveM,
+            'topClients' => $topClients,
+            'k'          => [
+                'revenue' => $ytd['revenue'],
+                'gopPct'  => abs($ytd['revenue']) > 0.005 ? $ytd['gross_profit'] / $ytd['revenue'] : 0.0,
+                'ebitda'  => $ytd['operating'],
+                'net'     => $ytd['net_income'],
+                'ar'      => $ar,
+                'ap'      => $ap,
+            ],
             'recent'     => $recent,
             'draftCount' => $draftCount,
         ]);

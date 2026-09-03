@@ -635,6 +635,56 @@ class Ledger
         return $out;
     }
 
+    /**
+     * Net cash & bank movement (debit - credit on is_cash accounts) for each
+     * period column. Positive = cash came in.
+     *
+     * @param list<array{label:string, from:string, to:string}> $cols
+     *
+     * @return list<float>  aligned to $cols
+     */
+    public function cashMovementByPeriod(array $cols): array
+    {
+        $out = [];
+        foreach ($cols as $c) {
+            $row = $this->baseQuery($c['from'], $c['to'])
+                ->select('SUM(jl.debit_base - jl.credit_base) AS net')
+                ->join('accounts a', 'a.id = jl.account_id')
+                ->where('a.is_cash', 1)
+                ->get()->getRowArray();
+            $out[] = (float) ($row['net'] ?? 0);
+        }
+
+        return $out;
+    }
+
+    /**
+     * Top customers by invoiced sales (line amounts, base currency) in a window.
+     * Voided invoices excluded; unnamed customers bucketed as "—".
+     *
+     * @return list<array{label:string, value:float}>  descending, max $limit
+     */
+    public function topCustomers(string $from, string $to, int $limit = 10): array
+    {
+        $rows = $this->db->table('sales_invoice_lines sil')
+            ->select('COALESCE(c.name, "—") AS name, SUM(sil.amount_base) AS total')
+            ->join('sales_invoices si', 'si.id = sil.invoice_id')
+            ->join('customers c', 'c.id = si.customer_id', 'left')
+            ->whereIn('si.company_id', $this->companies)
+            ->where('si.status !=', 'void')
+            ->where('si.invoice_date >=', $from)
+            ->where('si.invoice_date <=', $to)
+            ->groupBy('si.customer_id')
+            ->orderBy('total', 'DESC')
+            ->limit($limit)
+            ->get()->getResultArray();
+
+        return array_map(
+            static fn ($r) => ['label' => (string) $r['name'], 'value' => (float) $r['total']],
+            $rows
+        );
+    }
+
     // --------------------------------------------------------- consolidation
 
     /**

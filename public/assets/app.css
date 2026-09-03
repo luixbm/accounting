@@ -346,6 +346,12 @@ legend{font-weight:700;font-size:12px;color:var(--muted);padding:0 6px}
 .chart-grid .card{margin-bottom:0}
 .chart-grid .card h2{margin-top:0;margin-bottom:6px;font-size:14px}
 .chart-grid svg{max-width:100%;overflow:visible}
+.chart-placeholder{
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  min-height:150px;padding:16px;border:1px dashed var(--line);border-radius:6px;
+  color:var(--muted);font-size:12.5px;background:var(--panel-2)
+}
+.chart-placeholder p{margin:0;max-width:34ch}
 
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px;margin-bottom:20px}
 .kpi{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--muted);border-radius:var(--radius);padding:13px 15px;overflow:hidden}

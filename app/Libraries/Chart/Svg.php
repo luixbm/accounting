@@ -175,6 +175,88 @@ class Svg
     }
 
     /**
+     * Grouped bars (left money axis) with a percentage line overlaid on a
+     * right-hand 0-100% axis. Built for "Sales · Cost of Sales · GOP %".
+     *
+     * @param list<string>              $labels
+     * @param array<string,list<float>> $barSeries   name => values
+     * @param list<float>               $pct         fractions 0..1, aligned to $labels
+     * @param string                    $pctLabel
+     * @param list<string>|null          $barColors
+     */
+    public static function barsAndLine(array $labels, array $barSeries, array $pct, string $pctLabel, ?array $barColors = null): string
+    {
+        $vals = array_merge(...array_values($barSeries)) ?: [0.0];
+        $max  = max(max($vals), 0.0);
+        if ($max <= 0.0) {
+            return self::empty('No data for this range');
+        }
+
+        $padL = 44;
+        $padR = 40;
+        $padT = 24;
+        $padB = 34;
+        $plotW = self::W - $padL - $padR;
+        $plotH = self::H - $padT - $padB;
+        $names = array_keys($barSeries);
+        $cols  = $barColors ?? [self::BRAND, self::AMBER];
+
+        // right axis scale: round the max % up to a sensible ceiling
+        $pctMax = max(0.01, max(array_map('abs', $pct ?: [0.0])));
+        $pctTop = $pctMax <= 0.5 ? ceil($pctMax * 20) / 20 : ceil($pctMax * 4) / 4; // 5% or 25% steps
+
+        $svg  = self::open();
+        $svg .= self::yGrid($padL, $padR, $padT, $plotH, 0.0, $max);
+
+        $n      = count($labels);
+        $slot   = $plotW / max($n, 1);
+        $gCount = count($names);
+        $bw     = min(16, ($slot * 0.62) / max($gCount, 1));
+        $gw     = $bw * $gCount;
+
+        foreach ($labels as $i => $label) {
+            $cx = $padL + $slot * $i + $slot / 2;
+            foreach ($names as $s => $name) {
+                $v  = $barSeries[$name][$i] ?? 0;
+                $bh = max(abs($v) / $max * $plotH, 0.5);
+                $x  = $cx - $gw / 2 + $bw * $s;
+                $svg .= '<rect x="' . round($x, 1) . '" y="' . round($padT + $plotH - $bh, 1) . '" width="' . round($bw, 1)
+                    . '" height="' . round($bh, 1) . '" rx="1.5" fill="' . $cols[$s % count($cols)] . '">'
+                    . '<title>' . htmlspecialchars($name . ' · ' . $label . ' : ' . self::abbr($v)) . '</title></rect>';
+            }
+            $svg .= self::xLabel($cx, self::H - $padB + 13, $label);
+        }
+
+        // right % axis ticks
+        for ($t = 0; $t <= 3; $t++) {
+            $frac = $pctTop * $t / 3;
+            $y    = $padT + $plotH - ($frac / $pctTop) * $plotH;
+            $svg .= '<text x="' . (self::W - $padR + 6) . '" y="' . round($y + 3, 1) . '" font-size="9" fill="' . self::MUTED . '">'
+                . round($frac * 100) . '%</text>';
+        }
+
+        // the % line
+        $pts = [];
+        foreach ($labels as $i => $label) {
+            $frac = $pct[$i] ?? 0;
+            $cx   = $padL + $slot * $i + $slot / 2;
+            $cy   = $padT + $plotH - (max(min($frac, $pctTop), 0) / $pctTop) * $plotH;
+            $pts[] = round($cx, 1) . ',' . round($cy, 1);
+        }
+        $svg .= '<polyline points="' . implode(' ', $pts) . '" fill="none" stroke="' . self::GREEN
+            . '" stroke-width="2" stroke-linejoin="round"/>';
+        foreach ($labels as $i => $label) {
+            [$cx, $cy] = explode(',', $pts[$i]);
+            $svg .= '<circle cx="' . $cx . '" cy="' . $cy . '" r="2.6" fill="' . self::GREEN . '">'
+                . '<title>' . htmlspecialchars($pctLabel . ' · ' . $label . ' : ' . round(($pct[$i] ?? 0) * 100, 1) . '%') . '</title></circle>';
+        }
+
+        $svg .= self::legend($padL, 13, array_merge($names, [$pctLabel]), array_merge($cols, [self::GREEN]));
+
+        return $svg . '</svg>';
+    }
+
+    /**
      * Filled line (area) chart, non-negative series.
      *
      * @param list<string> $labels
