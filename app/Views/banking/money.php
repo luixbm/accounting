@@ -3,7 +3,7 @@
 <?php
 $isSpend = $mode === 'spend';
 $accOpt = static function ($accounts) {
-    $h = '<option value="">— account —</option>';
+    $h = '<option value="">' . esc(lang('Txn.choose_account')) . '</option>';
     foreach ($accounts as $a) {
         $h .= '<option value="' . $a['id'] . '">' . esc($a['code'] . ' · ' . $a['name']) . '</option>';
     }
@@ -20,29 +20,29 @@ $jobOpt = static function ($jobs) {
 };
 ?>
 
-<div class="page-head"><h1><?= $isSpend ? 'Spend Money' : 'Receive Money' ?></h1></div>
+<div class="page-head"><h1><?= $isSpend ? lang('Txn.spend_money_h') : lang('Txn.receive_money_h') ?></h1></div>
 
 <form method="post" action="<?= site_url('banking/' . $mode) ?>" id="mform">
   <?= csrf_field() ?>
   <div class="card">
     <div class="row">
       <div class="field" style="max-width:260px">
-        <label><?= $isSpend ? 'Pay from' : 'Receive into' ?></label>
+        <label><?= $isSpend ? lang('Txn.pay_from') : lang('Txn.receive_into') ?></label>
         <select name="bank_account" required>
-          <option value="">— bank / cash —</option>
+          <option value=""><?= lang('Txn.bank_cash_choose') ?></option>
           <?php foreach ($banks as $b): ?><option value="<?= $b['id'] ?>" <?= old('bank_account') == $b['id'] ? 'selected' : '' ?>><?= esc($b['code'] . ' · ' . $b['name']) ?></option><?php endforeach ?>
         </select>
       </div>
-      <div class="field" style="max-width:170px"><label>Date</label><input type="date" name="date" value="<?= esc(old('date', date('Y-m-d'))) ?>" required></div>
-      <div class="field"><label>Reference</label><input name="reference" value="<?= esc(old('reference')) ?>"></div>
+      <div class="field" style="max-width:170px"><label><?= lang('App.date') ?></label><input type="date" name="date" value="<?= esc(old('date', date('Y-m-d'))) ?>" required></div>
+      <div class="field"><label><?= lang('App.reference') ?></label><input name="reference" value="<?= esc(old('reference')) ?>"></div>
     </div>
-    <div class="field"><label>Memo</label><input name="memo" value="<?= esc(old('memo')) ?>"></div>
+    <div class="field"><label><?= lang('App.memo') ?></label><input name="memo" value="<?= esc(old('memo')) ?>"></div>
   </div>
 
   <div class="card">
-    <h2><?= $isSpend ? 'What was it for?' : 'What is it for?' ?></h2>
+    <h2><?= $isSpend ? lang('Txn.what_for_spend') : lang('Txn.what_for_receive') ?></h2>
     <table class="grid tight" id="lineTable">
-      <thead><tr><th style="width:34%">Account</th><th>Description</th><th style="width:9%">Job</th><th style="width:16%" class="right">Amount</th><th></th></tr></thead>
+      <thead><tr><th style="width:34%"><?= lang('App.account') ?></th><th><?= lang('App.description') ?></th><th style="width:9%"><?= lang('Txn.job') ?></th><th style="width:16%" class="right"><?= lang('App.amount') ?></th><th></th></tr></thead>
       <tbody>
         <?php for ($i = 0; $i < 2; $i++): ?>
           <tr class="lrow">
@@ -55,7 +55,7 @@ $jobOpt = static function ($jobs) {
         <?php endfor ?>
       </tbody>
       <tfoot>
-        <tr><td colspan="3" class="right"><button type="button" class="btn sm secondary" id="addRow">+ Add line</button></td>
+        <tr><td colspan="3" class="right"><button type="button" class="btn sm secondary" id="addRow"><?= lang('App.add_line') ?></button></td>
           <td class="right mono" id="tot">0.00</td><td></td></tr>
       </tfoot>
     </table>
@@ -63,9 +63,9 @@ $jobOpt = static function ($jobs) {
 
   <div class="card">
     <div class="btn-group">
-      <button class="btn" type="submit">Post</button>
-      <a class="btn ghost" href="<?= site_url('banking') ?>">Cancel</a>
-      <span class="muted small" style="align-self:center">Books: <?= $isSpend ? 'Dr the accounts above / Cr bank' : 'Dr bank / Cr the accounts above' ?>.</span>
+      <button class="btn" type="submit"><?= lang('App.post') ?></button>
+      <a class="btn ghost" href="<?= site_url('banking') ?>"><?= lang('App.cancel') ?></a>
+      <span class="muted small" style="align-self:center"><?= $isSpend ? lang('Txn.books_spend') : lang('Txn.books_receive') ?></span>
     </div>
   </div>
 </form>
