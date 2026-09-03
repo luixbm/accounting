@@ -270,14 +270,22 @@ class InvoiceImportController extends BaseController
             return redirect()->to($this->base($kind) . "/{$id}")->with('error', 'Already committed.');
         }
 
-        $parsed = $this->parseBatch($kind, $batch);
-        $res    = (new InvoiceImporter($kind))->commit($id, $parsed, (int) auth()->id());
+        $parsed  = $this->parseBatch($kind, $batch);
+        $canPost = user_can('journal.post');
+        $res     = (new InvoiceImporter($kind))->commit($id, $parsed, (int) auth()->id(), $canPost);
 
-        return redirect()->to($this->base($kind) . "/{$id}")->with(
-            'message',
-            sprintf('%d invoices imported as draft (%d skipped). Created %d %s.',
-                $res['invoices'], $res['skipped'], $res['parties'], $kind === 'sales' ? 'customers' : 'suppliers')
-        );
+        $party = $kind === 'sales' ? 'customers' : 'suppliers';
+        if (! $canPost) {
+            $msg = sprintf('%d invoices imported as draft (%d skipped). Created %d %s.',
+                $res['invoices'], $res['skipped'], $res['parties'], $party);
+        } else {
+            $msg = sprintf('%d invoices imported, %d posted%s (%d skipped). Created %d %s.',
+                $res['invoices'], $res['posted'],
+                $res['post_failed'] ? sprintf(', %d kept as draft (could not post — open them to see why)', $res['post_failed']) : '',
+                $res['skipped'], $res['parties'], $party);
+        }
+
+        return redirect()->to($this->base($kind) . "/{$id}")->with('message', $msg);
     }
 
     // ------------------------------------------------------------------ batch detail

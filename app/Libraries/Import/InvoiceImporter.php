@@ -332,7 +332,11 @@ class InvoiceImporter
     /**
      * @return array{invoices:int,skipped:int,parties:int}
      */
-    public function commit(int $batchId, array $parsed, int $userId): array
+    /**
+     * @param bool $post  post each invoice straight away (create its journal);
+     *                     an invoice that fails to post is kept as a draft
+     */
+    public function commit(int $batchId, array $parsed, int $userId, bool $post = true): array
     {
         $db          = db_connect();
         $partyModel  = $this->kind === 'sales' ? model(CustomerModel::class) : model(SupplierModel::class);
@@ -358,8 +362,9 @@ class InvoiceImporter
             $newParties++;
         }
 
-        $made    = 0;
-        $skipped = 0;
+        $made      = 0;
+        $skipped   = 0;
+        $createdId = [];
         foreach ($parsed['invoices'] as $inv) {
             if ($inv['status'] !== 'ok') {
                 $skipped++;
@@ -396,6 +401,7 @@ class InvoiceImporter
                 'import_batch_id'=> $batchId,
             ]);
             $made++;
+            $createdId[] = (int) $res['id'];
         }
 
         model(ImportBatchModel::class)->update($batchId, [
@@ -407,7 +413,28 @@ class InvoiceImporter
 
         $db->transComplete();
 
-        return ['invoices' => $made, 'skipped' => $skipped, 'parties' => $newParties];
+        // Post OUTSIDE the create transaction (mirrors postAll) so one bad post
+        // fails a single invoice instead of rolling the whole batch back. A
+        // logical failure (unbalanced, locked period, …) just leaves it a draft.
+        $posted     = 0;
+        $postFailed = 0;
+        if ($post) {
+            foreach ($createdId as $invId) {
+                if (($poster->postInvoice($invId)['ok'] ?? false) === true) {
+                    $posted++;
+                } else {
+                    $postFailed++;
+                }
+            }
+        }
+
+        return [
+            'invoices'    => $made,
+            'skipped'     => $skipped,
+            'parties'     => $newParties,
+            'posted'      => $posted,
+            'post_failed' => $postFailed,
+        ];
     }
 
     private function partyCode($model): string

@@ -3,7 +3,9 @@
 <?php
 $s         = $parsed['summary'];
 $canCommit = $s['ok'] > 0 && $batch['status'] !== 'committed' && user_can('journal.create');
+$willPost  = user_can('journal.post');
 $party     = $kind === 'sales' ? 'customer' : 'supplier';
+$verb      = $willPost ? 'import & post' : 'import as draft';
 ?>
 
 <div class="page-head"><div><h1><?= ucfirst($kind) ?> Import · Preview</h1><div class="muted small"><?= esc($batch['filename']) ?> · sheet <?= esc($batch['sheet']) ?></div></div></div>
@@ -32,10 +34,14 @@ $party     = $kind === 'sales' ? 'customer' : 'supplier';
 <div class="card">
   <?php if ($canCommit): ?>
     <form method="post" action="<?= site_url($base . '/' . $batch['id'] . '/commit') ?>"
-      onsubmit="return confirm('Import <?= $s['ok'] ?> invoices as draft?')">
+      onsubmit="return confirm('<?= ucfirst($verb) ?> <?= $s['ok'] ?> invoices?')">
       <?= csrf_field() ?>
-      <button class="btn" type="submit">Import <?= $s['ok'] ?> invoice(s) as draft</button>
-      <span class="muted small">Errored and already-imported invoices are skipped.</span>
+      <button class="btn" type="submit"><?= ucfirst($verb) ?> <?= $s['ok'] ?> invoice(s)</button>
+      <span class="muted small">
+        <?= $willPost
+            ? 'Each invoice is posted straight away; any that can\'t post are kept as drafts. Errored and already-imported invoices are skipped.'
+            : 'Errored and already-imported invoices are skipped.' ?>
+      </span>
     </form>
   <?php elseif ($batch['status'] === 'committed'): ?>
     <a class="btn" href="<?= site_url($base . '/' . $batch['id']) ?>">View imported batch</a>
