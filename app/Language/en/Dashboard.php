@@ -5,6 +5,7 @@ return [
     'figures_note'   => 'Figures as of {0} · from {1}',
     'new_journal'    => '+ New Journal',
     'ytd_through'    => 'YTD through {0}',
+    'of_ly'         => 'of {0}',
     'cash_bank'      => 'Cash & Bank',
     'ar'             => 'Accounts Receivable',
     'ap'             => 'Accounts Payable',

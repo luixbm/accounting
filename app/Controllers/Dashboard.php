@@ -27,7 +27,7 @@ class Dashboard extends BaseController
         $cols   = $ledger->periodColumns('month', $from, $year . '-12-31');
         $labels = array_map(static fn ($c) => substr((string) $c['label'], 0, 3), $cols);
 
-        // Monthly P&L series (one pass)
+        // Monthly P&L series (one pass) + the same for the prior year
         $ism    = $ledger->incomeStatementMulti($cols);
         $revM   = $ism['subtotals']['revenue'];
         $gopM   = $ism['subtotals']['gross_profit'];
@@ -39,11 +39,21 @@ class Dashboard extends BaseController
             $revM
         );
 
+        $prev     = $year - 1;
+        $colsPrev = $ledger->periodColumns('month', $prev . '-01-01', $prev . '-12-31');
+        $ismPrev  = $ledger->incomeStatementMulti($colsPrev);
+        $revPrevM  = $ismPrev['subtotals']['revenue'];
+        $ebitPrevM = $ismPrev['subtotals']['operating'];
+        $hasPrev   = (bool) array_filter($revPrevM, static fn ($v) => abs($v) > 0.005)
+                  || (bool) array_filter($ebitPrevM, static fn ($v) => abs($v) > 0.005);
+
         $cashMoveM  = $ledger->cashMovementByPeriod($cols);
         $topClients = $ledger->topCustomers($from, $ytdTo, 10);
 
-        // YTD KPIs
-        $ytd   = $ledger->incomeStatement($from, $ytdTo);
+        // YTD KPIs (+ same window last year for the revenue-vs-LY figure)
+        $ytd     = $ledger->incomeStatement($from, $ytdTo);
+        $ytdPrev = $ledger->incomeStatement($prev . '-01-01', $prev . substr($ytdTo, 4));
+        $revLyPct = abs($ytdPrev['revenue']) > 0.005 ? $ytd['revenue'] / $ytdPrev['revenue'] : null;
         $arIds = array_map(static fn ($a) => (int) $a['id'], $accounts->where('subledger', 'customer')->findAll());
         $apIds = array_map(static fn ($a) => (int) $a['id'], $accounts->where('subledger', 'supplier')->findAll());
         $ar    = 0.0;
@@ -65,22 +75,27 @@ class Dashboard extends BaseController
         return view('dashboard/index', [
             'title'      => 'Dashboard',
             'year'       => $year,
+            'prev'       => $prev,
+            'hasPrev'    => $hasPrev,
             'years'      => range((int) date('Y') + 1, (int) date('Y') - 4),
             'ytdTo'      => $ytdTo,
             'labels'     => $labels,
             'revM'       => $revM,
+            'revPrevM'   => $revPrevM,
             'cosM'       => $cosM,
             'gopPctM'    => $gopPct,
             'ebitdaM'    => $ebitM,
+            'ebitdaPrevM' => $ebitPrevM,
             'cashMoveM'  => $cashMoveM,
             'topClients' => $topClients,
             'k'          => [
-                'revenue' => $ytd['revenue'],
-                'gopPct'  => abs($ytd['revenue']) > 0.005 ? $ytd['gross_profit'] / $ytd['revenue'] : 0.0,
-                'ebitda'  => $ytd['operating'],
-                'net'     => $ytd['net_income'],
-                'ar'      => $ar,
-                'ap'      => $ap,
+                'revenue'  => $ytd['revenue'],
+                'revLyPct' => $revLyPct,
+                'gopPct'   => abs($ytd['revenue']) > 0.005 ? $ytd['gross_profit'] / $ytd['revenue'] : 0.0,
+                'ebitda'   => $ytd['operating'],
+                'net'      => $ytd['net_income'],
+                'ar'       => $ar,
+                'ap'       => $ap,
             ],
             'recent'     => $recent,
             'draftCount' => $draftCount,

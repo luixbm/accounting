@@ -53,6 +53,9 @@ $pctText = static fn (float $f): string => number_format($f * 100, 1) . '%';
   <div class="kpi">
     <div class="k-label"><?= lang('Dashboard.revenue') ?> <span class="muted">YTD</span></div>
     <div class="k-value mono"><?= rupiah($k['revenue'], false, 0) ?></div>
+    <?php if ($k['revLyPct'] !== null): ?>
+      <div class="small muted"><?= number_format($k['revLyPct'] * 100) ?>% <?= lang('Dashboard.of_ly', [$prev]) ?></div>
+    <?php endif ?>
   </div>
   <div class="kpi">
     <div class="k-label"><?= lang('Dashboard.gop_pct') ?> <span class="muted">YTD</span></div>
@@ -78,8 +81,10 @@ $pctText = static fn (float $f): string => number_format($f * 100, 1) . '%';
 
 <div class="chart-grid">
   <div class="card">
-    <h2><?= lang('Dashboard.chart_sales') ?> <span class="muted small"><?= $year ?></span></h2>
-    <?= Svg::signedBars($labels, $revM) ?>
+    <h2><?= lang('Dashboard.chart_sales') ?> <span class="muted small"><?= $hasPrev ? $year . ' vs ' . $prev : $year ?></span></h2>
+    <?= $hasPrev
+        ? Svg::groupedBars($labels, [(string) $year => $revM, (string) $prev => $revPrevM], [Svg::BRAND, Svg::MUTED])
+        : Svg::signedBars($labels, $revM) ?>
   </div>
 
   <div class="card">
@@ -88,8 +93,10 @@ $pctText = static fn (float $f): string => number_format($f * 100, 1) . '%';
   </div>
 
   <div class="card">
-    <h2><?= lang('Dashboard.ebitda') ?> <span class="muted small"><?= $year ?></span></h2>
-    <?= Svg::signedBars($labels, $ebitdaM) ?>
+    <h2><?= lang('Dashboard.ebitda') ?> <span class="muted small"><?= $hasPrev ? $year . ' vs ' . $prev : $year ?></span></h2>
+    <?= $hasPrev
+        ? Svg::groupedBars($labels, [(string) $year => $ebitdaM, (string) $prev => $ebitdaPrevM], [Svg::BRAND, Svg::MUTED])
+        : Svg::signedBars($labels, $ebitdaM) ?>
   </div>
 
   <div class="card">

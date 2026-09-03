@@ -5,6 +5,7 @@ return [
     'figures_note'   => 'Angka per {0} · dari {1}',
     'new_journal'    => '+ Jurnal Baru',
     'ytd_through'    => 'YTD s/d {0}',
+    'of_ly'         => 'dari {0}',
     'cash_bank'      => 'Kas & Bank',
     'ar'             => 'Piutang Usaha',
     'ap'             => 'Hutang Usaha',
