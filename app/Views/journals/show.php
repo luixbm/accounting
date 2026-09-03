@@ -1,6 +1,6 @@
 <?= $this->extend('layout') ?>
 <?= $this->section('content') ?>
-<?php $isForeign = (int) ($journal['currency_is_base'] ?? 1) === 0; ?>
+<?php $isForeign = strtoupper((string) ($journal['currency_code'] ?? base_code())) !== base_code(); ?>
 
 <div class="page-head">
   <div>
