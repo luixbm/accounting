@@ -13,18 +13,18 @@ $action = $account ? site_url('accounts/' . $account['id']) : site_url('accounts
 
     <div class="row">
       <div class="field" style="max-width:160px">
-        <label>Code</label>
+        <label><?= lang('Report.col_code') ?></label>
         <input name="code" class="mono" value="<?= esc($v('code')) ?>" required>
       </div>
       <div class="field">
-        <label>Account Name</label>
+        <label><?= lang('Setup.account_name') ?></label>
         <input name="name" value="<?= esc($v('name')) ?>" required>
       </div>
     </div>
 
     <div class="row">
       <div class="field">
-        <label>Type</label>
+        <label><?= lang('Report.col_type') ?></label>
         <select name="type" required>
           <?php foreach ($types as $key => $label): ?>
             <option value="<?= $key ?>" <?= $v('type') === $key ? 'selected' : '' ?>><?= esc($label) ?></option>
@@ -32,19 +32,19 @@ $action = $account ? site_url('accounts/' . $account['id']) : site_url('accounts
         </select>
       </div>
       <div class="field" style="max-width:180px">
-        <label>Normal Balance</label>
+        <label><?= lang('Setup.normal_balance') ?></label>
         <select name="normal_balance">
-          <option value="D" <?= $v('normal_balance') === 'D' ? 'selected' : '' ?>>Debit (D)</option>
-          <option value="K" <?= $v('normal_balance') === 'K' ? 'selected' : '' ?>>Credit (K)</option>
+          <option value="D" <?= $v('normal_balance') === 'D' ? 'selected' : '' ?>><?= lang('Setup.debit_d') ?></option>
+          <option value="K" <?= $v('normal_balance') === 'K' ? 'selected' : '' ?>><?= lang('Setup.credit_k') ?></option>
         </select>
       </div>
     </div>
 
     <div class="row">
       <div class="field">
-        <label>Parent (header account)</label>
+        <label><?= lang('Setup.parent_header') ?></label>
         <select name="parent_id">
-          <option value="">— none —</option>
+          <option value=""><?= lang('App.none') ?></option>
           <?php foreach ($parents as $p): ?>
             <option value="<?= $p['id'] ?>" <?= (string) $v('parent_id') === (string) $p['id'] ? 'selected' : '' ?>>
               <?= esc($p['code'] . ' · ' . $p['name']) ?>
@@ -53,15 +53,15 @@ $action = $account ? site_url('accounts/' . $account['id']) : site_url('accounts
         </select>
       </div>
       <div class="field">
-        <label>Subledger</label>
+        <label><?= lang('Setup.subledger') ?></label>
         <select name="subledger">
-          <option value="none" <?= $v('subledger', 'none') === 'none' ? 'selected' : '' ?>>None</option>
-          <option value="customer" <?= $v('subledger') === 'customer' ? 'selected' : '' ?>>Customer (AR)</option>
-          <option value="supplier" <?= $v('subledger') === 'supplier' ? 'selected' : '' ?>>Supplier (AP)</option>
+          <option value="none" <?= $v('subledger', 'none') === 'none' ? 'selected' : '' ?>><?= lang('Setup.sl_none') ?></option>
+          <option value="customer" <?= $v('subledger') === 'customer' ? 'selected' : '' ?>><?= lang('Setup.sl_customer') ?></option>
+          <option value="supplier" <?= $v('subledger') === 'supplier' ? 'selected' : '' ?>><?= lang('Setup.sl_supplier') ?></option>
         </select>
       </div>
       <div class="field">
-        <label>Cash-flow section</label>
+        <label><?= lang('Setup.cashflow_section') ?></label>
         <select name="cashflow">
           <?php foreach (\App\Models\AccountModel::CASHFLOW as $k => $lbl): ?>
             <option value="<?= $k ?>" <?= $v('cashflow', 'operating') === $k ? 'selected' : '' ?>><?= esc($lbl) ?></option>
@@ -69,9 +69,9 @@ $action = $account ? site_url('accounts/' . $account['id']) : site_url('accounts
         </select>
       </div>
       <div class="field">
-        <label>Denomination Currency</label>
+        <label><?= lang('Setup.denomination_ccy') ?></label>
         <select name="currency_id">
-          <option value="">— base —</option>
+          <option value=""><?= lang('Setup.base_opt') ?></option>
           <?php foreach ($currencies as $c): ?>
             <option value="<?= $c['id'] ?>" <?= (string) $v('currency_id') === (string) $c['id'] ? 'selected' : '' ?>><?= esc($c['code']) ?></option>
           <?php endforeach ?>
@@ -80,46 +80,46 @@ $action = $account ? site_url('accounts/' . $account['id']) : site_url('accounts
     </div>
 
     <div class="field">
-      <label>Description</label>
+      <label><?= lang('App.description') ?></label>
       <input name="description" value="<?= esc($v('description')) ?>">
     </div>
 
     <fieldset>
-      <legend>Flags</legend>
+      <legend><?= lang('Setup.flags') ?></legend>
       <div class="inline">
         <label class="inline" style="font-weight:400">
-          <input type="checkbox" name="is_group" value="1" style="width:auto" <?= $v('is_group') ? 'checked' : '' ?>> Header account (no postings)
+          <input type="checkbox" name="is_group" value="1" style="width:auto" <?= $v('is_group') ? 'checked' : '' ?>> <?= lang('Setup.flag_header_full') ?>
         </label>
         <label class="inline" style="font-weight:400">
-          <input type="checkbox" name="is_cash" value="1" style="width:auto" <?= $v('is_cash') ? 'checked' : '' ?>> Cash / bank account
+          <input type="checkbox" name="is_cash" value="1" style="width:auto" <?= $v('is_cash') ? 'checked' : '' ?>> <?= lang('Setup.flag_cash_full') ?>
         </label>
         <label class="inline" style="font-weight:400">
-          <input type="checkbox" name="is_active" value="1" style="width:auto" <?= old('is_active', $account['is_active'] ?? 1) ? 'checked' : '' ?>> Active
+          <input type="checkbox" name="is_active" value="1" style="width:auto" <?= old('is_active', $account['is_active'] ?? 1) ? 'checked' : '' ?>> <?= lang('App.active') ?>
         </label>
       </div>
     </fieldset>
 
     <div class="btn-group">
-      <button class="btn" type="submit">Save</button>
-      <a class="btn ghost" href="<?= site_url('accounts') ?>">Cancel</a>
+      <button class="btn" type="submit"><?= lang('App.save') ?></button>
+      <a class="btn ghost" href="<?= site_url('accounts') ?>"><?= lang('App.cancel') ?></a>
     </div>
   </form>
 </div>
 
 <?php if ($account): ?>
   <div class="card" style="max-width:640px">
-    <h2>Danger zone</h2>
+    <h2><?= lang('Setup.danger_zone') ?></h2>
     <div class="btn-group">
       <form method="post" action="<?= site_url('accounts/' . $account['id'] . '/toggle') ?>">
         <?= csrf_field() ?>
-        <button class="btn ghost" type="submit"><?= $account['is_active'] ? 'Deactivate' : 'Reactivate' ?></button>
+        <button class="btn ghost" type="submit"><?= $account['is_active'] ? lang('Setup.deactivate') : lang('Setup.reactivate') ?></button>
       </form>
       <form method="post" action="<?= site_url('accounts/' . $account['id'] . '/delete') ?>"
-        onsubmit="return confirm('Delete account <?= esc($account['code'], 'attr') ?>? This only works if it has no journal entries and no sub-accounts.')">
+        onsubmit="return confirm('<?= esc(lang('Setup.delete_account_confirm', [esc($account['code'], 'attr')]), 'js') ?>')">
         <?= csrf_field() ?>
-        <button class="btn danger" type="submit">Delete</button>
+        <button class="btn danger" type="submit"><?= lang('App.delete') ?></button>
       </form>
-      <span class="muted small" style="align-self:center">Deactivate hides it from pickers but keeps history. Delete is only for accounts never used.</span>
+      <span class="muted small" style="align-self:center"><?= lang('Setup.danger_note') ?></span>
     </div>
   </div>
 <?php endif ?>
