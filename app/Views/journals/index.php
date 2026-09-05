@@ -13,7 +13,7 @@
 </div>
 
 <form class="filterbar" method="get">
-  <div class="field"><label><?= lang('App.search') ?></label><input name="q" value="<?= esc($f['q']) ?>" placeholder="no. / description / ref"></div>
+  <div class="field"><label><?= lang('App.search') ?></label><input name="q" value="<?= esc($f['q']) ?>" placeholder="no. / description / ref / line memo / account"></div>
   <div class="field">
     <label><?= lang('App.status') ?></label>
     <select name="status">

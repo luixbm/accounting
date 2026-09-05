@@ -29,10 +29,22 @@ class PurchaseInvoiceModel extends TenantModel
             $b->where('purchase_invoices.supplier_id', $filters['supplier_id']);
         }
         if (! empty($filters['q'])) {
+            $q    = trim((string) $filters['q']);
+            $like = $this->db->escape('%' . $q . '%');
             $b->groupStart()
-                ->like('purchase_invoices.internal_no', $filters['q'])
-                ->orLike('purchase_invoices.supplier_ref', $filters['q'])
-                ->orLike('purchase_invoices.description', $filters['q'])
+                ->like('purchase_invoices.internal_no', $q)
+                ->orLike('purchase_invoices.supplier_ref', $q)
+                ->orLike('purchase_invoices.description', $q)
+                ->orLike('purchase_invoices.external_id', $q)
+                ->orLike('suppliers.name', $q)
+                // also match text written on any line of the invoice
+                ->orWhere(
+                    "purchase_invoices.id IN (
+                        SELECT l.invoice_id FROM purchase_invoice_lines l WHERE l.description LIKE {$like}
+                    )",
+                    null,
+                    false
+                )
                 ->groupEnd();
         }
         if (! empty($filters['from'])) {

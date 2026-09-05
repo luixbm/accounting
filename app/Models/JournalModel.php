@@ -53,10 +53,26 @@ class JournalModel extends TenantModel
             $b->where('journals.entry_date <=', $filters['to']);
         }
         if (! empty($filters['q'])) {
+            $q    = trim((string) $filters['q']);
+            $like = $this->db->escape('%' . $q . '%');
             $b->groupStart()
-                ->like('journals.journal_no', $filters['q'])
-                ->orLike('journals.description', $filters['q'])
-                ->orLike('journals.reference', $filters['q'])
+                ->like('journals.journal_no', $q)
+                ->orLike('journals.description', $q)
+                ->orLike('journals.reference', $q)
+                // also match content on any line: memo, account code/name, party name
+                ->orWhere(
+                    "journals.id IN (
+                        SELECT jl.journal_id FROM journal_lines jl
+                        LEFT JOIN accounts a ON a.id = jl.account_id
+                        LEFT JOIN customers c ON c.id = jl.customer_id
+                        LEFT JOIN suppliers s ON s.id = jl.supplier_id
+                        WHERE jl.memo LIKE {$like}
+                           OR a.code LIKE {$like} OR a.name LIKE {$like}
+                           OR c.name LIKE {$like} OR s.name LIKE {$like}
+                    )",
+                    null,
+                    false
+                )
                 ->groupEnd();
         }
 
