@@ -202,6 +202,8 @@ $routes->group('', ['filter' => 'session'], static function (RouteCollection $ro
         $routes->post('(:num)/post', 'SalesController::post/$1');
         $routes->post('(:num)/void', 'SalesController::void/$1');
         $routes->post('(:num)/delete', 'SalesController::delete/$1');
+        $routes->post('(:num)/einvoice/submit', 'EinvoiceController::submit/$1');
+        $routes->post('(:num)/einvoice/status', 'EinvoiceController::checkStatus/$1');
     });
 
     // --- Journals -------------------------------------------------------
@@ -390,6 +392,11 @@ $routes->group('', ['filter' => 'session'], static function (RouteCollection $ro
         $routes->get('/', 'ApiTokenController::index');
         $routes->post('/', 'ApiTokenController::create');
         $routes->post('(:num)/revoke', 'ApiTokenController::revoke/$1');
+    });
+
+    $routes->group('settings/einvoice', ['filter' => 'permission:settings.manage'], static function (RouteCollection $routes): void {
+        $routes->get('/', 'EinvoiceController::settings');
+        $routes->post('/', 'EinvoiceController::saveSettings');
     });
 
     $routes->group('users', ['filter' => 'permission:users.manage'], static function (RouteCollection $routes): void {

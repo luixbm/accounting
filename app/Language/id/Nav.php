@@ -29,6 +29,7 @@ return [
     'roles'         => 'Peran',
     'api_tokens'    => 'Token API',
     'control_accounts' => 'Akun Kontrol',
+    'einvoice'      => 'E-Invoice (MyInvois)',
     'budgets'       => 'Anggaran',
 
     'profile'  => 'Profil Saya',

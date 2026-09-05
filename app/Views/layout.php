@@ -34,6 +34,7 @@ $setup = [
     ['users', 'users', 'users', 'users', user_can('users.manage')],
     ['roles', 'roles', 'users', 'roles', user_can('roles.manage')],
     ['api-tokens', 'api-tokens', 'currency', 'api_tokens', user_can('settings.manage')],
+    ['settings/einvoice', 'settings/einvoice', 'einvoice', 'einvoice', user_can('settings.manage')],
 ];
 
 // Pick the single best-matching nav entry for the current URL: the LONGEST

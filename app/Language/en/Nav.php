@@ -29,6 +29,7 @@ return [
     'roles'         => 'Roles',
     'api_tokens'    => 'API Tokens',
     'control_accounts' => 'Control Accounts',
+    'einvoice'      => 'E-Invoice (MyInvois)',
     'budgets'       => 'Budgets',
 
     'profile'  => 'My Profile',
