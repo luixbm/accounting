@@ -14,16 +14,18 @@ return [
     'confirm_delete' => 'Delete this announcement?',
 
     'card_title' => 'Announcements',
-    'help'   => 'Pinned announcements appear as a dismissible banner on every page. All active announcements show on the dashboard. Use the date window to schedule one ahead or let it expire on its own.',
+    'help'   => 'Pinned announcements appear as a dismissible banner on every page. All active announcements show on the dashboard. Check "On login page" to also greet signed-out visitors (e.g. for a holiday). Use the date window to schedule one ahead or let it expire on its own.',
 
     'f_title'  => 'Title',
     'f_body'   => 'Message',
     'f_level'  => 'Style',
     'f_window' => 'Shown',
     'f_pinned' => 'Pinned',
+    'f_login'  => 'On login page',
     'f_starts' => 'Show from',
     'f_ends'   => 'Show until',
     'f_pinned_hint' => 'Pin as a banner on every page (dismissible per user)',
+    'f_login_hint'  => 'Also show on the public login page (e.g. a holiday greeting) — visible to anyone, even signed out',
     'f_active_hint' => 'Active (uncheck to hide without deleting)',
 
     'lvl_info'    => 'Info (neutral)',

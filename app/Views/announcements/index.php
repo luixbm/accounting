@@ -30,7 +30,10 @@
             <td class="small muted">
               <?= $r['starts_on'] ? esc(date_id($r['starts_on'])) : '—' ?> → <?= $r['ends_on'] ? esc(date_id($r['ends_on'])) : '—' ?>
             </td>
-            <td><?= $r['pinned'] ? '<span class="badge badge-amber">pinned</span>' : '' ?></td>
+            <td>
+              <?= $r['pinned'] ? '<span class="badge badge-amber">pinned</span>' : '' ?>
+              <?= ! empty($r['show_on_login']) ? '<span class="badge badge-gray">' . esc(lang('Announce.f_login')) . '</span>' : '' ?>
+            </td>
             <td><?= $r['is_active'] ? '<span class="badge badge-green">active</span>' : '<span class="badge badge-gray">hidden</span>' ?></td>
             <td class="right nowrap">
               <a class="btn sm ghost" href="<?= site_url('announcements/' . $r['id'] . '/edit') ?>"><?= lang('App.edit') ?></a>

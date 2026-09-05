@@ -39,11 +39,16 @@
       </div>
     </div>
 
-    <?php $pinned = old('pinned', $isEdit ? $row['pinned'] : 0); ?>
-    <?php $active = old('is_active', $isEdit ? $row['is_active'] : 1); ?>
+    <?php $pinned  = old('pinned', $isEdit ? $row['pinned'] : 0); ?>
+    <?php $onLogin = old('show_on_login', $isEdit ? ($row['show_on_login'] ?? 0) : 0); ?>
+    <?php $active  = old('is_active', $isEdit ? $row['is_active'] : 1); ?>
     <label class="inline" style="font-weight:400">
       <input type="checkbox" name="pinned" value="1" style="width:auto" <?= $pinned ? 'checked' : '' ?>>
       <span><?= lang('Announce.f_pinned_hint') ?></span>
+    </label>
+    <label class="inline" style="font-weight:400">
+      <input type="checkbox" name="show_on_login" value="1" style="width:auto" <?= $onLogin ? 'checked' : '' ?>>
+      <span><?= lang('Announce.f_login_hint') ?></span>
     </label>
     <label class="inline" style="font-weight:400">
       <input type="checkbox" name="is_active" value="1" style="width:auto" <?= $active ? 'checked' : '' ?>>

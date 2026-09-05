@@ -101,13 +101,14 @@ class AnnouncementController extends BaseController
         $clean = fn (string $k): ?string => ($v = trim((string) $this->request->getPost($k))) !== '' ? $v : null;
 
         return [
-            'title'     => trim((string) $this->request->getPost('title')),
-            'body'      => $clean('body'),
-            'level'     => in_array($level, self::LEVELS, true) ? $level : 'info',
-            'pinned'    => $this->request->getPost('pinned') !== null ? 1 : 0,
-            'is_active' => $this->request->getPost('is_active') !== null ? 1 : 0,
-            'starts_on' => $clean('starts_on'),
-            'ends_on'   => $clean('ends_on'),
+            'title'         => trim((string) $this->request->getPost('title')),
+            'body'          => $clean('body'),
+            'level'         => in_array($level, self::LEVELS, true) ? $level : 'info',
+            'pinned'        => $this->request->getPost('pinned') !== null ? 1 : 0,
+            'show_on_login' => $this->request->getPost('show_on_login') !== null ? 1 : 0,
+            'is_active'     => $this->request->getPost('is_active') !== null ? 1 : 0,
+            'starts_on'     => $clean('starts_on'),
+            'ends_on'       => $clean('ends_on'),
         ];
     }
 }
