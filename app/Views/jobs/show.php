@@ -1,19 +1,5 @@
 <?= $this->extend('layout') ?>
 <?= $this->section('content') ?>
-<?php
-$section = static function (array $g): string {
-    if (! $g['rows']) {
-        return '';
-    }
-    $h = '<tr class="grp-row"><td colspan="2">' . esc($g['label']) . '</td></tr>';
-    foreach ($g['rows'] as $r) {
-        $h .= '<tr><td><span class="mono small">' . esc($r['code']) . '</span> ' . esc($r['name']) . '</td>'
-        . '<td class="right mono">' . money($r['amount']) . '</td></tr>';
-    }
-
-    return $h . '<tr class="subtotal"><td>' . lang('App.total') . '</td><td class="right mono">' . money($g['total']) . '</td></tr>';
-};
-?>
 
 <div class="page-head">
   <div>
@@ -48,44 +34,77 @@ $section = static function (array $g): string {
   <div class="kpi"><div class="k-label"><?= lang('Txn.margin') ?></div><div class="k-value mono"><?= number_format($pl['margin'], 1) ?>%</div></div>
 </div>
 
-<div class="card" style="max-width:720px">
-  <div class="report-title">
-    <div class="co"><?= esc(company_name()) ?></div>
-    <h1><?= lang('Txn.job_pnl_title', [esc($job['code'])]) ?></h1>
-  </div>
+<?php
+$jbxSales  = (float) ($job['sales_ref'] ?? 0);
+$hasJbx    = ($job['sales_ref'] ?? null) !== null || ($job['buy_ref'] ?? null) !== null;
+$hasJbxCard = ($job['pax'] ?? null) !== null || ($job['category'] ?? null) !== null
+    || ($job['jambix_status'] ?? null) !== null || ($job['created_on'] ?? null) !== null;
+// Purchase Jambix column = per-supplier booking budget, so the Total foots to
+// the rows. Sales has no per-supplier budget, so its Total stays the job quote.
+$totBudget = (float) $partyBreakdown['total_purchase_budget'];
+$totDiff   = $totBudget - (float) $partyBreakdown['total_purchase'];
+$jbxMargin = $jbxSales != 0.0 ? ($jbxSales - $totBudget) / $jbxSales * 100 : null;
+?>
+
+<div class="card" style="max-width:1100px">
+  <div style="overflow-x:auto">
   <table class="grid tight">
+    <thead>
+      <tr>
+        <th><?= lang('Report.col_cust_supp') ?></th>
+        <th class="right"><?= lang('Report.col_sales_jambix') ?></th>
+        <th class="right"><?= lang('Report.col_purchase_jambix') ?></th>
+        <th class="right"><?= lang('Report.col_gop') ?></th>
+        <th class="right"><?= lang('Report.col_actual_sales') ?></th>
+        <th class="right"><?= lang('Report.col_actual_purchase') ?></th>
+        <th class="right"><?= lang('Report.col_gop_actual') ?></th>
+        <th class="right"><?= lang('Report.col_diff_cost') ?></th>
+      </tr>
+    </thead>
     <tbody>
-      <?= $section($pl['groups']['revenue']) ?>
-      <?= $section($pl['groups']['cogs']) ?>
-      <tr class="subtotal" style="background:var(--brand-soft)"><td><?= lang('Report.v_gross_profit') ?></td><td class="right mono"><?= money($pl['gross_profit']) ?></td></tr>
-      <?= $section($pl['groups']['expense']) ?>
-      <?= $section($pl['groups']['other_income']) ?>
-      <?= $section($pl['groups']['other_expense']) ?>
+      <?php foreach ($partyBreakdown['rows'] as $r): ?>
+        <?php
+        $rowHasBuy  = abs($r['purchase']) >= 0.005 || abs($r['purchase_budget']) >= 0.005;
+        $rowDiff    = $r['purchase_budget'] - $r['purchase'];
+        ?>
+        <tr>
+          <td><?= esc($r['party']) ?></td>
+          <td class="right mono">—</td>
+          <td class="right mono"><?= abs($r['purchase_budget']) >= 0.005 ? money($r['purchase_budget']) : '' ?></td>
+          <td class="right mono">—</td>
+          <td class="right mono"><?= abs($r['sales']) >= 0.005 ? money($r['sales']) : '' ?></td>
+          <td class="right mono"><?= abs($r['purchase']) >= 0.005 ? money($r['purchase']) : '' ?></td>
+          <td class="right mono">—</td>
+          <td class="right mono" style="<?= $rowHasBuy && abs($rowDiff) >= 0.005 ? ($rowDiff < 0 ? 'color:var(--red)' : 'color:var(--green)') : '' ?>"><?= $rowHasBuy ? money($rowDiff) : '' ?></td>
+        </tr>
+      <?php endforeach ?>
+      <?php if (! $partyBreakdown['rows']): ?>
+        <tr><td colspan="8" class="muted"><?= lang('Txn.no_job_lines') ?></td></tr>
+      <?php else: ?>
+        <tr class="subtotal">
+          <td><?= lang('App.total') ?></td>
+          <td class="right mono"><?= $hasJbx ? money($jbxSales, 0) : '—' ?></td>
+          <td class="right mono"><?= $totBudget >= 0.005 ? money($totBudget, 0) : '—' ?></td>
+          <td class="right mono"><?= $jbxMargin === null ? '—' : number_format($jbxMargin, 1) . '%' ?></td>
+          <td class="right mono"><?= money($partyBreakdown['total_sales']) ?></td>
+          <td class="right mono"><?= money($partyBreakdown['total_purchase']) ?></td>
+          <td class="right mono"><?= number_format($pl['margin'], 1) ?>%</td>
+          <td class="right mono" style="<?= abs($totDiff) >= 0.005 ? ($totDiff < 0 ? 'color:var(--red)' : 'color:var(--green)') : '' ?>"><?= $totBudget >= 0.005 ? money($totDiff) : '—' ?></td>
+        </tr>
+      <?php endif ?>
     </tbody>
-    <tfoot>
-      <tr><td><?= lang('Report.v_net_income') ?></td><td class="right mono"><?= money($pl['net']) ?></td></tr>
-    </tfoot>
   </table>
-  <?php if (! array_filter($pl['groups'], static fn ($g) => $g['rows'])): ?>
-    <p class="muted"><?= lang('Txn.no_job_lines') ?></p>
+  </div>
+  <?php if ($hasJbx): ?>
+    <p class="muted small" style="margin:.6rem 0 0"><?= lang('Report.jbx_total_note') ?></p>
   <?php endif ?>
 </div>
 
-<?php
-$jbxNet    = (float) ($job['sales_ref'] ?? 0) - (float) ($job['buy_ref'] ?? 0);
-$jbxMargin = (float) ($job['sales_ref'] ?? 0) != 0.0 ? $jbxNet / (float) $job['sales_ref'] * 100 : null;
-$hasJbx    = ($job['sales_ref'] ?? null) !== null || ($job['buy_ref'] ?? null) !== null
-    || ($job['pax'] ?? null) !== null || ($job['category'] ?? null) !== null || ($job['jambix_status'] ?? null) !== null;
-?>
-<?php if ($hasJbx): ?>
+<?php if ($hasJbxCard): ?>
   <div class="card" style="max-width:520px">
     <h2><?= lang('Txn.jambix_ref') ?> <span class="muted small" style="font-weight:400">— <?= lang('Txn.jbx_ref_note') ?></span></h2>
     <table class="grid tight">
       <tbody>
-        <?php if (($job['sales_ref'] ?? null) !== null): ?><tr><td class="muted"><?= lang('Txn.sales_quoted') ?></td><td class="right mono"><?= money((float) $job['sales_ref'], 0) ?></td></tr><?php endif ?>
-        <?php if (($job['buy_ref'] ?? null) !== null): ?><tr><td class="muted"><?= lang('Txn.buy_quoted') ?></td><td class="right mono"><?= money((float) $job['buy_ref'], 0) ?></td></tr><?php endif ?>
-        <tr><td class="muted"><?= lang('Txn.net_quoted') ?></td><td class="right mono" style="font-weight:700;<?= $jbxNet < 0 ? 'color:var(--red)' : '' ?>"><?= money($jbxNet, 0) ?></td></tr>
-        <tr><td class="muted"><?= lang('Txn.margin_quoted') ?></td><td class="right mono"><?= $jbxMargin === null ? '—' : number_format($jbxMargin, 1) . '%' ?></td></tr>
         <?php if (($job['pax'] ?? null) !== null): ?><tr><td class="muted"><?= lang('Txn.pax') ?></td><td class="right mono"><?= (int) $job['pax'] ?></td></tr><?php endif ?>
         <?php if (($job['category'] ?? null) !== null): ?><tr><td class="muted"><?= lang('Txn.category') ?></td><td><?= esc($job['category']) ?></td></tr><?php endif ?>
         <?php if (($job['jambix_status'] ?? null) !== null): ?><tr><td class="muted"><?= lang('Txn.jambix_status') ?></td><td><?= esc($job['jambix_status']) ?></td></tr><?php endif ?>

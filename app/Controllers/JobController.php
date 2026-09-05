@@ -256,15 +256,17 @@ class JobController extends BaseController
 
         $from = $this->request->getGet('from') ?: null;
         $to   = $this->request->getGet('to') ?: null;
+        $ledger = new Ledger();
 
         return view('jobs/show', [
-            'title'    => $job['code'] . ' — Profit & Loss',
-            'job'      => $job,
-            'from'     => $from,
-            'to'       => $to,
-            'pl'       => (new Ledger())->jobProfitLoss($id, $from, $to),
-            'cfDefs'   => $this->cf->defs('job'),
-            'cfValues' => $this->cf->valuesFor('job', $id),
+            'title'          => $job['code'] . ' — Profit & Loss',
+            'job'            => $job,
+            'from'           => $from,
+            'to'             => $to,
+            'pl'             => $ledger->jobProfitLoss($id, $from, $to),
+            'partyBreakdown' => $ledger->jobPartyBreakdown($id, $from, $to),
+            'cfDefs'         => $this->cf->defs('job'),
+            'cfValues'       => $this->cf->valuesFor('job', $id),
         ]);
     }
 

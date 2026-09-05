@@ -1002,6 +1002,85 @@ class Ledger
     }
 
     /**
+     * Party-level breakdown of one job's actual sales/purchases: one row per
+     * customer/supplier with a posted-invoice line tagged to this job.
+     *
+     * Sourced from sales_invoice_lines/purchase_invoice_lines rather than
+     * journal_lines - a job-tagged journal line (the revenue/cogs line) does
+     * not itself carry customer_id/supplier_id, only the AR/AP control line
+     * for the whole invoice does. Mirrors the per-job block in
+     * LedgerReportController::jobPnlMulti() (the "Job P&L Detail" report).
+     *
+     * @return array{rows: list<array{party:string,sales:float,purchase:float}>, total_sales: float, total_purchase: float}
+     */
+    public function jobPartyBreakdown(int $jobId, ?string $from = null, ?string $to = null): array
+    {
+        $sales = [];
+        $b1    = $this->db->table('sales_invoice_lines sil')
+            ->select('c.name AS nm, SUM(sil.amount_base) AS amt')
+            ->join('sales_invoices si', 'si.id = sil.invoice_id')
+            ->join('customers c', 'c.id = si.customer_id', 'left')
+            ->whereIn('si.company_id', $this->companies)
+            ->where('sil.job_id', $jobId);
+        if ($from !== null) {
+            $b1->where('si.invoice_date >=', $from);
+        }
+        if ($to !== null) {
+            $b1->where('si.invoice_date <=', $to);
+        }
+        foreach ($b1->groupBy('c.name')->get()->getResultArray() as $r) {
+            $sales[$r['nm'] ?: '(no customer)'] = (float) $r['amt'];
+        }
+
+        $purchase       = [];
+        $purchaseBudget = [];
+        $b2             = $this->db->table('purchase_invoice_lines pil')
+            ->select('s.name AS nm, SUM(pil.amount_base) AS amt, SUM(COALESCE(pil.budget_amount, pil.amount) * pi.exchange_rate) AS bud')
+            ->join('purchase_invoices pi', 'pi.id = pil.invoice_id')
+            ->join('suppliers s', 's.id = pi.supplier_id', 'left')
+            ->whereIn('pi.company_id', $this->companies)
+            ->where('pil.job_id', $jobId);
+        if ($from !== null) {
+            $b2->where('pi.invoice_date >=', $from);
+        }
+        if ($to !== null) {
+            $b2->where('pi.invoice_date <=', $to);
+        }
+        foreach ($b2->groupBy('s.name')->get()->getResultArray() as $r) {
+            $key                  = $r['nm'] ?: '(no supplier)';
+            $purchase[$key]       = (float) $r['amt'];
+            $purchaseBudget[$key] = (float) $r['bud'];
+        }
+
+        $names = array_unique(array_merge(array_keys($sales), array_keys($purchase)));
+        natcasesort($names);
+
+        $rows                = [];
+        $totalSales          = 0.0;
+        $totalPurchase       = 0.0;
+        $totalPurchaseBudget = 0.0;
+        foreach ($names as $nm) {
+            $s  = $sales[$nm] ?? 0.0;
+            $p  = $purchase[$nm] ?? 0.0;
+            $pb = $purchaseBudget[$nm] ?? 0.0;
+            if (abs($s) < 0.005 && abs($p) < 0.005) {
+                continue;
+            }
+            $rows[]               = ['party' => $nm, 'sales' => $s, 'purchase' => $p, 'purchase_budget' => $pb];
+            $totalSales          += $s;
+            $totalPurchase       += $p;
+            $totalPurchaseBudget += $pb;
+        }
+
+        return [
+            'rows'                  => $rows,
+            'total_sales'           => $totalSales,
+            'total_purchase'        => $totalPurchase,
+            'total_purchase_budget' => $totalPurchaseBudget,
+        ];
+    }
+
+    /**
      * One-line P&amp;L totals for every job (for the jobs index).
      *
      * @return array<int,array{revenue:float,cost:float,net:float}>  keyed by job_id
