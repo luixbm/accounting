@@ -43,13 +43,12 @@ foreach ($accounts as $a) {
     $acctById[(int) $a['id']] = ['code' => $a['code'], 'name' => $a['name']];
 }
 $acctCell = static function ($selId) use ($acctById) {
-    $sel  = $acctById[(int) $selId] ?? null;
-    $code = $sel ? esc($sel['code'], 'attr') : '';
-    $nm   = $sel ? esc($sel['code'] . ' · ' . $sel['name'], 'attr') : '';
+    $sel   = $acctById[(int) $selId] ?? null;
+    $label = $sel ? esc($sel['code'] . ' · ' . $sel['name'], 'attr') : '';
 
     return '<div class="combo" data-combo="account">'
         . '<input type="hidden" name="line_account[]" value="' . ($selId !== '' && $selId !== null ? (int) $selId : '') . '">'
-        . '<input class="combo-input" autocomplete="off" spellcheck="false" placeholder="' . esc(lang('App.account'), 'attr') . '…" value="' . $code . '" title="' . $nm . '">'
+        . '<input class="combo-input" autocomplete="off" spellcheck="false" placeholder="' . esc(lang('App.account'), 'attr') . '…" value="' . $label . '" title="' . $label . '">'
         . '<div class="combo-pop" hidden></div>'
         . '</div>';
 };
@@ -208,7 +207,7 @@ $jobOpt = static function ($sel) use ($jobs) {
 
 <style>
   .piline-grid { min-width: 1160px; }
-  .piline-grid th.c-acct  { width: 220px; }
+  .piline-grid th.c-acct  { width: 300px; }
   .piline-grid th.c-job   { width: 88px; }
   .piline-grid th.c-num   { width: 110px; }
   .piline-grid th.c-date  { width: 148px; }

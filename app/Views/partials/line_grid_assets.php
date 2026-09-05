@@ -24,9 +24,9 @@
 
   /* searchable account combo */
   .combo { position: relative; }
-  .combo-input { width: 100%; font-family: ui-monospace, Menlo, Consolas, monospace; }
+  .combo-input { width: 100%; }
   .combo-pop {
-    position: fixed; z-index: 60; max-width: 460px;
+    position: fixed; z-index: 1000; max-width: 480px;
     background: var(--card, #fff); border: 1px solid var(--rule, #ccd);
     border-radius: 7px; box-shadow: 0 8px 26px rgba(0,0,0,.18);
     max-height: 280px; overflow-y: auto; padding: 3px;
@@ -52,45 +52,69 @@
 window.__ACCTS = <?= json_encode(array_map(static fn ($a) => ['id' => (int) $a['id'], 'code' => $a['code'], 'name' => $a['name']], $accounts), JSON_UNESCAPED_SLASHES) ?>;
 (function () {
   var ACCTS = window.__ACCTS || [], byId = {};
+  var NOMATCH = <?= json_encode(lang('App.no_records')) ?>;
   ACCTS.forEach(function (a) { byId[String(a.id)] = a; });
   function esc(s){ return String(s).replace(/[&<>"]/g, function (c) { return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]; }); }
+
+  function label(a){ return a ? (a.code + ' · ' + a.name) : ''; }
+  function tokens(q){ return String(q || '').toLowerCase().replace(/[·.]+/g, ' ').split(/\s+/).filter(Boolean); }
 
   window.initAccountCombo = function (root) {
     if (root.__wired) { return; } root.__wired = true;
     var hid = root.querySelector('input[type=hidden]'),
         inp = root.querySelector('.combo-input'),
         pop = root.querySelector('.combo-pop'),
-        items = [], active = -1;
+        items = [], active = -1, open = false;
 
-    function selCode(){ var a = byId[hid.value]; return a ? a.code : ''; }
-    function restore(){ inp.value = selCode(); }
-    function hidePop(){ pop.hidden = true; active = -1; document.removeEventListener('scroll', hidePop, true); }
-    function commit(a){
-      hid.value = a ? a.id : '';
-      inp.value = a ? a.code : '';
-      inp.title = a ? (a.code + ' · ' + a.name) : '';
-      hidePop();
-    }
+    function selLabel(){ return label(byId[hid.value]); }
+    function restore(){ inp.value = selLabel(); }
+
     function place(){
       var r = inp.getBoundingClientRect();
-      pop.style.left = r.left + 'px';
-      pop.style.top = (r.bottom + 2) + 'px';
       pop.style.minWidth = Math.max(r.width, 320) + 'px';
+      pop.style.left = Math.round(Math.max(4, Math.min(r.left, window.innerWidth - 344))) + 'px';
+      var h = Math.min(pop.scrollHeight, 280), room = window.innerHeight - r.bottom - 8;
+      pop.style.top = Math.round(room < h && r.top - 8 > room ? r.top - h - 2 : r.bottom + 2) + 'px';
+    }
+    function onScroll(e){
+      if (e.target === pop || (e.target && e.target.nodeType === 1 && pop.contains(e.target))) { return; }
+      if (open) { place(); }
+    }
+    function hidePop(){
+      if (!open && pop.hidden) { return; }
+      open = false; pop.hidden = true; active = -1;
+      if (pop.parentNode === document.body) { root.appendChild(pop); }
+      document.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('resize', place);
+    }
+    function commit(a){
+      hid.value = a ? a.id : '';
+      inp.value = label(a);
+      inp.title = label(a);
+      hidePop();
+      hid.dispatchEvent(new Event('change', { bubbles: true }));
     }
     function showPop(q){
-      var s = (q || '').trim().toLowerCase();
+      var toks = tokens(q);
       items = ACCTS.filter(function (a) {
-        return !s || a.code.toLowerCase().indexOf(s) !== -1 || a.name.toLowerCase().indexOf(s) !== -1;
+        if (!toks.length) { return true; }
+        var hay = (a.code + ' ' + a.name).toLowerCase();
+        return toks.every(function (t) { return hay.indexOf(t) !== -1; });
       }).slice(0, 60);
       pop.innerHTML = items.length
         ? items.map(function (a, i) { return '<div class="combo-opt' + (i === active ? ' on' : '') + '" data-i="' + i + '"><b>' + esc(a.code) + '</b>' + esc(a.name) + '</div>'; }).join('')
-        : '<div class="combo-empty">no account matches</div>';
-      place();
+        : '<div class="combo-empty">' + esc(NOMATCH) + '</div>';
+      if (pop.parentNode !== document.body) { document.body.appendChild(pop); }
       pop.hidden = false;
-      document.addEventListener('scroll', hidePop, true);
+      place();
+      if (!open) {
+        open = true;
+        document.addEventListener('scroll', onScroll, true);
+        window.addEventListener('resize', place);
+      }
     }
     function move(d){
-      if (pop.hidden) { showPop(inp.value === selCode() ? '' : inp.value); }
+      if (!open) { showPop(inp.value === selLabel() ? '' : inp.value); }
       if (!items.length) { return; }
       active = (active + d + items.length) % items.length;
       var opts = pop.querySelectorAll('.combo-opt');
@@ -98,20 +122,25 @@ window.__ACCTS = <?= json_encode(array_map(static fn ($a) => ['id' => (int) $a['
       if (opts[active]) { opts[active].scrollIntoView({ block: 'nearest' }); }
     }
 
-    inp.addEventListener('focus', function () { inp.select(); showPop(inp.value === selCode() ? '' : inp.value); });
+    inp.addEventListener('focus', function () { inp.select(); showPop(inp.value === selLabel() ? '' : inp.value); });
     inp.addEventListener('input', function () { active = -1; showPop(inp.value); });
     inp.addEventListener('keydown', function (e) {
       if (e.key === 'ArrowDown') { e.preventDefault(); move(1); }
       else if (e.key === 'ArrowUp') { e.preventDefault(); move(-1); }
-      else if (e.key === 'Enter' && !pop.hidden) { e.preventDefault(); commit(items[active] || items[0] || null); }
+      else if (e.key === 'Enter' && open) { e.preventDefault(); commit(items[active] || items[0] || null); }
       else if (e.key === 'Escape') { hidePop(); restore(); inp.blur(); }
     });
     inp.addEventListener('blur', function () {
-      setTimeout(function () { hidePop(); if (byId[hid.value]) { restore(); } else if (inp.value.trim() === '') { hid.value = ''; } }, 150);
+      setTimeout(function () {
+        hidePop();
+        if (byId[hid.value]) { restore(); } else { hid.value = ''; inp.value = ''; inp.title = ''; }
+      }, 150);
     });
+    // Keep focus on the input while the pointer is inside the popup, so the
+    // blur/close race can't swallow the click that selects an option.
     pop.addEventListener('mousedown', function (e) {
-      var opt = e.target.closest('.combo-opt'); if (!opt) { return; }
       e.preventDefault();
+      var opt = e.target.closest('.combo-opt'); if (!opt) { return; }
       commit(items[+opt.dataset.i] || null);
     });
   };
