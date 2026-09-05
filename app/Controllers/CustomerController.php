@@ -15,4 +15,12 @@ class CustomerController extends PartyController
     {
         return model(CustomerModel::class);
     }
+
+    protected function payload(): array
+    {
+        return parent::payload() + [
+            'client_group' => trim((string) $this->request->getPost('client_group')) ?: null,
+            'country'      => trim((string) $this->request->getPost('country')) ?: null,
+        ];
+    }
 }

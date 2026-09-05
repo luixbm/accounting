@@ -48,6 +48,7 @@ class Reports extends BaseConfig
         // ---- Sales
         's-register'     => ['sales', 'Sales Register', 'All sales per customer for a period', 'sales', 'reports/sales-register', true],
         's-monthly'      => ['sales', 'Sales Monthly', 'Monthly sales per customer', 'sales', 'reports/sales-monthly', true],
+        's-overview'     => ['sales', 'Sales Overview (YTD vs last year)', 'Revenue &amp; pax per customer this year vs last, with averages', 'sales', 'reports/sales-overview', true],
         's-outstanding'  => ['sales', 'Outstanding Invoices', 'Unpaid customer invoices', 'sales', 'reports/sales-outstanding', true],
         's-aging-sum'    => ['sales', 'AR Aging (summary)', 'Receivables by customer &amp; bucket', 'sales', 'reports/ar-aging', true],
         's-aging'        => ['sales', 'AR Aging (detail)', 'Receivables aged per invoice', 'sales', 'reports/sales-aging-detail', true],

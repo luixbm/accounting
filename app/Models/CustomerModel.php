@@ -10,7 +10,7 @@ class CustomerModel extends TenantModel
     protected $primaryKey    = 'id';
     protected $returnType    = 'array';
     protected $useTimestamps  = true;
-    protected $allowedFields = ['code', 'name', 'email', 'phone', 'npwp', 'address', 'is_active'];
+    protected $allowedFields = ['code', 'name', 'email', 'phone', 'npwp', 'client_group', 'country', 'address', 'is_active'];
 
     protected $validationRules = [
         'code'  => 'required|max_length[20]',

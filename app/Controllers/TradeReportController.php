@@ -49,6 +49,66 @@ class TradeReportController extends BaseController
         return $s === 'Report.' . $key ? $fallback : $s;
     }
 
+    /** A `<select>` field for the `_period` `$extra` slot. `$options` = value => label. */
+    private function selectField(string $label, string $name, array $options, string $current): string
+    {
+        $opts = '';
+        foreach ($options as $val => $text) {
+            $sel = (string) $val === $current ? ' selected' : '';
+            $opts .= '<option value="' . esc((string) $val, 'attr') . '"' . $sel . '>' . esc($text) . '</option>';
+        }
+
+        return '<div class="field" style="max-width:200px"><label>' . esc($label) . '</label>'
+            . '<select name="' . esc($name, 'attr') . '">' . $opts . '</select></div>';
+    }
+
+    /**
+     * Traveller count per customer for a date window, sourced from the dossier
+     * (jobs.pax) and counted once per job — a job's pax is not multiplied by how
+     * many sales lines reference it. Keyed by customer name (matching `monthly`).
+     *
+     * @return array<string,int>
+     */
+    private function paxByCustomer(string $from, string $to, string $clientGroup = ''): array
+    {
+        $sql = "SELECT c.name AS party, SUM(t.pax) AS pax
+                FROM (
+                    SELECT DISTINCT j.id, j.pax, i.customer_id
+                    FROM sales_invoice_lines sl
+                    JOIN sales_invoices i ON i.id = sl.invoice_id
+                    JOIN jobs j           ON j.id = sl.job_id
+                    WHERE i.company_id = ? AND i.status <> 'draft' AND j.pax IS NOT NULL
+                      AND i.invoice_date >= ? AND i.invoice_date <= ?
+                ) t
+                JOIN customers c ON c.id = t.customer_id";
+        $params = [$this->co(), $from, $to];
+        if ($clientGroup !== '') {
+            $sql .= ' WHERE c.client_group = ?';
+            $params[] = $clientGroup;
+        }
+        $sql .= ' GROUP BY c.id';
+
+        $out = [];
+        foreach ($this->db->query($sql, $params)->getResultArray() as $r) {
+            $out[$r['party']] = (int) $r['pax'];
+        }
+
+        return $out;
+    }
+
+    /** Distinct non-empty customers.client_group for the active company. */
+    private function clientGroups(): array
+    {
+        $rows = $this->db->table('customers')
+            ->distinct()->select('client_group')
+            ->where('company_id', $this->co())
+            ->where('client_group IS NOT NULL')->where("client_group <>", '')
+            ->orderBy('client_group', 'ASC')
+            ->get()->getResultArray();
+
+        return array_column($rows, 'client_group');
+    }
+
     private function respond(string $title, array $f, array $columns, array $rows, array $periodOpts = [], string $subtitle = '')
     {
         if ($this->request->getGet('format') === 'xlsx') {
@@ -121,18 +181,23 @@ class TradeReportController extends BaseController
 
     public function monthly(string $kind)
     {
-        $c = $this->cfg($kind);
-        $f = ReportFilter::resolve();
+        $c       = $this->cfg($kind);
+        $f       = ReportFilter::resolve();
+        $isSales = $kind === 'sales';
+        $group   = $isSales ? trim((string) $this->request->getGet('client_group')) : '';
 
-        $rows = $this->db->table($c['inv'] . ' i')
+        $q = $this->db->table($c['inv'] . ' i')
             ->select("p.name AS party, MONTH(i.invoice_date) AS m, SUM(i.total_base) AS t")
             ->join($c['party'] . ' p', "p.id = i.{$c['pid']}", 'left')
             ->where('i.company_id', $this->co())
             ->where('i.status !=', 'draft')
             ->where('YEAR(i.invoice_date)', $f['year'])
             ->groupBy(['p.id', 'm'])
-            ->orderBy('p.name', 'ASC')
-            ->get()->getResultArray();
+            ->orderBy('p.name', 'ASC');
+        if ($group !== '') {
+            $q->where('p.client_group', $group);
+        }
+        $rows = $q->get()->getResultArray();
 
         $byParty = [];
         foreach ($rows as $r) {
@@ -142,14 +207,23 @@ class TradeReportController extends BaseController
         }
         ksort($byParty);
 
+        $pax = $isSales
+            ? $this->paxByCustomer($f['year'] . '-01-01', $f['year'] . '-12-31', $group)
+            : [];
+
         $cols = [['key' => 'party', 'label' => $c['pLabel']]];
         for ($m = 1; $m <= 12; $m++) {
             $cols[] = ['key' => 'm' . $m, 'label' => date('M', mktime(0, 0, 0, $m, 1)), 'money' => true, 'blankZero' => true];
         }
         $cols[] = ['key' => 't', 'label' => $this->rlang('col_total', 'Total'), 'money' => true];
+        if ($isSales) {
+            $cols[] = ['key' => 'pax', 'label' => $this->rlang('col_pax', 'Pax')];
+            $cols[] = ['key' => 'avg', 'label' => $this->rlang('col_avg_pax', 'Avg rev / pax'), 'money' => true, 'blankZero' => true];
+        }
 
-        $out    = [];
-        $totRow = ['_style' => 'total', 'party' => 'TOTAL', 't' => 0.0];
+        $out     = [];
+        $totRow  = ['_style' => 'total', 'party' => 'TOTAL', 't' => 0.0];
+        $totPax  = 0;
         foreach ($byParty as $party => $vals) {
             $row = ['party' => $party, 't' => $vals['t']];
             for ($m = 1; $m <= 12; $m++) {
@@ -157,11 +231,31 @@ class TradeReportController extends BaseController
                 $totRow['m' . $m] = ($totRow['m' . $m] ?? 0) + $vals[$m];
             }
             $totRow['t'] += $vals['t'];
-            $out[]        = $row;
+            if ($isSales) {
+                $px         = $pax[$party] ?? 0;
+                $row['pax'] = $px ?: '';
+                $row['avg'] = $px ? $vals['t'] / $px : '';
+                $totPax    += $px;
+            }
+            $out[] = $row;
+        }
+        if ($isSales) {
+            $totRow['pax'] = $totPax ?: '';
+            $totRow['avg'] = $totPax ? $totRow['t'] / $totPax : '';
         }
         $out[] = $totRow;
 
-        return $this->respond($this->rlang($c['k'] . '-monthly', $c['noun'] . ' Monthly') . ' — ' . $c['pLabel'] . ' (' . $f['year'] . ')', $f, $cols, $out, ['showCompare' => false]);
+        $opts = ['showCompare' => false];
+        if ($isSales && ($groups = $this->clientGroups())) {
+            $opts['extra'] = $this->selectField(
+                $this->rlang('col_client_group', 'Client group'),
+                'client_group',
+                ['' => '(all)'] + array_combine($groups, $groups),
+                $group
+            );
+        }
+
+        return $this->respond($this->rlang($c['k'] . '-monthly', $c['noun'] . ' Monthly') . ' — ' . $c['pLabel'] . ' (' . $f['year'] . ')', $f, $cols, $out, $opts);
     }
 
     // ---------------------------------------------------------------- outstanding
@@ -580,5 +674,147 @@ class TradeReportController extends BaseController
             ['key' => 'b90p', 'label' => $this->rlang('v_over90', '> 90'), 'money' => true, 'blankZero' => true],
             ['key' => 'tot', 'label' => $this->rlang('col_total', 'Total'), 'money' => true],
         ], $out, ['showAsOf' => true]);
+    }
+
+    // ---------------------------------------------------------------- sales overview (YTD vs prior year)
+
+    /**
+     * Per customer (or client group / country): revenue and pax for the chosen
+     * window vs the same window one year earlier, plus averages. Sales only.
+     * Mirrors the client's "Overview-YTD" spreadsheet.
+     */
+    public function salesOverview()
+    {
+        $f  = ReportFilter::resolve();
+        $by = (string) $this->request->getGet('by');
+        $by = in_array($by, ['customer', 'group', 'country'], true) ? $by : 'customer';
+
+        $pyFrom = date('Y-m-d', strtotime($f['from'] . ' -1 year'));
+        $pyTo   = date('Y-m-d', strtotime($f['to'] . ' -1 year'));
+
+        $revenue = function (string $from, string $to): array {
+            $out = [];
+            $rows = $this->db->table('sales_invoices i')
+                ->select('c.name AS party, c.client_group, c.country, SUM(i.total_base) AS rev')
+                ->join('customers c', 'c.id = i.customer_id', 'left')
+                ->where('i.company_id', $this->co())
+                ->where('i.status !=', 'draft')
+                ->where('i.invoice_date >=', $from)->where('i.invoice_date <=', $to)
+                ->groupBy('c.id')
+                ->get()->getResultArray();
+            foreach ($rows as $r) {
+                $out[$r['party'] ?: '(no customer)'] = [
+                    'rev'   => (float) $r['rev'],
+                    'group' => $r['client_group'] ?: '(ungrouped)',
+                    'country' => $r['country'] ?: '(no country)',
+                ];
+            }
+
+            return $out;
+        };
+
+        $revNow = $revenue($f['from'], $f['to']);
+        $revPy  = $revenue($pyFrom, $pyTo);
+        $paxNow = $this->paxByCustomer($f['from'], $f['to']);
+        $paxPy  = $this->paxByCustomer($pyFrom, $pyTo);
+
+        // fold to the chosen grain
+        $key = static function (string $name) use ($by, $revNow, $revPy): string {
+            if ($by === 'customer') {
+                return $name;
+            }
+            $meta = $revNow[$name] ?? $revPy[$name] ?? null;
+
+            return $meta[$by] ?? ($by === 'group' ? '(ungrouped)' : '(no country)');
+        };
+
+        $agg = [];
+        $bump = static function (array &$agg, string $k) {
+            $agg[$k] ??= ['rev' => 0.0, 'rev_py' => 0.0, 'pax' => 0, 'pax_py' => 0];
+        };
+        foreach ($revNow as $name => $m) {
+            $k = $key($name);
+            $bump($agg, $k);
+            $agg[$k]['rev'] += $m['rev'];
+        }
+        foreach ($revPy as $name => $m) {
+            $k = $key($name);
+            $bump($agg, $k);
+            $agg[$k]['rev_py'] += $m['rev'];
+        }
+        foreach ($paxNow as $name => $px) {
+            $k = $key($name);
+            $bump($agg, $k);
+            $agg[$k]['pax'] += $px;
+        }
+        foreach ($paxPy as $name => $px) {
+            $k = $key($name);
+            $bump($agg, $k);
+            $agg[$k]['pax_py'] += $px;
+        }
+
+        uasort($agg, static fn ($a, $b) => $b['rev'] <=> $a['rev']);
+
+        $pct = static fn (float $now, float $prev): string => abs($prev) < 0.005
+            ? ($now > 0.005 ? 'new' : '—')
+            : sprintf('%+.1f%%', ($now - $prev) / $prev * 100);
+
+        $out = [];
+        $tot = ['rev' => 0.0, 'rev_py' => 0.0, 'pax' => 0, 'pax_py' => 0];
+        foreach ($agg as $k => $v) {
+            $tot['rev'] += $v['rev'];
+            $tot['rev_py'] += $v['rev_py'];
+            $tot['pax'] += $v['pax'];
+            $tot['pax_py'] += $v['pax_py'];
+            $out[] = [
+                'party'     => $k,
+                'rev'       => $v['rev'],
+                'rev_py'    => $v['rev_py'],
+                'rev_delta' => $pct($v['rev'], $v['rev_py']),
+                'pax'       => $v['pax'] ?: '',
+                'pax_py'    => $v['pax_py'] ?: '',
+                'pax_delta' => $pct((float) $v['pax'], (float) $v['pax_py']),
+                'avg'       => $v['pax'] ? $v['rev'] / $v['pax'] : '',
+                'avg_py'    => $v['pax_py'] ? $v['rev_py'] / $v['pax_py'] : '',
+            ];
+        }
+        $out[] = [
+            '_style'    => 'total',
+            'party'     => 'TOTAL',
+            'rev'       => $tot['rev'],
+            'rev_py'    => $tot['rev_py'],
+            'rev_delta' => $pct($tot['rev'], $tot['rev_py']),
+            'pax'       => $tot['pax'] ?: '',
+            'pax_py'    => $tot['pax_py'] ?: '',
+            'pax_delta' => $pct((float) $tot['pax'], (float) $tot['pax_py']),
+            'avg'       => $tot['pax'] ? $tot['rev'] / $tot['pax'] : '',
+            'avg_py'    => $tot['pax_py'] ? $tot['rev_py'] / $tot['pax_py'] : '',
+        ];
+
+        $partyLabel = $by === 'group'
+            ? $this->rlang('col_client_group', 'Client group')
+            : ($by === 'country' ? $this->rlang('col_country', 'Country') : $this->rlang('col_customer', 'Customer'));
+
+        $cols = [
+            ['key' => 'party', 'label' => $partyLabel],
+            ['key' => 'rev', 'label' => $this->rlang('col_rev_ytd', 'Revenue YTD') . ' (' . base_code() . ')', 'money' => true, 'blankZero' => true],
+            ['key' => 'rev_py', 'label' => $this->rlang('col_rev_py', 'Revenue last year'), 'money' => true, 'blankZero' => true],
+            ['key' => 'rev_delta', 'label' => $this->rlang('col_delta_pct', 'Δ %'), 'align' => 'right'],
+            ['key' => 'pax', 'label' => $this->rlang('col_pax', 'Pax'), 'align' => 'right'],
+            ['key' => 'pax_py', 'label' => $this->rlang('col_pax_py', 'Pax last year'), 'align' => 'right'],
+            ['key' => 'pax_delta', 'label' => $this->rlang('col_delta_pct', 'Δ %'), 'align' => 'right'],
+            ['key' => 'avg', 'label' => $this->rlang('col_avg_pax', 'Avg rev / pax'), 'money' => true, 'blankZero' => true],
+            ['key' => 'avg_py', 'label' => $this->rlang('col_avg_pax_py', 'Avg / pax last year'), 'money' => true, 'blankZero' => true],
+        ];
+
+        $extra = $this->selectField($this->rlang('v_group_by', 'Group by'), 'by', [
+            'customer' => $this->rlang('grp_by_customer', 'By customer'),
+            'group'    => $this->rlang('grp_by_group', 'By client group'),
+            'country'  => $this->rlang('grp_by_country', 'By country'),
+        ], $by);
+
+        $sub = $f['label'] . ' vs ' . date_id($pyFrom) . ' – ' . date_id($pyTo);
+
+        return $this->respond($this->rlang('s-overview', 'Sales Overview (YTD vs last year)'), $f, $cols, $out, ['showCompare' => false, 'extra' => $extra], $sub);
     }
 }

@@ -367,6 +367,7 @@ $routes->group('', ['filter' => 'session'], static function (RouteCollection $ro
         $routes->get('payment-list', 'TradeReportController::paymentList');
         $routes->get('customer-list', 'TradeReportController::parties/sales');
         $routes->get('supplier-list', 'TradeReportController::parties/purchase');
+        $routes->get('sales-overview', 'TradeReportController::salesOverview');
 
         // Cross-cutting ledger / journal / job analytics (R4)
         $routes->get('journal-list', 'LedgerReportController::journalList');

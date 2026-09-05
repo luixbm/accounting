@@ -25,6 +25,12 @@ $action = $row ? site_url($route . '/' . $row['id']) : site_url($route);
       <div class="field"><label>Phone</label><input name="phone" value="<?= esc($v('phone')) ?>"></div>
       <div class="field"><label>NPWP</label><input name="npwp" class="mono" value="<?= esc($v('npwp')) ?>"></div>
     </div>
+    <?php if ($route === 'customers'): ?>
+      <div class="row">
+        <div class="field"><label><?= lang('Report.col_client_group') ?></label><input name="client_group" value="<?= esc($v('client_group')) ?>"></div>
+        <div class="field"><label><?= lang('Report.col_country') ?></label><input name="country" value="<?= esc($v('country')) ?>"></div>
+      </div>
+    <?php endif ?>
     <div class="field"><label><?= lang('Setup.address') ?></label><textarea name="address" rows="2"><?= esc($v('address')) ?></textarea></div>
     <label class="inline" style="font-weight:400">
       <input type="checkbox" name="is_active" value="1" style="width:auto" <?= old('is_active', $row['is_active'] ?? 1) ? 'checked' : '' ?>> <?= lang('App.active') ?>
