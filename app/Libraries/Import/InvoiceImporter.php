@@ -263,15 +263,20 @@ class InvoiceImporter
                     $warn[] = "Job '{$row['job']}' not found — line left untagged.";
                 }
                 $lines[] = [
-                    'account_id'   => $row['account_id'],
-                    'job_id'       => $jobId,
-                    'description'  => $row['desc'] ?: null,
-                    'amount'       => $row['amount'],
-                    'booking_ref'  => $row['l_booking'] ?: null,
-                    'service_date' => $row['l_service'] !== '' ? SpreadsheetReader::toDate($row['l_service'], $dateFmt) : null,
-                    'party_name'   => $row['l_party'] ?: null,
-                    'units'        => $row['l_units'] ?: null,
-                    'nights'       => $row['l_nights'] ?: null,
+                    'account_id'    => $row['account_id'],
+                    'job_id'        => $jobId,
+                    'description'   => $row['desc'] ?: null,
+                    'amount'        => $row['amount'],
+                    // purchase imports carry a planned/quoted cost (same convention as the
+                    // Jambix wizard) so Invoice Review has a budget baseline to check the
+                    // real supplier invoice against; sales invoices have no such concept.
+                    'budget_amount' => $this->kind === 'purchase' ? $row['amount'] : null,
+                    'cost_source'   => $this->kind === 'purchase' ? 'budget' : null,
+                    'booking_ref'   => $row['l_booking'] ?: null,
+                    'service_date'  => $row['l_service'] !== '' ? SpreadsheetReader::toDate($row['l_service'], $dateFmt) : null,
+                    'party_name'    => $row['l_party'] ?: null,
+                    'units'         => $row['l_units'] ?: null,
+                    'nights'        => $row['l_nights'] ?: null,
                 ];
                 $subtotal += $row['amount'];
             }

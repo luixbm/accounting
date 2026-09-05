@@ -108,9 +108,10 @@ class PurchasePoster
                 'description'  => trim((string) ($l['description'] ?? '')) ?: null,
                 'amount'       => $amount,
                 'amount_base'  => round($amount * $rate, 2),
+                // blank on manual lines; only import / Jambix lines carry a planned cost
                 'budget_amount' => isset($l['budget_amount']) && $l['budget_amount'] !== null && $l['budget_amount'] !== ''
                     ? round((float) str_replace([',', ' '], '', (string) $l['budget_amount']), 2)
-                    : $amount,
+                    : null,
                 'cost_remark'  => trim((string) ($l['cost_remark'] ?? '')) ?: null,
                 'booking_ref'  => trim((string) ($l['booking_ref'] ?? '')) ?: null,
                 'service_date' => $this->normDate($l['service_date'] ?? null),

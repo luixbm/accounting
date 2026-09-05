@@ -1,0 +1,4 @@
+"Invoice group / no.","Invoice date","Supplier / Customer name","Account (name or code)","Line amount","Their invoice / PO no.","Due date","Line description","Job code","Invoice description","PPN amount","PPh amount","Currency code","Exchange rate","Line booking ref","Line service date","Line party / traveller name","Line units","Line nights"
+"PI-2026-001","2026-09-01","PT Sumber Rejeki","63101","500000","INV/SR/0912","2026-09-30","Internet & telepon September","","Biaya utilitas kantor Sept 2026","88000","","IDR","","","","","",""
+"PI-2026-001","","","63200","300000","","","Alat tulis kantor","","","","","","","","","","",""
+"PI-2026-002","2026-09-03","CV Konsultan Andal","Jasa Profesional","1500000","CKA-2026-14","2026-10-03","Jasa konsultasi pajak","JOB-001","Konsultan Q3","","30000","IDR","","","","","",""

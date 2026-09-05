@@ -44,13 +44,12 @@ foreach ($accounts as $a) {
     $acctById[(int) $a['id']] = ['code' => $a['code'], 'name' => $a['name']];
 }
 $acctCell = static function ($selId) use ($acctById) {
-    $sel  = $acctById[(int) $selId] ?? null;
-    $code = $sel ? esc($sel['code'], 'attr') : '';
-    $nm   = $sel ? esc($sel['code'] . ' · ' . $sel['name'], 'attr') : '';
+    $sel   = $acctById[(int) $selId] ?? null;
+    $label = $sel ? esc($sel['code'] . ' · ' . $sel['name'], 'attr') : '';
 
     return '<div class="combo" data-combo="account">'
         . '<input type="hidden" name="line_account[]" value="' . ($selId !== '' && $selId !== null ? (int) $selId : '') . '">'
-        . '<input class="combo-input" autocomplete="off" spellcheck="false" placeholder="' . esc(lang('App.account'), 'attr') . '…" value="' . $code . '" title="' . $nm . '">'
+        . '<input class="combo-input" autocomplete="off" spellcheck="false" placeholder="' . esc(lang('App.account'), 'attr') . '…" value="' . $label . '" title="' . $label . '">'
         . '<div class="combo-pop" hidden></div>'
         . '</div>';
 };
@@ -102,7 +101,7 @@ $jobOpt = static function ($sel) use ($jobs) {
         <label><?= lang('Txn.rate_to', [base_code()]) ?></label>
         <input name="exchange_rate" id="rateInp" type="number" step="0.00000001" value="<?= esc(old('exchange_rate', $inv['exchange_rate'] ?? 1)) ?>">
       </div>
-      <div class="field"><label><?= lang('App.reference') ?></label><input name="description" value="<?= esc(old('description', $inv['description'] ?? '')) ?>" placeholder="<?= esc(lang('Txn.ref_hint_dossier'), 'attr') ?>"></div>
+      <div class="field"><label><?= lang('App.description') ?></label><input name="description" value="<?= esc(old('description', $inv['description'] ?? '')) ?>" placeholder="<?= esc(lang('Txn.ref_hint_dossier'), 'attr') ?>"></div>
     </div>
   </div>
 
@@ -207,9 +206,10 @@ $jobOpt = static function ($sel) use ($jobs) {
 </form>
 
 <style>
-  .piline-grid { min-width: 1180px; }
-  .piline-grid th.c-acct { width: 230px; }
-  .piline-grid th.c-job  { width: 90px; }
+  .piline-grid { min-width: 1500px; }
+  .piline-grid th.c-acct { width: 300px; }
+  .piline-grid th.c-desc { width: 300px; }
+  .piline-grid th.c-job  { width: 96px; }
   .piline-grid th.c-num  { width: 110px; }
   .piline-grid th.c-date { width: 150px; }
   .piline-grid th.c-book { width: 130px; }
@@ -253,9 +253,9 @@ $jobOpt = static function ($sel) use ($jobs) {
   }
   function subtotal(){ var s=0; tbody.querySelectorAll('tr.lrow .amt').forEach(function(i){ s+=num(i.value); }); return s; }
   function markRow(row) {
+    // Budget is only meaningful for imported / Jambix lines that arrive with a
+    // planned cost. Manual lines leave it blank — no snapshot, no variance colour.
     var amt = row.querySelector('.amt'), bud = row.querySelector('.bud');
-    // a line with no budget yet (new manual line) — budget tracks the amount
-    if (bud && bud.value.trim() === '' && amt.value.trim() !== '') { bud.value = amt.value; }
     var a = num(amt.value), b = bud ? num(bud.value) : 0;
     amt.style.color = (bud && bud.value.trim() !== '' && a !== b) ? (a > b ? 'var(--red)' : 'var(--green)') : '';
   }
