@@ -1,0 +1,46 @@
+<?php
+
+return [
+    'new'    => 'New budget version',
+    'edit'   => 'Edit budget version',
+    'saved'  => 'Budget version saved.',
+    'deleted' => 'Budget version deleted.',
+    'not_found' => 'Budget version not found.',
+    'empty'  => 'No budget versions yet. Create one, then import your budget spreadsheet.',
+    'default' => 'default',
+    'default_set' => 'Default budget version updated.',
+    'make_default' => 'Set default',
+    'open'   => 'Open',
+    'lines'  => 'Figures',
+    'confirm_delete' => 'Delete this budget version and all its figures?',
+    'help'   => 'A version holds one budgeted amount per P&L account per month (e.g. "Realistic 2026"). The default version is what the P&L vs Budget report uses unless you pick another.',
+
+    'f_name' => 'Name',
+    'f_year' => 'Year',
+    'f_note' => 'Note',
+    'f_default_hint' => 'Use as the default budget for this year',
+
+    'import_btn' => 'Import spreadsheet',
+    'grid_note'  => 'Figures shown are the imported / entered monthly budget. Use the row Edit link to adjust one account.',
+    'row_note'   => 'Enter the budgeted amount for each month. Leave blank or 0 for months with no budget.',
+    'row_saved'  => 'Account budget saved.',
+
+    // import wizard
+    'imp_title'    => 'Import budget spreadsheet',
+    'imp_into'     => 'Import into: {0}',
+    'imp_choose'   => 'Choose a .xlsx, .xls or .csv file with one row per account and a column per month.',
+    'imp_map'      => 'Map columns',
+    'imp_header_row' => 'Header row',
+    'imp_sheet'    => 'Sheet',
+    'imp_preview'  => 'Preview',
+    'imp_commit'   => 'Import {0} account(s)',
+    'imp_done'     => '{0} account(s) / {1} monthly figure(s) imported into {2}.',
+    'imp_col_account' => 'Account (code or name)',
+    'imp_col_month'   => '{0} amount',
+    'imp_accounts_matched' => 'Accounts matched',
+    'imp_cells'      => 'Monthly figures',
+    'imp_errors'     => 'Rows with problems',
+    'imp_row_ok'     => 'ok',
+    'imp_row_error'  => 'error',
+    'imp_need_version' => 'Open a budget version first, then use its "Import spreadsheet" button.',
+];

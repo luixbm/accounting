@@ -22,6 +22,9 @@ return [
     'pnl-monthly_d' => 'Laba rugi bulanan untuk suatu periode',
     'pnl-yearly'   => 'Laba Rugi — multi tahun',
     'pnl-yearly_d' => 'Laba rugi tahunan',
+    'pnl-budget'   => 'Laba Rugi vs Anggaran',
+    'pnl-budget_d' => 'Aktual vs anggaran per akun untuk suatu periode',
+    'pnlb_none'    => 'Belum ada anggaran untuk tahun ini — buat di Pengaturan → Anggaran.',
     'bs'           => 'Neraca',
     'bs_d'         => 'Neraca standar per suatu tanggal',
     'bs-monthly'   => 'Neraca — multi periode',
@@ -242,6 +245,10 @@ return [
     'col_margin'      => 'Margin',
     'col_sales'       => 'Penjualan',
     'col_purchase'    => 'Pembelian',
+    'col_actual'      => 'Aktual',
+    'col_budget'      => 'Anggaran',
+    'col_variance'    => 'Selisih',
+    'col_achieved'    => 'Tercapai %',
 
     // laporan payment-list (mengikuti templat Excel pengguna)
     'col_pl_po_no'          => 'No. PO',

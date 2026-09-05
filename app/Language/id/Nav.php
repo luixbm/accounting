@@ -28,6 +28,7 @@ return [
     'roles'         => 'Peran',
     'api_tokens'    => 'Token API',
     'control_accounts' => 'Akun Kontrol',
+    'budgets'       => 'Anggaran',
 
     'profile'  => 'Profil Saya',
     'announcements' => 'Pengumuman',

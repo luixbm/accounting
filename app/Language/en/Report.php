@@ -22,6 +22,9 @@ return [
     'pnl-monthly_d' => 'Monthly profit & loss for a period',
     'pnl-yearly'    => 'P&L — multi year',
     'pnl-yearly_d'  => 'Yearly profit & loss',
+    'pnl-budget'    => 'P&L vs Budget',
+    'pnl-budget_d'  => 'Actual vs budget by account for a period',
+    'pnlb_none'     => 'No budget for this year — add one under Setup → Budgets.',
     'bs'            => 'Balance Sheet',
     'bs_d'          => 'Standard balance sheet as of a date',
     'bs-monthly'    => 'Balance Sheet — multi period',
@@ -242,6 +245,10 @@ return [
     'col_margin'      => 'Margin',
     'col_sales'       => 'Sales',
     'col_purchase'    => 'Purchase',
+    'col_actual'      => 'Actual',
+    'col_budget'      => 'Budget',
+    'col_variance'    => 'Variance',
+    'col_achieved'    => 'Achieved %',
 
     // payment-list report (mirrors the user's Excel template)
     'col_pl_po_no'          => 'PO No',

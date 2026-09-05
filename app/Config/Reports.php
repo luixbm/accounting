@@ -26,6 +26,7 @@ class Reports extends BaseConfig
         'pnl'          => ['financial', 'Profit &amp; Loss', 'Income statement for a period', 'reports', 'reports/income-statement', true],
         'pnl-monthly'  => ['financial', 'P&amp;L — multi period', 'Monthly profit &amp; loss for a period', 'reports', 'reports/income-statement?compare=month', true],
         'pnl-yearly'   => ['financial', 'P&amp;L — multi year', 'Yearly profit &amp; loss', 'reports', 'reports/income-statement?compare=year', true],
+        'pnl-budget'   => ['financial', 'P&amp;L vs Budget', 'Actual vs budget by account for a period', 'reports', 'reports/pnl-budget', true],
         'bs'           => ['financial', 'Balance Sheet', 'Standard balance sheet as of a date', 'reports', 'reports/balance-sheet', true],
         'bs-monthly'   => ['financial', 'Balance Sheet — multi period', 'Month-end balance sheet columns', 'reports', 'reports/balance-sheet?compare=month', true],
         'cashflow'     => ['financial', 'Cash Flow', 'Cash inflow &amp; outflow for a period', 'currency', 'reports/cash-flow', true],

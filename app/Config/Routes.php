@@ -265,6 +265,30 @@ $routes->group('', ['filter' => 'session'], static function (RouteCollection $ro
         $routes->post('(:num)/delete', 'AnnouncementController::delete/$1');
     });
 
+    // --- Budgets -------------------------------------------------------------
+    $routes->group('budgets', ['filter' => 'permission:settings.manage'], static function (RouteCollection $routes): void {
+        $routes->get('/', 'BudgetVersionController::index');
+        $routes->get('new', 'BudgetVersionController::new');
+        $routes->post('/', 'BudgetVersionController::create');
+
+        $routes->group('import', static function (RouteCollection $routes): void {
+            $routes->get('/', 'BudgetImportController::index');
+            $routes->post('/', 'BudgetImportController::upload');
+            $routes->get('(:num)/map', 'BudgetImportController::map/$1');
+            $routes->post('(:num)/map', 'BudgetImportController::saveMap/$1');
+            $routes->get('(:num)/preview', 'BudgetImportController::preview/$1');
+            $routes->post('(:num)/commit', 'BudgetImportController::commit/$1');
+        });
+
+        $routes->get('(:num)/edit', 'BudgetVersionController::edit/$1');
+        $routes->post('(:num)', 'BudgetVersionController::update/$1');
+        $routes->post('(:num)/set-default', 'BudgetVersionController::setDefault/$1');
+        $routes->post('(:num)/delete', 'BudgetVersionController::delete/$1');
+        $routes->get('(:num)/row/(:num)', 'BudgetVersionController::editRow/$1/$2');
+        $routes->post('(:num)/row/(:num)', 'BudgetVersionController::saveRow/$1/$2');
+        $routes->get('(:num)', 'BudgetVersionController::show/$1');
+    });
+
     $routes->group('jobs', static function (RouteCollection $routes): void {
         $routes->get('/', 'JobController::index');
 
@@ -311,6 +335,7 @@ $routes->group('', ['filter' => 'session'], static function (RouteCollection $ro
         $routes->get('general-ledger', 'ReportController::generalLedger');
         $routes->get('balance-sheet', 'ReportController::balanceSheet');
         $routes->get('income-statement', 'ReportController::incomeStatement');
+        $routes->get('pnl-budget', 'BudgetReportController::pnlBudget');
         $routes->get('ar-aging', 'ReportController::arAging');
         $routes->get('ap-aging', 'ReportController::apAging');
 

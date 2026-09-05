@@ -27,6 +27,7 @@ $setup = [
     ['companies', 'companies', 'accounts', 'companies', user_can('settings.manage')],
     ['settings', 'settings', 'settings', 'settings', user_can('settings.manage')],
     ['control-accounts', 'control-accounts', 'accounts', 'control_accounts', user_can('settings.manage')],
+    ['budgets', 'budgets', 'budget', 'budgets', user_can('settings.manage')],
     ['custom-fields', 'custom-fields', 'journal', 'custom_fields', user_can('settings.manage')],
     ['users', 'users', 'users', 'users', user_can('users.manage')],
     ['roles', 'roles', 'users', 'roles', user_can('roles.manage')],
