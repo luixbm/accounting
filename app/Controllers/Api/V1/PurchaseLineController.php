@@ -3,6 +3,7 @@
 namespace App\Controllers\Api\V1;
 
 use App\Controllers\Api\BaseApiController;
+use App\Libraries\Api\PurchaseCostReview;
 use App\Libraries\Api\PurchaseCostUpdate;
 
 /**
@@ -18,6 +19,27 @@ class PurchaseLineController extends BaseApiController
         }
 
         $result = (new PurchaseCostUpdate())->apply($this->body());
+
+        if ($result['status'] === 'error') {
+            return $this->fail($result['payload']['message'] ?? 'Request rejected.', $result['code'], 'invalid_request');
+        }
+
+        return $this->respond($result['payload'], $result['code']);
+    }
+
+    /**
+     * Queue a batch of proposed actual costs for human review in the app
+     * (Purchases -> Invoice Review) instead of applying them immediately.
+     * Each item is resolved with a dry run at intake time; confirming an
+     * item re-resolves and applies it for real.
+     */
+    public function review()
+    {
+        if ($deny = $this->guardAbility('purchase:write')) {
+            return $deny;
+        }
+
+        $result = (new PurchaseCostReview())->intake($this->body());
 
         if ($result['status'] === 'error') {
             return $this->fail($result['payload']['message'] ?? 'Request rejected.', $result['code'], 'invalid_request');

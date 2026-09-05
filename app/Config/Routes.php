@@ -39,6 +39,7 @@ $routes->group('api/v1', ['filter' => 'apiauth', 'namespace' => 'App\Controllers
     // Budget -> actual line costs (n8n supplier-invoice pipeline)
     $routes->get('purchase/lines/pending', 'PurchaseLineController::pending');
     $routes->post('purchase/lines/costs', 'PurchaseLineController::costs');
+    $routes->post('purchase/lines/review', 'PurchaseLineController::review');
 
     // Jambix job / dossier upsert (reference figures only - no ledger effect)
     $routes->post('jobs', 'JobController::create');
@@ -128,6 +129,17 @@ $routes->group('', ['filter' => 'session'], static function (RouteCollection $ro
         $routes->get('(:num)/preview', 'JambixImportController::preview/$1');
         $routes->post('(:num)/commit', 'JambixImportController::commit/$1');
         $routes->post('(:num)/revert', 'JambixImportController::revert/$1');
+    });
+
+    // --- Invoice review queue (n8n supplier-invoice pipeline, human confirms) ----
+    $routes->group('purchases/review', static function (RouteCollection $routes): void {
+        $routes->get('/', 'InvoiceReviewController::index');
+        $routes->post('(:num)/confirm', 'InvoiceReviewController::confirmItem/$1');
+        $routes->post('(:num)/recheck', 'InvoiceReviewController::recheck/$1');
+        $routes->post('(:num)/promise-date', 'InvoiceReviewController::promiseDate/$1');
+        $routes->post('batch/(:num)/confirm', 'InvoiceReviewController::confirmBatch/$1');
+        $routes->post('batch/(:num)/recheck', 'InvoiceReviewController::recheckBatch/$1');
+        $routes->post('batch/(:num)/delete', 'InvoiceReviewController::deleteBatch/$1');
     });
 
     // --- Banking ------------------------------------------------------------

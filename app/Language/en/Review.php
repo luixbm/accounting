@@ -1,0 +1,48 @@
+<?php
+
+/**
+ * Invoice Review page (Purchases -> Invoice Review): the human side of the
+ * n8n supplier-invoice pipeline.
+ */
+return [
+    'title'              => 'Invoice review',
+    'subtitle'           => 'Extracted invoices awaiting matching or confirmation',
+    'col_supplier_file'  => 'Supplier / File',
+    'col_travelers'      => 'Traveler(s)',
+    'col_service_date'   => 'Service date',
+    'col_arrival_date'   => 'Arrival date',
+    'col_requested'      => 'Supplier invoice',
+    'col_matched_budget' => 'Matched budget',
+    'col_diff'           => 'Diff',
+    'col_status'         => 'Status',
+    'col_promise_date'   => 'Promise date',
+    'promise_saved'      => 'Promise date saved.',
+    'status_matched_ok'  => 'Matched OK',
+    'status_pending'     => 'Pending review',
+    'status_overbudget'  => 'Overbudget',
+    'status_confirmed'   => 'Confirmed',
+    'status_unmatched'   => 'Unmatched',
+    'status_error'       => 'Error',
+    'confirm'            => 'Confirm',
+    'confirm_all'        => 'Confirm all matched',
+    'recheck'            => 'Re-check',
+    'filter_open'        => 'Open',
+    'filter_all'         => 'All',
+    'no_batches'         => 'Nothing waiting for review.',
+    'search_ph'          => 'Search supplier or traveler…',
+    'search'             => 'Search',
+    'delete'             => 'Delete',
+    'delete_confirm'     => 'Remove this from the review queue? Already-confirmed lines keep their effect on the real invoice - this only clears the staging entry.',
+    'batch_deleted'      => 'Removed from the queue.',
+    'sum_ok'             => 'Sum OK',
+    'sum_mismatch'       => 'Sum mismatch',
+    'transactions_n'     => '{0} transactions',
+    'confirmed_of'       => '{0}/{1} confirmed',
+    'not_allowed'        => 'Not allowed.',
+    'rechecked'          => 'Re-checked.',
+    'rechecked_n'        => '{0} line(s) re-checked.',
+    'recheck_all'        => 'Re-check all',
+    'nothing_to_confirm' => 'Nothing to confirm.',
+    'confirmed_n'        => '{0} line(s) confirmed.',
+    'failed_n'           => '{0} could not be applied — see the message on each row.',
+];

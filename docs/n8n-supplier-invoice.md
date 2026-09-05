@@ -170,7 +170,16 @@ return { json: { costs, unmatched, invoice } };
 - Then **Microsoft SharePoint → move file** to `Applied/`
 
 ### 9b. FALSE → review
-- **Microsoft Teams / Slack** message:
+
+There's now an in-app queue for this instead of (or in addition to) a chat
+message: **Purchases → Invoice Review**. Send the same items you dry-ran to
+`POST {{$env.API_BASE}}/purchase/lines/review` (same body shape as the
+dry-run call, plus `source`/`file_name`/`file_url`/`vendor`) and a person
+confirms or leaves each line from that page — see `docs/API.md` §4
+`POST /purchase/lines/review`. Do this instead of step 7's dry run (or in
+addition to it, if you still want the Teams heads-up below).
+
+- **Microsoft Teams / Slack** message *(optional, alongside or instead of the review queue)*:
   ```
   ⚠ Supplier invoice needs review — {{ $('Code - normalise').item.json.vendor }}
   File: {{ $('Code - normalise').item.json.file_web_url }}
@@ -197,7 +206,7 @@ normalise** onward is identical.
 - Puts the PDF/image into the binary property `data`
 
 ### 3. HTTP Request — Gemini extraction  (replaces Azure DI / Claude)
-- `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{$env.GEMINI_KEY}}`
+- `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={{$env.GEMINI_KEY}}` (model name changes as Google deprecates old ones — check aistudio.google.com if this 404s)
 - Send Body: **JSON**
 ```json
 {

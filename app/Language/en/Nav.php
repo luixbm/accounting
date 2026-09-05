@@ -12,8 +12,9 @@ return [
     'customers'         => 'Customers',
     'currencies'        => 'Currencies',
 
-    'purchases' => 'Purchases',
-    'sales'     => 'Sales',
+    'purchases'      => 'Purchases',
+    'invoice_review' => 'Invoice Review',
+    'sales'          => 'Sales',
     'banking'   => 'Banking',
     'journals'  => 'Journals',
     'jobs'      => 'Jobs',

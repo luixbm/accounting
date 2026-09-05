@@ -12,8 +12,9 @@ return [
     'customers'         => 'Pelanggan',
     'currencies'        => 'Mata Uang',
 
-    'purchases' => 'Pembelian',
-    'sales'     => 'Penjualan',
+    'purchases'      => 'Pembelian',
+    'invoice_review' => 'Tinjauan Invoice',
+    'sales'          => 'Penjualan',
     'banking'   => 'Kas & Bank',
     'journals'  => 'Jurnal',
     'jobs'      => 'Job',

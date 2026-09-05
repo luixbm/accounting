@@ -1,13 +1,14 @@
 <?php
 
 /** @var string $title */
-$seg1   = service('uri')->getSegment(1);
-$navFor = static fn (string ...$s): string => in_array($seg1, $s, true) ? 'active' : '';
-
 $canReports = user_can('reports.view');
 $logo       = company_logo_url();
 
-/** @var list<array{0:string,1:string,2:string,3:string,4:bool}> $link  [seg, url, icon, langkey, visible] */
+/** @var list<array{0:string,1:string,2:string,3:string,4:bool}> $link  [seg, url, icon, langkey, visible]
+ * `seg` may be a single segment ('accounts') or a path ('purchases/review') for a
+ * sub-section that needs to win over its parent's own link (e.g. Purchases vs.
+ * Invoice Review both live under /purchases/*).
+ */
 $masterData = [
     ['accounts', 'accounts', 'accounts', 'chart_of_accounts', true],
     ['suppliers', 'suppliers', 'supplier', 'suppliers', true],
@@ -16,6 +17,7 @@ $masterData = [
 ];
 $transactions = [
     ['purchases', 'purchases', 'purchase', 'purchases', module_enabled('PurchaseController')],
+    ['purchases/review', 'purchases/review', 'review', 'invoice_review', module_enabled('InvoiceReviewController')],
     ['sales', 'sales', 'sales', 'sales', module_enabled('SalesController')],
     ['banking', 'banking', 'currency', 'banking', module_enabled('BankingController')],
     ['journals', 'journals', 'journal', 'journals', true],
@@ -33,6 +35,20 @@ $setup = [
     ['roles', 'roles', 'users', 'roles', user_can('roles.manage')],
     ['api-tokens', 'api-tokens', 'currency', 'api_tokens', user_can('settings.manage')],
 ];
+
+// Pick the single best-matching nav entry for the current URL: the LONGEST
+// registered path that is (or prefixes) the current path, so a sub-section
+// like purchases/review wins over its parent purchases when both are
+// registered - a plain "compare segment 1" check can't tell them apart.
+$uriPath   = trim(service('uri')->getPath(), '/');
+$allSegs   = array_merge(array_column($masterData, 0), array_column($transactions, 0), array_column($setup, 0), ['dashboard', 'reports']);
+$activeSeg = null;
+foreach ($allSegs as $candidate) {
+    if (($uriPath === $candidate || str_starts_with($uriPath, $candidate . '/')) && strlen($candidate) > strlen((string) $activeSeg)) {
+        $activeSeg = $candidate;
+    }
+}
+$navFor = static fn (string ...$s): string => in_array($activeSeg, $s, true) ? 'active' : '';
 
 $allCompanies = model(\App\Models\CompanyModel::class)->where('is_active', 1)->orderBy('code')->findAll();
 if (($allowedCo = allowed_company_ids()) !== null) {

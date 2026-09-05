@@ -1,0 +1,48 @@
+<?php
+
+/**
+ * Halaman Invoice Review (Purchases -> Invoice Review): sisi manusia dari
+ * alur pipeline invoice supplier n8n.
+ */
+return [
+    'title'              => 'Tinjauan invoice',
+    'subtitle'           => 'Invoice hasil ekstraksi, menunggu pencocokan atau konfirmasi',
+    'col_supplier_file'  => 'Supplier / File',
+    'col_travelers'      => 'Traveler',
+    'col_service_date'   => 'Tanggal layanan',
+    'col_arrival_date'   => 'Tanggal kedatangan',
+    'col_requested'      => 'Faktur supplier',
+    'col_matched_budget' => 'Budget tercocok',
+    'col_diff'           => 'Selisih',
+    'col_status'         => 'Status',
+    'col_promise_date'   => 'Rencana bayar',
+    'promise_saved'      => 'Rencana bayar disimpan.',
+    'status_matched_ok'  => 'Cocok OK',
+    'status_pending'     => 'Menunggu review',
+    'status_overbudget'  => 'Lebih budget',
+    'status_confirmed'   => 'Terkonfirmasi',
+    'status_unmatched'   => 'Tidak cocok',
+    'status_error'       => 'Error',
+    'confirm'            => 'Konfirmasi',
+    'confirm_all'        => 'Konfirmasi semua yang cocok',
+    'recheck'            => 'Cek ulang',
+    'filter_open'        => 'Belum selesai',
+    'filter_all'         => 'Semua',
+    'no_batches'         => 'Tidak ada yang menunggu review.',
+    'search_ph'          => 'Cari supplier atau traveler…',
+    'search'             => 'Cari',
+    'delete'             => 'Hapus',
+    'delete_confirm'     => 'Hapus dari antrean review? Baris yang sudah dikonfirmasi tetap berlaku di invoice asli - ini hanya membersihkan entri antreannya.',
+    'batch_deleted'      => 'Dihapus dari antrean.',
+    'sum_ok'             => 'Total OK',
+    'sum_mismatch'       => 'Total tidak cocok',
+    'transactions_n'     => '{0} transaksi',
+    'confirmed_of'       => '{0}/{1} terkonfirmasi',
+    'not_allowed'        => 'Tidak diizinkan.',
+    'rechecked'          => 'Sudah dicek ulang.',
+    'rechecked_n'        => '{0} baris dicek ulang.',
+    'recheck_all'        => 'Cek ulang semua',
+    'nothing_to_confirm' => 'Tidak ada yang dikonfirmasi.',
+    'confirmed_n'        => '{0} baris terkonfirmasi.',
+    'failed_n'           => '{0} gagal diterapkan — lihat pesan pada masing-masing baris.',
+];

@@ -419,6 +419,7 @@ zero or several lines is reported, never guessed.
 | `account_code` | — | Re-point the line to this cost account (non-header, active). Default: leave as-is. |
 | `remark` | — | Free-text note stored on the line (`cost_remark`) — e.g. why the actual ran over budget. |
 | `supplier_invoice_ref` / `supplier_invoice_date` | — | Recorded on the line (`supp_inv_ref` / `supp_inv_date`) — the audit trail behind the budget→actual flip. |
+| `promise_date` | — | Planned payment date (often a few days before/after `service_date`, not the invoice's formal due date). Stored on the line; left unset if omitted (existing value carried through, never cleared implicitly). On the Invoice Review page this defaults to the matched line's `service_date` and is editable per row before confirming. |
 | `window_days` | — | Top-level default (0–15, default `2`); per-item override allowed. |
 | `dry_run` | — | Resolve and report only; write nothing. |
 
@@ -463,6 +464,63 @@ re-posted.
 
 Re-post failures (period locked, invoice already has a payment) mark that
 item `error` with the reason; other items in the same request still apply.
+
+---
+
+### `POST /purchase/lines/review`
+
+Same idea as `POST /purchase/lines/costs`, but instead of writing immediately
+it **queues the batch for human review** in the app (Purchases -> Invoice
+Review) — a resolved-but-unwritten inbox, in place of (or alongside) posting
+to a Teams/Slack channel. Ability: `purchase:write`.
+
+Each item is resolved with a dry run at intake time and stored with its match
+result. A person then confirms individual lines or a whole batch from the
+Invoice Review page; confirming re-resolves and applies for real at that
+point (not at intake time), so drift — a booking updated after you POSTed,
+a line already actualised another way — is caught rather than blindly
+replayed.
+
+#### Request body
+
+```json
+{
+  "source": "n8n",
+  "file_name": "black-horse-weekly-recap.pdf",
+  "file_url": "https://.../black-horse-weekly-recap.pdf",
+  "vendor": "Black Horse Bali",
+  "window_days": 5,
+  "items": [
+    { "booking_ref": "26495-6106793", "cost": 550002, "party_name": "Carola van Roon H184250128",
+      "description": "Munduk - Pemuteran (transfer)", "supplier_invoice_ref": "WKT-260501" }
+  ]
+}
+```
+
+| Field | Req. | Notes |
+|---|---|---|
+| `items[]` | ✔ | 1–2000 items, same shape as `costs[]` on `POST /purchase/lines/costs` (`costs` accepted as an alias for the array itself). `dry_run` is ignored — intake is always a dry run. |
+| `source` | — | Free text, e.g. `n8n`. Defaults to `n8n`. |
+| `file_name` / `file_url` | — | The source document, shown on the review page. |
+| `vendor` | — | Label for the batch header; falls back to each item's own match if omitted. |
+| `window_days` | — | Same meaning as on `.../costs`. |
+
+#### Response — `201`
+
+```json
+{
+  "batch_id": 42,
+  "summary": {
+    "received": 4, "applied": 0, "would_apply": 3, "unchanged": 0,
+    "ambiguous": 0, "not_found": 1, "errors": 0, "over_budget": 1, "invoices_reposted": 0
+  }
+}
+```
+
+`summary` mirrors `.../costs`'s dry-run summary — useful for an immediate
+Teams/Slack "N lines need a look" notice — but nothing is written; the
+`batch_id` is only a reference for your own logs, there's no GET for it (open
+the app to review).
 
 ---
 

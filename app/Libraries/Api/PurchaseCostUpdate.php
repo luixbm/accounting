@@ -96,19 +96,22 @@ class PurchaseCostUpdate
             $line   = $found['line'];
             $budget = $line['budget_amount'] !== null ? (float) $line['budget_amount'] : (float) $line['amount'];
             $res += [
-                'match'       => $found['match'],
-                'booking_ref' => $line['booking_ref'],
-                'invoice'     => [
+                'match'        => $found['match'],
+                'booking_ref'  => $line['booking_ref'],
+                'invoice'      => [
                     'id'          => (int) $line['inv_id'],
                     'internal_no' => $line['internal_no'],
                     'external_id' => $line['external_id'],
                     'status'      => $line['inv_status'],
                 ],
-                'budget'      => $budget,
-                'old_amount'  => (float) $line['amount'],
-                'new_amount'  => $cost,
-                'variance'    => round($cost - $budget, 2),
-                'over_budget' => $cost - $budget > 0.005,
+                'line_id'      => (int) $line['id'],
+                'job_id'       => $line['job_id'] !== null ? (int) $line['job_id'] : null,
+                'service_date' => $line['service_date'],
+                'budget'       => $budget,
+                'old_amount'   => (float) $line['amount'],
+                'new_amount'   => $cost,
+                'variance'     => round($cost - $budget, 2),
+                'over_budget'  => $cost - $budget > 0.005,
             ];
 
             // already at this actual figure -> nothing to do
@@ -384,6 +387,36 @@ class PurchaseCostUpdate
         $out  = [];
         foreach ($this->suppliers->findAll() as $s) {
             if (mb_strtolower(trim(preg_replace('/\s+/', ' ', $s['name']))) === $norm) {
+                $out[] = (int) $s['id'];
+            }
+        }
+        if ($out) {
+            return $out;
+        }
+
+        // Extracted vendor text rarely matches the supplier record verbatim
+        // (e.g. a PDF letterhead "BLACK HORSE BALI" vs. the supplier "Black
+        // Horse") - fall back to a substring match, either direction. The
+        // caller narrows further by service_date/party_name/budget, so a
+        // loose hit here is safe; it only ever adds candidates.
+        foreach ($this->suppliers->findAll() as $s) {
+            $sname = mb_strtolower(trim(preg_replace('/\s+/', ' ', $s['name'])));
+            if ($sname !== '' && (str_contains($norm, $sname) || str_contains($sname, $norm))) {
+                $out[] = (int) $s['id'];
+            }
+        }
+        if ($out) {
+            return $out;
+        }
+
+        // One more pass ignoring apostrophes/periods and any "(...)" aside
+        // (e.g. supplier "Ketut's Bali Cooking Class (formerly Payuk Bali)"
+        // vs. an invoice's plain "Ketuts Bali Cooking Class").
+        $strip        = static fn (string $s) => trim(preg_replace('/\s+/', ' ', preg_replace('/\([^)]*\)/', '', str_replace(["'", '.'], '', $s))));
+        $normStripped = mb_strtolower($strip($ref));
+        foreach ($this->suppliers->findAll() as $s) {
+            $sStripped = mb_strtolower($strip($s['name']));
+            if ($sStripped !== '' && (str_contains($normStripped, $sStripped) || str_contains($sStripped, $normStripped))) {
                 $out[] = (int) $s['id'];
             }
         }

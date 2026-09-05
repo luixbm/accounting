@@ -1,0 +1,122 @@
+{
+  "name": "Supplier Invoice -> Simple Accounting Review Queue",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Setup (no env vars, no n8n credentials - just paste real values into 2 nodes)\n1. Create folders: C:\\n8n\\invoice\\inbox and C:\\n8n\\invoice\\queued\n2. \"Scan Inbox Folder\" / \"Move File to Queued\" use require('fs')/require('path')\n   - in n8n's Settings, or via env var, set:\n     NODE_FUNCTION_ALLOW_BUILTIN=fs,path\n   (self-hosted only; restart n8n after setting)\n3. \"Gemini - Extract Invoice\" node: in the URL field, replace\n   YOUR_GEMINI_KEY_HERE with your real Gemini API key\n   (aistudio.google.com/apikey).\n4. \"POST to Review Queue\" node: under Header Parameters, replace\n   YOUR_SA_API_TOKEN_HERE with your real token from Setup -> API Tokens\n   in the app (needs read + purchase:write). Edit the URL host if the app\n   isn't on localhost:8080.\n5. Drop a real supplier PDF/JPG/PNG into inbox\\. The Schedule Trigger polls\n   every minute; check Purchases -> Invoice Review in the app afterward.\n\nNote: the key/token sit in plain text in this workflow - fine for a local\ndev n8n, but don't share this exported file once filled in.",
+        "height": 420,
+        "width": 460
+      },
+      "id": "sticky-1",
+      "name": "Setup notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [220, 20]
+    },
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "minutes", "minutesInterval": 1 }] }
+      },
+      "id": "node-schedule",
+      "name": "Every Minute",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [220, 480]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// List new files in the inbox folder and base64-encode each one as a plain\n// JSON field (not n8n's binary-data channel, whose helper API has moved\n// between versions) - only core Node.js fs/path is used, nothing n8n-specific.\nconst fs = require('fs');\nconst path = require('path');\n\nconst dir = 'C:\\\\n8n\\\\invoice\\\\inbox';\nif (!fs.existsSync(dir)) { return []; }\n\nconst files = fs.readdirSync(dir).filter((f) => /\\.(pdf|png|jpe?g)$/i.test(f));\nconst now = Date.now();\nconst out = [];\n\nfor (const f of files) {\n  const full = path.join(dir, f);\n  const stat = fs.statSync(full);\n  // skip files still being written/copied\n  if (now - stat.mtimeMs < 10000) { continue; }\n\n  const buf  = fs.readFileSync(full);\n  const ext  = path.extname(f).toLowerCase();\n  const mime = ext === '.pdf' ? 'application/pdf' : ext === '.png' ? 'image/png' : 'image/jpeg';\n  const base64 = buf.toString('base64');\n\n  out.push({ json: { source_path: full, file_name: f, mime_type: mime, base64 } });\n}\n\nreturn out;"
+      },
+      "id": "node-scan",
+      "name": "Scan Inbox Folder",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 480]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Build the Gemini request body (base64 file + extraction prompt).\nconst prompt = 'You are an invoice parser. Return ONLY minified JSON, no markdown. Schema:\\n{\"vendor\":string,\"invoice_no\":string,\"invoice_date\":\"YYYY-MM-DD\",\"currency\":string,\"lines\":[{\"description\":string,\"guest_or_ref\":string,\"service_date\":\"YYYY-MM-DD\"|null,\"reservation_code\":string|null,\"amount\":number}]}\\nRules: amount is a plain number (no thousands separators). guest_or_ref = the guest name or booking reference the line is for. If a line is a discount, rebate, or adjustment that applies to another line (e.g. a room charge), give it the SAME guest_or_ref and reservation_code as that line, and make amount negative. Do not invent a discount that is not printed on the invoice. If a line has no own date, leave service_date null.';\n\nconst body = {\n  contents: [{\n    parts: [\n      { inline_data: { mime_type: $json.mime_type || 'application/pdf', data: $json.base64 } },\n      { text: prompt },\n    ],\n  }],\n  generationConfig: { response_mime_type: 'application/json' },\n};\n\nreturn { json: { geminiBody: JSON.stringify(body), source_path: $json.source_path, file_name: $json.file_name } };"
+      },
+      "id": "node-build-gemini",
+      "name": "Build Gemini Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 480]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=YOUR_GEMINI_KEY_HERE",
+        "authentication": "none",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.geminiBody }}",
+        "options": {}
+      },
+      "id": "node-gemini",
+      "name": "Gemini - Extract Invoice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [940, 480],
+      "notes": "Replace YOUR_GEMINI_KEY_HERE in the URL with your real Gemini API key (aistudio.google.com/apikey)."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Parse Gemini's JSON text, NET discount/adjustment lines into the booking\n// they apply to (the review API rejects a negative cost - and matching is\n// per booking anyway, not per invoice line), then shape into the\n// /purchase/lines/review payload.\nconst prior = $('Build Gemini Request').item.json;\nconst text  = $json.candidates[0].content.parts[0].text;\nconst inv   = JSON.parse(text);\n\nconst norm = (s) => String(s || '').trim().toLowerCase().replace(/\\s+/g, ' ');\nconst groups = new Map();\n\nfor (const l of (inv.lines || [])) {\n  const key = norm(l.reservation_code) || norm(l.guest_or_ref) || norm(l.description);\n  const amount = Number(String(l.amount ?? 0).replace(/[^0-9.-]/g, ''));\n  if (!groups.has(key)) {\n    groups.set(key, {\n      party_name: l.guest_or_ref || l.description || '',\n      service_date: l.service_date || null,\n      res_code: l.reservation_code || null,\n      descriptions: [],\n      cost: 0,\n    });\n  }\n  const g = groups.get(key);\n  g.cost += amount;\n  if (l.description) { g.descriptions.push(l.description); }\n  if (!g.service_date && l.service_date) { g.service_date = l.service_date; }\n}\n\nconst items = Array.from(groups.values())\n  .filter((g) => g.cost >= 0) // a group that still nets negative is a data problem, not a booking - drop it, don't send an invalid cost\n  .map((g) => ({\n    supplier: inv.vendor || '',\n    service_date: g.service_date || inv.invoice_date || null,\n    party_name: g.party_name,\n    description: g.descriptions.join(' + '),\n    res_code: g.res_code || undefined,\n    cost: Math.round(g.cost * 100) / 100,\n    supplier_invoice_ref: inv.invoice_no || undefined,\n    supplier_invoice_date: inv.invoice_date || undefined,\n  }));\n\nreturn {\n  json: {\n    vendor: inv.vendor || '',\n    file_name: prior.file_name,\n    source_path: prior.source_path,\n    items,\n  },\n};"
+      },
+      "id": "node-parse",
+      "name": "Parse & Build Review Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1180, 480]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8080/api/v1/purchase/lines/review",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer YOUR_SA_API_TOKEN_HERE" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ source: 'n8n', file_name: $json.file_name, vendor: $json.vendor, window_days: 5, items: $json.items }) }}",
+        "options": {}
+      },
+      "id": "node-post-review",
+      "name": "POST to Review Queue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1420, 480],
+      "notes": "Replace YOUR_SA_API_TOKEN_HERE under Header Parameters with your real API token. Edit the URL host if the app isn't on localhost:8080."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Move the processed file out of inbox\\ so the next poll doesn't see it again.\nconst fs = require('fs');\nconst path = require('path');\n\nconst prev = $('Parse & Build Review Payload').item.json;\nconst destDir = 'C:\\\\n8n\\\\invoice\\\\queued';\nif (!fs.existsSync(destDir)) { fs.mkdirSync(destDir, { recursive: true }); }\nconst dest = path.join(destDir, path.basename(prev.source_path));\nfs.renameSync(prev.source_path, dest);\n\nreturn { json: { moved_to: dest, batch_response: $json } };"
+      },
+      "id": "node-move",
+      "name": "Move File to Queued",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1660, 480]
+    }
+  ],
+  "connections": {
+    "Every Minute": { "main": [[{ "node": "Scan Inbox Folder", "type": "main", "index": 0 }]] },
+    "Scan Inbox Folder": { "main": [[{ "node": "Build Gemini Request", "type": "main", "index": 0 }]] },
+    "Build Gemini Request": { "main": [[{ "node": "Gemini - Extract Invoice", "type": "main", "index": 0 }]] },
+    "Gemini - Extract Invoice": { "main": [[{ "node": "Parse & Build Review Payload", "type": "main", "index": 0 }]] },
+    "Parse & Build Review Payload": { "main": [[{ "node": "POST to Review Queue", "type": "main", "index": 0 }]] },
+    "POST to Review Queue": { "main": [[{ "node": "Move File to Queued", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}
