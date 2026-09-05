@@ -16,3 +16,6 @@ writable/**/*
 public/assets/avatars/*
 !public/assets/avatars/
 !public/assets/avatars/index.html
+
+# local DB backup dumps (backup-db.ps1 output) - never commit real data
+backups/
