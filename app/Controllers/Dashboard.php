@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Libraries\Accounting\Ledger;
+use App\Libraries\Budget\Budget;
 use App\Libraries\Report\ExecutiveSummary;
 use App\Models\AccountModel;
 use App\Models\JournalModel;
@@ -81,6 +82,10 @@ class Dashboard extends BaseController
             $ap += $ledger->accountBalance($id, $winTo);
         }
 
+        // Monthly budgeted revenue for the year's default (or newest) budget version
+        $budVid       = Budget::resolveVersionId(null, $year);
+        $salesBudgetM = $budVid !== null ? Budget::revenueByMonth($budVid) : null;
+
         // Cash & bank account positions as of the window end, high → low
         $cashPos = [];
         foreach ($accounts->cashAccounts() as $c) {
@@ -140,6 +145,7 @@ class Dashboard extends BaseController
             'cashMoveM'  => $cashMoveM,
             'topClients' => $topClients,
             'cashPos'    => $cashPos,
+            'salesBudgetM' => $salesBudgetM,
             'summary'    => $summary,
             'k'          => [
                 'revenue'   => $ytd['revenue'],

@@ -41,6 +41,9 @@ return [
     'chart_cash_move'   => 'Monthly Cash Movement',
     'chart_cash_positions' => 'Cash & Bank Positions',
     'budget_soon'       => 'Activates once the budget module is built and monthly sales targets are entered.',
+    'budget_none'       => 'No budget version for {0}. Add one under Setup → Budgets and enter monthly revenue targets.',
+    'actual'            => 'Actual',
+    'budget'            => 'Budget',
 
     'per_month'      => 'per month',
     'month_end'      => 'balance at month-end',

@@ -41,6 +41,9 @@ return [
     'chart_cash_move'   => 'Pergerakan Kas Bulanan',
     'chart_cash_positions' => 'Posisi Kas & Bank',
     'budget_soon'       => 'Aktif setelah modul anggaran dibuat dan target penjualan bulanan diisi.',
+    'budget_none'       => 'Belum ada versi anggaran untuk {0}. Buat di Pengaturan → Anggaran dan isi target pendapatan bulanan.',
+    'actual'            => 'Aktual',
+    'budget'            => 'Anggaran',
 
     'per_month'      => 'per bulan',
     'month_end'      => 'saldo akhir bulan',

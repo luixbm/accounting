@@ -254,9 +254,13 @@ $prevCol = ($month > 0 ? lang('Dashboard.ytd') . ' ' : '') . $prev;
 
   <div class="card">
     <h2><?= lang('Dashboard.chart_budget') ?> <span class="muted small"><?= $year ?></span></h2>
-    <div class="chart-placeholder">
-      <p><?= lang('Dashboard.budget_soon') ?></p>
-    </div>
+    <?php if ($salesBudgetM !== null): ?>
+      <?= Svg::groupedBars($labels, [lang('Dashboard.actual') => $revM, lang('Dashboard.budget') => $salesBudgetM], [Svg::BRAND, Svg::MUTED]) ?>
+    <?php else: ?>
+      <div class="chart-placeholder">
+        <p><?= lang('Dashboard.budget_none', [$year]) ?></p>
+      </div>
+    <?php endif ?>
   </div>
 
   <div class="card">

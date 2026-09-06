@@ -90,6 +90,32 @@ class Budget
         return $out;
     }
 
+    /**
+     * Budgeted revenue per calendar month for a version, as a 12-element list
+     * indexed 0 (Jan) .. 11 (Dec). Sums budget_lines on revenue-type accounts.
+     *
+     * @return list<float>
+     */
+    public static function revenueByMonth(int $versionId): array
+    {
+        $out  = array_fill(0, 12, 0.0);
+        $rows = Database::connect()->table('budget_lines bl')
+            ->select('bl.period_month AS m, COALESCE(SUM(bl.amount),0) AS amt')
+            ->join('accounts a', 'a.id = bl.account_id')
+            ->where('bl.version_id', $versionId)
+            ->where('a.type', 'revenue')
+            ->groupBy('bl.period_month')
+            ->get()->getResultArray();
+        foreach ($rows as $r) {
+            $m = (int) $r['m'];
+            if ($m >= 1 && $m <= 12) {
+                $out[$m - 1] = (float) $r['amt'];
+            }
+        }
+
+        return $out;
+    }
+
     /** @return array{lines:int,amount:float} */
     public static function totals(int $versionId): array
     {
