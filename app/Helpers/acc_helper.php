@@ -325,6 +325,7 @@ if (! function_exists('nav_icon')) {
             'megaphone' => '<path d="M3 11v2a1 1 0 0 0 1 1h2l9 5V6L6 11H4a1 1 0 0 0-1 0z"/><path d="M15 8a4 4 0 0 1 0 8"/><path d="M7 14v4a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-3"/>',
             'budget'    => '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>',
             'review'    => '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 3v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3"/><path d="m8.5 13 2 2 4-4"/>',
+            'repeat'    => '<path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',
             'einvoice'  => '<path d="M7 15a4 4 0 0 1-1-7.9 5 5 0 0 1 9.6-1.8A4.5 4.5 0 0 1 17 15z"/><path d="M12 12v7M9 16l3-3 3 3"/>',
         ];
 

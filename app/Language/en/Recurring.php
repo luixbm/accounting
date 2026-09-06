@@ -1,0 +1,47 @@
+<?php
+
+return [
+    'sub'          => 'Templates for entries that repeat every period — salary, depreciation, rent, accruals.',
+    'new'          => '+ New Template',
+    'edit'         => 'Edit Template',
+    'empty'        => 'No recurring journal templates yet.',
+    'not_found'    => 'Template not found.',
+    'saved'        => 'Template saved.',
+    'deleted'      => 'Template deleted.',
+    'lines_saved'  => 'Template lines saved.',
+    'generated'    => 'Draft journal created from "{0}" — review the amounts and post.',
+    'inactive'     => 'inactive',
+    'due'          => 'Due',
+    'generate'     => 'Generate',
+    'generate_now' => 'Generate draft journal',
+    'activate'     => 'Activate',
+    'deactivate'   => 'Deactivate',
+    'confirm_delete' => 'Delete this template? Journals already generated from it are kept.',
+    'help'         => 'Generating never posts to the ledger — it creates a draft journal you review and post from the journal screen.',
+
+    'f_name'             => 'Name',
+    'f_name_ph'          => 'e.g. Monthly salary',
+    'f_description'      => 'Journal description',
+    'f_description_ph'   => 'e.g. Salary {month} {year}',
+    'f_description_hint' => 'Used as the generated journal\'s description. {month}, {year} and {date} are filled in from the entry date.',
+    'f_frequency'        => 'Frequency',
+    'f_next_date'        => 'Next date',
+    'f_next_date_hint'   => 'The generated journal is dated this day, and the template shows as “due” once it arrives.',
+    'f_active'           => 'Active (counts toward the “due” reminder)',
+    'after_save_hint'    => 'Add the lines on the next screen.',
+
+    'freq_monthly'   => 'Monthly',
+    'freq_quarterly' => 'Quarterly',
+    'freq_yearly'    => 'Yearly',
+    'freq_manual'    => 'Manual only',
+
+    'generate_h'    => 'Generate',
+    'generate_hint' => 'Creates a draft journal for the date above and opens it for review.',
+    'save_lines'    => 'Save lines',
+    'lines_hint'    => 'These amounts are defaults — adjust them on the generated draft before posting.',
+    'next_is'       => 'next {0}',
+    'last_was'      => 'last generated {0}',
+
+    'nudge'         => '{0} recurring journal(s) due',
+    'nudge_action'  => 'Review',
+];

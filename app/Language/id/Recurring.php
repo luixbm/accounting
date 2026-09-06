@@ -1,0 +1,47 @@
+<?php
+
+return [
+    'sub'          => 'Templat untuk entri yang berulang tiap periode — gaji, penyusutan, sewa, akrual.',
+    'new'          => '+ Templat Baru',
+    'edit'         => 'Ubah Templat',
+    'empty'        => 'Belum ada templat jurnal berulang.',
+    'not_found'    => 'Templat tidak ditemukan.',
+    'saved'        => 'Templat disimpan.',
+    'deleted'      => 'Templat dihapus.',
+    'lines_saved'  => 'Baris templat disimpan.',
+    'generated'    => 'Draf jurnal dibuat dari "{0}" — periksa nominalnya lalu posting.',
+    'inactive'     => 'nonaktif',
+    'due'          => 'Jatuh tempo',
+    'generate'     => 'Buat',
+    'generate_now' => 'Buat draf jurnal',
+    'activate'     => 'Aktifkan',
+    'deactivate'   => 'Nonaktifkan',
+    'confirm_delete' => 'Hapus templat ini? Jurnal yang sudah dibuat darinya tetap disimpan.',
+    'help'         => 'Membuat jurnal tidak langsung memposting ke buku besar — menghasilkan draf yang Anda periksa dan posting dari layar jurnal.',
+
+    'f_name'             => 'Nama',
+    'f_name_ph'          => 'mis. Gaji bulanan',
+    'f_description'      => 'Keterangan jurnal',
+    'f_description_ph'   => 'mis. Gaji {month} {year}',
+    'f_description_hint' => 'Dipakai sebagai keterangan jurnal yang dibuat. {month}, {year}, dan {date} diisi dari tanggal entri.',
+    'f_frequency'        => 'Frekuensi',
+    'f_next_date'        => 'Tanggal berikutnya',
+    'f_next_date_hint'   => 'Jurnal yang dibuat bertanggal hari ini, dan templat tampil "jatuh tempo" begitu tanggalnya tiba.',
+    'f_active'           => 'Aktif (dihitung untuk pengingat "jatuh tempo")',
+    'after_save_hint'    => 'Tambahkan barisnya di layar berikutnya.',
+
+    'freq_monthly'   => 'Bulanan',
+    'freq_quarterly' => 'Triwulanan',
+    'freq_yearly'    => 'Tahunan',
+    'freq_manual'    => 'Manual saja',
+
+    'generate_h'    => 'Buat Jurnal',
+    'generate_hint' => 'Membuat draf jurnal untuk tanggal di atas dan membukanya untuk ditinjau.',
+    'save_lines'    => 'Simpan baris',
+    'lines_hint'    => 'Nominal ini hanya default — sesuaikan pada draf yang dibuat sebelum posting.',
+    'next_is'       => 'berikutnya {0}',
+    'last_was'      => 'terakhir dibuat {0}',
+
+    'nudge'         => '{0} jurnal berulang jatuh tempo',
+    'nudge_action'  => 'Tinjau',
+];

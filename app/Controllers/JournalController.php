@@ -33,6 +33,9 @@ class JournalController extends BaseController
             'pager'   => $this->journals->pager,
             'filters' => $filters,
             'sources' => JournalModel::SOURCES,
+            'dueRecurring' => user_can('journal.create')
+                ? model(\App\Models\RecurringJournalModel::class)->due()
+                : [],
         ]);
     }
 

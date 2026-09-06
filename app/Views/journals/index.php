@@ -6,11 +6,20 @@
   <div><h1><?= lang('Nav.journals') ?></h1></div>
   <?php if (user_can('journal.create')): ?>
     <div class="btn-group">
+      <a class="btn ghost" href="<?= site_url('journals/recurring') ?>"><?= lang('Nav.recurring_journals') ?></a>
       <a class="btn ghost" href="<?= site_url('journals/import') ?>"><?= lang('Txn.import_spreadsheet') ?></a>
       <a class="btn" href="<?= site_url('journals/new') ?>"><?= lang('Txn.new_journal') ?></a>
     </div>
   <?php endif ?>
 </div>
+
+<?php if (! empty($dueRecurring)): ?>
+  <div class="alert alert-info" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+    <span><?= esc(lang('Recurring.nudge', [count($dueRecurring)])) ?>:
+      <?= esc(implode(', ', array_column($dueRecurring, 'name'))) ?></span>
+    <a class="btn sm" href="<?= site_url('journals/recurring') ?>"><?= lang('Recurring.nudge_action') ?></a>
+  </div>
+<?php endif ?>
 
 <form class="filterbar" method="get">
   <div class="field"><label><?= lang('App.search') ?></label><input name="q" value="<?= esc($f['q']) ?>" placeholder="no. / description / ref / line memo / account"></div>

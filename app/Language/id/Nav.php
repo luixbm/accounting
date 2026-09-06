@@ -17,6 +17,7 @@ return [
     'sales'          => 'Penjualan',
     'banking'   => 'Kas & Bank',
     'journals'  => 'Jurnal',
+    'recurring_journals' => 'Jurnal Berulang',
     'jobs'      => 'Job',
 
     'reports' => 'Laporan',

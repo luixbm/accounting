@@ -219,6 +219,21 @@ $routes->group('', ['filter' => 'session'], static function (RouteCollection $ro
         $routes->get('/', 'JournalController::index');
         $routes->get('new', 'JournalController::new');
         $routes->post('/', 'JournalController::create');
+
+        // Recurring journal templates (registered before the (:num) routes)
+        $routes->group('recurring', static function (RouteCollection $routes): void {
+            $routes->get('/', 'RecurringJournalController::index');
+            $routes->get('new', 'RecurringJournalController::new');
+            $routes->post('/', 'RecurringJournalController::create');
+            $routes->get('(:num)', 'RecurringJournalController::show/$1');
+            $routes->get('(:num)/edit', 'RecurringJournalController::edit/$1');
+            $routes->post('(:num)', 'RecurringJournalController::update/$1');
+            $routes->post('(:num)/lines', 'RecurringJournalController::saveLines/$1');
+            $routes->post('(:num)/generate', 'RecurringJournalController::generate/$1');
+            $routes->post('(:num)/toggle', 'RecurringJournalController::toggle/$1');
+            $routes->post('(:num)/delete', 'RecurringJournalController::delete/$1');
+        });
+
         $routes->get('(:num)', 'JournalController::show/$1');
         $routes->get('(:num)/edit', 'JournalController::edit/$1');
         $routes->post('(:num)', 'JournalController::update/$1');

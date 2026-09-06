@@ -17,6 +17,7 @@ return [
     'sales'          => 'Sales',
     'banking'   => 'Banking',
     'journals'  => 'Journals',
+    'recurring_journals' => 'Recurring Journals',
     'jobs'      => 'Jobs',
 
     'reports' => 'Reports',

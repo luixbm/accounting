@@ -22,6 +22,7 @@ $transactions = [
     ['sales', 'sales', 'sales', 'sales', module_enabled('SalesController')],
     ['banking', 'banking', 'currency', 'banking', module_enabled('BankingController')],
     ['journals', 'journals', 'journal', 'journals', true],
+    ['journals/recurring', 'journals/recurring', 'repeat', 'recurring_journals', module_enabled('RecurringJournalController')],
     ['jobs', 'jobs', 'job', 'jobs', module_enabled('JobController')],
 ];
 $setup = [
