@@ -1,0 +1,996 @@
+<title>Simple Accounting Handbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --bg:        #F6F7F3;
+    --surface:   #FFFFFF;
+    --surface-2: #EEF1EA;
+    --ink:       #1B2320;
+    --ink-2:     #59635C;
+    --rule:      #D9DED4;
+    --rule-soft: #E7EBE2;
+    --accent:    #1E6F5C;
+    --accent-ink:#123f33;
+    --accent-tint:#E3EFEA;
+    --warn:      #A8452C;
+    --warn-ink:  #7e3120;
+    --warn-tint: #F4E7E1;
+    --shadow:    0 1px 2px rgba(27,35,32,.05), 0 8px 24px -12px rgba(27,35,32,.12);
+
+    --f-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+    --f-body:    "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --f-mono:    "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+    --measure: 68ch;
+    --radius: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:        #12150F;
+      --surface:   #191D17;
+      --surface-2: #21261E;
+      --ink:       #E6EAE0;
+      --ink-2:     #9AA394;
+      --rule:      #2C3228;
+      --rule-soft: #232820;
+      --accent:    #5AC1A2;
+      --accent-ink:#BDE7D9;
+      --accent-tint:#1A2B25;
+      --warn:      #DE8168;
+      --warn-ink:  #F0C4B6;
+      --warn-tint: #2E211B;
+      --shadow:    0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:        #12150F;
+    --surface:   #191D17;
+    --surface-2: #21261E;
+    --ink:       #E6EAE0;
+    --ink-2:     #9AA394;
+    --rule:      #2C3228;
+    --rule-soft: #232820;
+    --accent:    #5AC1A2;
+    --accent-ink:#BDE7D9;
+    --accent-tint:#1A2B25;
+    --warn:      #DE8168;
+    --warn-ink:  #F0C4B6;
+    --warn-tint: #2E211B;
+    --shadow:    0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.55);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 1.5rem; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *,*::before,*::after { animation-duration:.001ms!important; transition-duration:.001ms!important; } }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 1.02rem;
+    line-height: 1.66;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 264px minmax(0, 1fr);
+    gap: 0;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  /* ---------- sidebar / TOC ---------- */
+  .toc {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 2.1rem 1.4rem 3rem 1.6rem;
+    border-right: 1px solid var(--rule);
+    background: linear-gradient(180deg, var(--bg), color-mix(in srgb, var(--bg) 92%, var(--accent)));
+    font-size: .9rem;
+  }
+  .toc__brand {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: 1.06rem;
+    line-height: 1.25;
+    color: var(--ink);
+    margin-bottom: .15rem;
+    letter-spacing: -.01em;
+  }
+  .toc__sub { color: var(--ink-2); font-size: .78rem; margin-bottom: 1.5rem; }
+  .toc nav { display: flex; flex-direction: column; gap: 1.35rem; }
+  .toc h4 {
+    margin: 0 0 .4rem;
+    font-family: var(--f-mono);
+    font-weight: 500;
+    font-size: .68rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+  .toc ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .08rem; }
+  .toc a {
+    display: block;
+    padding: .28rem .55rem;
+    border-radius: 6px;
+    color: var(--ink);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition: background .12s ease, border-color .12s ease;
+  }
+  .toc a:hover { background: var(--surface-2); }
+  .toc a.is-active {
+    background: var(--accent-tint);
+    border-left-color: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 500;
+  }
+
+  /* ---------- main ---------- */
+  main {
+    padding: 2.6rem clamp(1.2rem, 4vw, 3.4rem) 6rem;
+    min-width: 0;
+  }
+  .doc-head { border-bottom: 1px solid var(--rule); padding-bottom: 2rem; margin-bottom: 2.4rem; }
+  .doc-head .eyebrow {
+    font-family: var(--f-mono);
+    font-size: .74rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  h1 {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: clamp(2rem, 4.6vw, 2.7rem);
+    line-height: 1.08;
+    letter-spacing: -.018em;
+    text-wrap: balance;
+    margin: .5rem 0 .6rem;
+  }
+  .doc-head p { color: var(--ink-2); max-width: 56ch; margin: 0; }
+  .doc-head .meta { margin-top: 1.1rem; font-size: .82rem; color: var(--ink-2); font-family: var(--f-mono); }
+
+  section { max-width: var(--measure); scroll-margin-top: 1.4rem; }
+  section + section { margin-top: 3.4rem; padding-top: 2.6rem; border-top: 1px solid var(--rule-soft); }
+  .sec-eyebrow {
+    font-family: var(--f-mono);
+    font-size: .7rem;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    margin-bottom: .35rem;
+  }
+  h2 {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: 1.72rem;
+    line-height: 1.15;
+    letter-spacing: -.015em;
+    text-wrap: balance;
+    margin: 0 0 1rem;
+  }
+  h3 {
+    font-family: var(--f-body);
+    font-weight: 600;
+    font-size: 1.12rem;
+    letter-spacing: -.005em;
+    margin: 2rem 0 .5rem;
+  }
+  h4.mini {
+    font-family: var(--f-mono);
+    font-weight: 500;
+    font-size: .72rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    margin: 1.4rem 0 .4rem;
+  }
+  p { margin: 0 0 1rem; }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  strong { font-weight: 600; }
+
+  ul.plain, ol.plain { margin: 0 0 1rem; padding-left: 1.25rem; }
+  ul.plain li, ol.plain li { margin: .3rem 0; }
+  dl { margin: 0 0 1rem; }
+  dl.terms { display: grid; grid-template-columns: minmax(9rem, 12rem) 1fr; gap: .1rem 1.4rem; }
+  dl.terms dt { font-weight: 600; padding: .35rem 0; border-top: 1px solid var(--rule-soft); }
+  dl.terms dd { margin: 0; padding: .35rem 0; border-top: 1px solid var(--rule-soft); color: var(--ink-2); }
+  dl.terms dt:first-of-type, dl.terms dt:first-of-type + dd { border-top: 0; }
+
+  /* nav path chip */
+  .path {
+    font-family: var(--f-mono);
+    font-size: .82em;
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    padding: .08em .45em;
+    white-space: nowrap;
+  }
+  .path i { color: var(--ink-2); font-style: normal; padding: 0 .1em; }
+  code:not(.path) {
+    font-family: var(--f-mono);
+    font-size: .86em;
+    background: var(--surface-2);
+    border-radius: 4px;
+    padding: .08em .35em;
+  }
+
+  /* callouts */
+  .note {
+    margin: 1.3rem 0;
+    padding: .9rem 1.1rem;
+    border-left: 3px solid var(--ink-2);
+    background: var(--surface-2);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    font-size: .95rem;
+  }
+  .note p:last-child { margin-bottom: 0; }
+  .note .lbl {
+    display: block;
+    font-family: var(--f-mono);
+    font-size: .68rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    margin-bottom: .3rem;
+    color: var(--ink-2);
+  }
+  .note--tip { border-left-color: var(--accent); background: var(--accent-tint); }
+  .note--tip .lbl { color: var(--accent-ink); }
+  .note--warn { border-left-color: var(--warn); background: var(--warn-tint); }
+  .note--warn .lbl { color: var(--warn-ink); }
+
+  /* steps */
+  ol.steps { list-style: none; counter-reset: s; margin: 1.2rem 0; padding: 0; }
+  ol.steps > li {
+    counter-increment: s;
+    position: relative;
+    padding: .1rem 0 1rem 2.6rem;
+    border-left: 1px solid var(--rule);
+    margin-left: .8rem;
+  }
+  ol.steps > li:last-child { border-left-color: transparent; padding-bottom: 0; }
+  ol.steps > li::before {
+    content: counter(s);
+    position: absolute;
+    left: -0.85rem;
+    top: 0;
+    width: 1.65rem;
+    height: 1.65rem;
+    display: grid;
+    place-items: center;
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    color: var(--accent-ink);
+    border-radius: 50%;
+    font-family: var(--f-mono);
+    font-size: .82rem;
+    font-weight: 500;
+  }
+  ol.steps > li strong { display: block; }
+
+  /* at-a-glance map */
+  .map {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin: 1.4rem 0 .5rem;
+  }
+  .map > div { background: var(--surface); padding: 1rem 1.1rem; }
+  .map h4 {
+    margin: 0 0 .5rem;
+    font-family: var(--f-mono);
+    font-size: .7rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .map ul { list-style: none; margin: 0; padding: 0; font-size: .9rem; }
+  .map li { padding: .16rem 0; color: var(--ink-2); }
+  .map li b { color: var(--ink); font-weight: 500; }
+
+  /* tables */
+  .twrap { overflow-x: auto; margin: 1.2rem 0; border: 1px solid var(--rule); border-radius: var(--radius); }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+  th, td { text-align: left; padding: .55rem .8rem; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+  thead th {
+    font-family: var(--f-mono);
+    font-weight: 500;
+    font-size: .7rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--rule);
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td code { white-space: nowrap; }
+
+  .pill {
+    display: inline-block;
+    font-family: var(--f-mono);
+    font-size: .74rem;
+    padding: .05em .5em;
+    border-radius: 100px;
+    border: 1px solid var(--rule);
+    color: var(--ink-2);
+  }
+  .pill--draft  { border-color: var(--ink-2); }
+  .pill--posted { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-tint); }
+  .pill--void   { border-color: var(--warn); color: var(--warn-ink); background: var(--warn-tint); }
+
+  hr.soft { border: 0; border-top: 1px solid var(--rule-soft); margin: 2rem 0; }
+  .lede { font-size: 1.08rem; color: var(--ink); }
+
+  a.skip {
+    position: absolute; left: -999px;
+  }
+  a.skip:focus {
+    left: 1rem; top: 1rem; z-index: 10; background: var(--surface); color: var(--ink);
+    padding: .5rem .8rem; border-radius: 6px; border: 1px solid var(--accent);
+  }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+
+  .theme-toggle {
+    position: fixed; right: 1rem; top: 1rem; z-index: 20;
+    font-family: var(--f-mono); font-size: .72rem;
+    background: var(--surface); color: var(--ink-2);
+    border: 1px solid var(--rule); border-radius: 100px;
+    padding: .3rem .7rem; cursor: pointer;
+  }
+  .theme-toggle:hover { color: var(--ink); }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .toc {
+      position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--rule);
+      background: var(--surface-2);
+    }
+    .toc nav { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 1rem 1.4rem; }
+    main { padding-top: 2rem; }
+  }
+</style>
+
+<a class="skip" href="#overview">Skip to content</a>
+<button class="theme-toggle" type="button" data-toggle-theme>Light / dark</button>
+
+<div class="layout">
+  <aside class="toc">
+    <div class="toc__brand">Simple Accounting Handbook</div>
+    <div class="toc__sub">Happy Trails Indonesia &middot; finance &amp; admin</div>
+    <nav aria-label="Contents">
+      <div>
+        <h4>Start here</h4>
+        <ul>
+          <li><a href="#overview">How the app works</a></li>
+          <li><a href="#setup">First-time setup</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Master data</h4>
+        <ul>
+          <li><a href="#coa">Chart of accounts</a></li>
+          <li><a href="#parties">Customers &amp; suppliers</a></li>
+          <li><a href="#currencies">Currencies &amp; rates</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Day to day</h4>
+        <ul>
+          <li><a href="#purchases">Purchases &amp; payments</a></li>
+          <li><a href="#sales">Sales &amp; receipts</a></li>
+          <li><a href="#banking">Banking</a></li>
+          <li><a href="#journals">Journals</a></li>
+          <li><a href="#jobs">Jobs (dossiers)</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Pipelines</h4>
+        <ul>
+          <li><a href="#review">Invoice review</a></li>
+          <li><a href="#imports">Spreadsheet imports</a></li>
+          <li><a href="#budgets">Budgets</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Reporting</h4>
+        <ul>
+          <li><a href="#reports">Report Center</a></li>
+          <li><a href="#monthend">Month-end checklist</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Admin</h4>
+        <ul>
+          <li><a href="#settings">Settings &amp; admin</a></li>
+          <li><a href="#api">REST API</a></li>
+          <li><a href="#einvoice">E-Invoice (MyInvois)</a></li>
+          <li><a href="#backups">Backups &amp; updates</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Reference</h4>
+        <ul>
+          <li><a href="#permissions">Roles &amp; permissions</a></li>
+          <li><a href="#glossary">Glossary</a></li>
+        </ul>
+      </div>
+    </nav>
+  </aside>
+
+  <main>
+    <div class="doc-head">
+      <div class="eyebrow">Operating manual</div>
+      <h1>Simple Accounting Handbook</h1>
+      <p>A working guide to the in-house double-entry accounting system — setting it up, running the books day to day, and producing the monthly financial, operational and sales reports.</p>
+      <div class="meta">CodeIgniter&nbsp;4 &middot; Shield auth &middot; MySQL/MariaDB &nbsp;|&nbsp; keep alongside <code>DEPLOY.md</code> &amp; <code>docs/API.md</code></div>
+    </div>
+
+    <section id="overview">
+      <div class="sec-eyebrow">Concepts</div>
+      <h2>How the app works</h2>
+      <p class="lede">Everything is a <strong>journal</strong> under the hood. Invoices, payments, transfers and manual entries all post balanced debit/credit lines to the general ledger; every report is read back from those posted lines.</p>
+
+      <h3>The five ideas to hold in your head</h3>
+      <dl class="terms">
+        <dt>Company</dt>
+        <dd>The books are multi-company. Pick the active company in the sidebar; everything you see and enter belongs to it. Each company has its own <strong>base currency</strong> (IDR for the Indonesian entities, MYR / HKD for the others).</dd>
+        <dt>Base currency</dt>
+        <dd>Every line stores both the transaction amount <em>and</em> a base-currency amount (<code>*_base</code>). Reports always read the base amounts, so a mixed-currency month still foots.</dd>
+        <dt>Document lifecycle</dt>
+        <dd><span class="pill pill--draft">draft</span> &rarr; <span class="pill pill--posted">posted</span> &rarr; <span class="pill pill--void">void</span>. Drafts touch nothing. Posting writes the journal. Voiding does <em>not</em> delete — it books an automatic reversing entry dated today, so the ledger stays balanced and audit-clean.</dd>
+        <dt>Control accounts</dt>
+        <dd>The accounts the system posts to automatically: trade A/R and A/P (per currency), customer down-payments, supplier deposits, retained earnings, FX gain/loss, rounding. Configured once per company under <span class="path">Setup <i>&rsaquo;</i> Control Accounts</span>.</dd>
+        <dt>Subledgers</dt>
+        <dd>An account flagged <code>customer</code> or <code>supplier</code> is a subledger — its balance is broken down by party. That is how the aging and statement reports work.</dd>
+      </dl>
+
+      <h3>The map of the app</h3>
+      <p>The sidebar has four groups. This handbook follows the same order.</p>
+      <div class="map">
+        <div>
+          <h4>Master data</h4>
+          <ul>
+            <li><b>Chart of Accounts</b> — the COA</li>
+            <li><b>Suppliers</b> · <b>Customers</b></li>
+            <li><b>Currencies</b> &amp; exchange rates</li>
+          </ul>
+        </div>
+        <div>
+          <h4>Transactions</h4>
+          <ul>
+            <li><b>Purchases</b> — supplier invoices</li>
+            <li><b>Invoice Review</b> — the cost-check queue</li>
+            <li><b>Sales</b> — customer invoices</li>
+            <li><b>Banking</b> — transfers, spend/receive</li>
+            <li><b>Journals</b> — manual entries</li>
+            <li><b>Jobs</b> — tour dossiers</li>
+          </ul>
+        </div>
+        <div>
+          <h4>Reports</h4>
+          <ul>
+            <li><b>Financial</b> — P&amp;L, Balance Sheet, Cash Flow</li>
+            <li><b>General Ledger</b> · <b>Cash &amp; Bank</b></li>
+            <li><b>Sales</b> · <b>Purchase</b> · <b>Job</b></li>
+            <li>Everything exports to Excel</li>
+          </ul>
+        </div>
+        <div>
+          <h4>Setup</h4>
+          <ul>
+            <li><b>Companies</b> · <b>Periods</b> · <b>Currencies rates</b></li>
+            <li><b>Control Accounts</b> · <b>Settings</b> (tax)</li>
+            <li><b>Budgets</b> · <b>Custom Fields</b> · <b>Announcements</b></li>
+            <li><b>Users</b> · <b>Roles</b> · <b>API Tokens</b> · <b>E-Invoice</b></li>
+          </ul>
+        </div>
+      </div>
+      <p>The <strong>Dashboard</strong> is the landing page: year-to-date KPIs (revenue, GOP %, EBITDA, net profit, AR, AP) and monthly charts, with a year selector.</p>
+    </section>
+
+    <section id="setup">
+      <div class="sec-eyebrow">Admin</div>
+      <h2>First-time setup</h2>
+      <p>Do this once per company, roughly in this order. Most of it lives under <span class="path">Setup</span>.</p>
+
+      <ol class="steps">
+        <li>
+          <strong>Sign in and pick the company</strong>
+          Log in with your email and password. If you have access to more than one branch, the company switcher appears at the top of the sidebar — choose the one you're working in.
+        </li>
+        <li>
+          <strong>Currencies &amp; the base currency</strong>
+          Under <span class="path">Currencies</span>, confirm the currencies you transact in exist (IDR, USD, EUR, AUD, MYR, HKD). The company's base currency is set on the company record (<span class="path">Setup <i>&rsaquo;</i> Companies</span>) and cannot be changed once transactions exist.
+        </li>
+        <li>
+          <strong>Chart of accounts</strong>
+          Either import your existing chart (<span class="path">Chart of Accounts <i>&rsaquo;</i> Import from spreadsheet</span>) or copy one from another company. See <a href="#coa">Chart of accounts</a> below.
+        </li>
+        <li>
+          <strong>Control accounts</strong>
+          <span class="path">Setup <i>&rsaquo;</i> Control Accounts</span> — map trade A/R, trade A/P, customer down-payment and supplier deposit accounts <em>for each currency</em>, plus retained earnings, rounding and realized FX gain/loss. The system refuses to post an invoice in a currency with no control account.
+        </li>
+        <li>
+          <strong>Tax defaults</strong>
+          <span class="path">Setup <i>&rsaquo;</i> Settings <i>&rsaquo;</i> Tax</span> — PPN rate and input/output PPN accounts; PPh&nbsp;23 rate and its payable / prepaid accounts. These pre-fill on new invoices.
+        </li>
+        <li>
+          <strong>Opening balances</strong>
+          Enter them as a single manual journal with source <code>opening</code>, balancing to Retained Earnings / Opening-Balance Equity. There is no separate opening-balance screen.
+        </li>
+        <li>
+          <strong>Fiscal periods</strong>
+          <span class="path">Setup <i>&rsaquo;</i> Periods</span> — create the year's periods. Lock a period once it's closed so nothing back-dates into it; you can reopen if you must.
+        </li>
+        <li>
+          <strong>Users, roles &amp; branch access</strong>
+          <span class="path">Setup <i>&rsaquo;</i> Users</span> / <span class="path">Roles</span>. Roles are permission sets (see <a href="#permissions">Roles &amp; permissions</a>). On a user you can also restrict which companies (branches) they may switch into — leave it empty for "all branches".
+        </li>
+      </ol>
+    </section>
+
+    <section id="coa">
+      <div class="sec-eyebrow">Master data</div>
+      <h2>Chart of accounts</h2>
+      <p>Accounts have a <strong>code</strong>, a <strong>name</strong>, a <strong>type</strong>, and an optional <strong>parent</strong> (header) account. Codes are per-company, so branches can reuse the same numbering.</p>
+
+      <h4 class="mini">Account types</h4>
+      <div class="twrap">
+        <table>
+          <thead><tr><th>Type</th><th>Rolls into</th><th>Normal side</th></tr></thead>
+          <tbody>
+            <tr><td><code>asset</code> / <code>contra_asset</code></td><td>Balance Sheet</td><td>Debit</td></tr>
+            <tr><td><code>liability</code></td><td>Balance Sheet</td><td>Credit</td></tr>
+            <tr><td><code>equity</code></td><td>Balance Sheet</td><td>Credit</td></tr>
+            <tr><td><code>revenue</code></td><td>P&amp;L — Income</td><td>Credit</td></tr>
+            <tr><td><code>cogs</code></td><td>P&amp;L — Cost of Sales</td><td>Debit</td></tr>
+            <tr><td><code>expense</code></td><td>P&amp;L — Operating Expenses</td><td>Debit</td></tr>
+            <tr><td><code>other_income</code> / <code>other_expense</code></td><td>P&amp;L — below the line</td><td>Credit / Debit</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>HTI's live chart uses 5–6 digit MYOB-style codes with a two-level header hierarchy — for example <code>42000</code> Sales B2B FIT – Full Tours under the <code>40000</code> Income header, <code>52000</code> COS B2B FIT under <code>50000</code>, and the <code>61xxx</code>/<code>62xxx</code>/<code>63xxx</code> operating-expense blocks. Per-currency control accounts sit at <code>12100 / 12110 / 12120</code> (trade A/R) and <code>21100 / 21120 / 21130</code> (trade A/P).</p>
+
+      <h3>Building or importing it</h3>
+      <ul class="plain">
+        <li><strong>Import wizard</strong> — <span class="path">Chart of Accounts <i>&rsaquo;</i> Import from spreadsheet</span>. Map columns for code, name, type, parent code, currency. It reuses account-name aliases so re-importing updates in place.</li>
+        <li><strong>Copy from another company</strong> — clone an entire chart to a new company from the account list.</li>
+        <li><strong>Header accounts</strong> are groups (<code>is_group</code>) — you never post to them; leaves post, headers subtotal.</li>
+        <li><strong>Cash flow section</strong> — each account carries an <code>operating / investing / financing</code> tag that drives the Cash Flow statement. Edit it on the account form.</li>
+      </ul>
+      <div class="note note--warn">
+        <span class="lbl">Deleting accounts</span>
+        <p>An account with journal lines or child accounts cannot be deleted — deactivate it instead (the "Danger zone" on the account edit form).</p>
+      </div>
+    </section>
+
+    <section id="parties">
+      <div class="sec-eyebrow">Master data</div>
+      <h2>Customers &amp; suppliers</h2>
+      <p>Both share one screen pattern. A party has a code, name, contact fields and NPWP. <strong>Customers</strong> also carry a <strong>client group</strong> (e.g. RTN, Scandinavia, Other TO) and <strong>country</strong> — these drive the Sales Overview report's grouping.</p>
+      <ul class="plain">
+        <li><strong>Auto-creation</strong> — imports and the API create missing parties automatically, with codes <code>C####</code> / <code>S####</code>.</li>
+        <li><strong>Custom fields</strong> — attach extra fields per party under <span class="path">Setup <i>&rsaquo;</i> Custom Fields</span> (entity <code>customer</code> / <code>supplier</code>). Flag one "show in list" to get a filterable column on the party list.</li>
+        <li><strong>Statement</strong> — open a party to see its running statement for a date range.</li>
+        <li><strong>List search</strong> matches code, name, contact, NPWP and any custom-field value; results are paged.</li>
+      </ul>
+    </section>
+
+    <section id="currencies">
+      <div class="sec-eyebrow">Master data</div>
+      <h2>Currencies &amp; exchange rates</h2>
+      <p>Exchange rates are <strong>per company</strong>, quoted against that company's base currency. Add them under <span class="path">Currencies</span> — the screen reframes to "rates for {company}". A journal takes one currency and one rate; if you leave the rate blank the most recent rate on or before the entry date is used.</p>
+      <div class="note">
+        <span class="lbl">FX gain / loss</span>
+        <p>Settling a foreign-currency invoice at a different rate books realized FX to the gain/loss control accounts automatically. Unrealized revaluation is a manual journal for now.</p>
+      </div>
+    </section>
+
+    <section id="purchases">
+      <div class="sec-eyebrow">Transactions</div>
+      <h2>Purchases &amp; supplier payments</h2>
+
+      <h3>Entering a purchase invoice</h3>
+      <ol class="steps">
+        <li><strong>Header</strong> — supplier, supplier's invoice/PO ref, invoice date, due date, currency + rate, description.</li>
+        <li><strong>Lines</strong> — pick an account (type to search the combo), optional Job, description, amount, service date. The <strong>Budget</strong> column is a quoted / expected cost baseline; it is left blank on manually typed lines and filled automatically on imported lines (see below).</li>
+        <li><strong>Tax</strong> — PPN % and PPh&nbsp;23 %; use <em>calc</em> to compute from the line subtotal, or type the amounts.</li>
+        <li><strong>Save</strong> as a draft, then <strong>Post</strong> to book the journal (Dr expense/COS lines, Dr PPN input, Cr trade A/P, Cr PPh payable).</li>
+      </ol>
+      <p><strong>Editing a posted invoice</strong> is allowed — the app un-posts, re-saves and re-posts in one step, as long as no payment has been applied and the period is open. <strong>Void</strong> books a reversing entry.</p>
+
+      <h4 class="mini">Budget vs actual on purchase lines</h4>
+      <p>A line's <code>budget_amount</code> is the planned cost; <code>amount</code> is what's currently booked; <code>cost_source</code> is <code>manual</code>, <code>budget</code> or <code>actual</code>. Imported and Jambix lines land as <code>budget</code> with <code>budget_amount = amount</code>. The <a href="#review">Invoice Review</a> pipeline flips a line to <code>actual</code> when the real supplier invoice arrives, freezing the budget for variance reporting.</p>
+
+      <h3>Supplier payments &amp; deposits</h3>
+      <ul class="plain">
+        <li><span class="path">Purchases <i>&rsaquo;</i> Payments</span> — record a payment from a bank account and allocate it across open invoices. The payment date must be on or after every invoice it pays.</li>
+        <li><strong>Deposits</strong> — money paid to a supplier before an invoice exists posts to the supplier-deposit control account; apply it to an invoice later.</li>
+        <li><strong>Payment List</strong> report — a flat "what to pay" list filtered by the invoice's promise-date custom field, laid out to mirror the BCA payment template.</li>
+      </ul>
+    </section>
+
+    <section id="sales">
+      <div class="sec-eyebrow">Transactions</div>
+      <h2>Sales &amp; customer receipts</h2>
+      <p>Sales invoices mirror purchases: header (customer, ref, dates, currency), lines (revenue account, Job, amount, and travel fields — <strong>pax</strong>, duration, party/traveller name), PPN/PPh, then Post (Dr trade A/R, Dr PPh prepaid, Cr revenue, Cr PPN output).</p>
+      <ul class="plain">
+        <li><span class="path">Sales <i>&rsaquo;</i> Receipts</span> — record money in and allocate across invoices.</li>
+        <li><strong>Customer deposits</strong> — down-payments received before invoicing sit in the customer-down-payment control account; apply them to invoices as they're raised.</li>
+        <li><strong>List</strong> — filter by customer, search no./ref/description, and pick which columns (including custom fields) show.</li>
+      </ul>
+    </section>
+
+    <section id="banking">
+      <div class="sec-eyebrow">Transactions</div>
+      <h2>Banking</h2>
+      <p><span class="path">Banking</span> shows every cash / bank account's balance and recent movements. An account is a "cash" account when it's flagged <code>is_cash</code> in the chart.</p>
+      <dl class="terms">
+        <dt>Transfer</dt>
+        <dd>Move money between two cash accounts, with an optional bank fee. Dr the destination, Cr the source (+ fee), Dr the fee account.</dd>
+        <dt>Spend</dt>
+        <dd>Quick multi-line payment: Dr the expense lines, Cr the bank. Source <code>cash_payment</code>.</dd>
+        <dt>Receive</dt>
+        <dd>Quick multi-line deposit: Dr the bank, Cr the income lines. Source <code>cash_receipt</code>.</dd>
+        <dt>Bank Book</dt>
+        <dd>Statement-style report for one account: opening, every movement with a running balance, money-in / money-out KPIs, closing.</dd>
+      </dl>
+      <h3>Bank statement reconciliation</h3>
+      <p><span class="path">Banking <i>&rsaquo;</i> Reconcile</span> — upload a bank statement (xlsx/csv), map columns, auto-match statement lines to unmatched ledger lines by amount and near date, add missing entries (fees, interest) straight from the workspace, then finish once the difference is zero. Reconciled statements can be reopened.</p>
+    </section>
+
+    <section id="journals">
+      <div class="sec-eyebrow">Transactions</div>
+      <h2>Manual journals</h2>
+      <p>Use <span class="path">Journals <i>&rsaquo;</i> New</span> for anything the modules don't cover — accruals, reclasses, opening balances, adjustments. A journal has one currency + rate; lines carry account, optional Job, optional party (for subledger lines), memo, debit / credit. It must balance in the transaction currency before it will save.</p>
+      <ul class="plain">
+        <li><strong>Source</strong> tags the journal's origin: <code>general</code>, <code>opening</code>, <code>adjustment</code>, <code>cash_payment</code>, etc. Reports can filter on it.</li>
+        <li><strong>Void</strong> posts a dated reversing entry rather than deleting; <code>Ledger</code> counts <code>posted</code> and <code>void</code> so the books stay balanced.</li>
+        <li><strong>Search</strong> on the journal list matches the journal no./description/reference <em>and</em> line memos, account codes/names and party names.</li>
+        <li><strong>Import</strong> — bring a batch of journals in from a spreadsheet; rows sharing a "group" column become one journal.</li>
+      </ul>
+      <div class="note note--tip">
+        <span class="lbl">Month-end accruals</span>
+        <p>The Finance report's "extra Cost of Sales" is a monthly accrual journal — Dr COS <code>52000</code> / Cr A/P <code>21100</code> — for supplier costs known but not yet invoiced. Book it in the closing month and reverse it when the real invoice lands (or let Invoice Review actualise the budgeted line).</p>
+      </div>
+    </section>
+
+    <section id="jobs">
+      <div class="sec-eyebrow">Transactions</div>
+      <h2>Jobs (tour dossiers)</h2>
+      <p>A <strong>Job</strong> is one tour dossier. Tag purchase and sales invoice lines to a Job and the app builds its P&amp;L. Jobs carry a code (the Jambix DOSS NR), customer, arrival dates, pax, category, and Jambix reference figures (<code>sales_ref</code> / <code>buy_ref</code> — the quoted sell and buy).</p>
+      <h3>The Job P&amp;L page</h3>
+      <p>Click a job code to open it. Top: revenue / direct cost / gross profit / net / margin KPIs for a date range. Then a table, one row per customer / supplier:</p>
+      <div class="twrap">
+        <table>
+          <thead><tr><th>Column</th><th>Source</th></tr></thead>
+          <tbody>
+            <tr><td>Sales Jambix</td><td>Job-level quoted sell (<code>sales_ref</code>) — shown on the Total row only</td></tr>
+            <tr><td>Purchase Jambix</td><td>Per supplier: sum of that supplier's line <code>budget_amount</code>; the Total foots to the rows</td></tr>
+            <tr><td>Actual Sales / Actual Purchase</td><td>Posted invoice lines tagged to the job, per party</td></tr>
+            <tr><td>GOP % / GOP Actual %</td><td>Gross margins</td></tr>
+            <tr><td>Diff Cost Jambix vs Actual</td><td>Budget &minus; actual, per row and total</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The "Jambix reference" card below shows pax, category and status. Job-level quoted figures come from the Jambix push API, not the ledger.</p>
+    </section>
+
+    <section id="review">
+      <div class="sec-eyebrow">Pipelines</div>
+      <h2>Invoice review — the supplier-cost check queue</h2>
+      <p>Supplier invoices are dropped into a watched folder. An n8n workflow (or the standalone PowerShell watcher in <code>n8n/</code>) reads each file, extracts the line items with Gemini vision, and POSTs them to <code>POST /api/v1/purchase/lines/review</code>. Nothing hits the ledger yet — the batch lands in a queue for a human to confirm.</p>
+      <h3>Working the queue</h3>
+      <p><span class="path">Transactions <i>&rsaquo;</i> Invoice Review</span> (or <span class="path">Setup</span>, depending on your menu). Each item shows the supplier's invoice line, the matched budget line, the variance and an over-budget flag.</p>
+      <ul class="plain">
+        <li><strong>Matching</strong> tries, in order: exact booking ref &rarr; the supplier's reservation code (res code) &rarr; supplier + service date within a window, narrowed by traveller name then budget amount. It never guesses between two candidates.</li>
+        <li><strong>Supplier names</strong> are matched tolerantly — exact, then either-direction substring, then punctuation-stripped — so "BLACK HORSE BALI" finds "Black Horse".</li>
+        <li><strong>Recheck</strong> re-runs the match (after you fix supplier names or add a booking ref). <strong>Confirm</strong> applies the actual cost: the line's <code>amount</code> becomes the real figure, <code>cost_source</code> flips to <code>actual</code>, the budget stays frozen, and the invoice re-posts.</li>
+        <li><strong>Promise date</strong> set here writes through to the purchase invoice's <em>Promise Date</em> custom field, which the Payment List report reads.</li>
+        <li><strong>Delete batch</strong> removes the queue rows only — it does not touch anything already posted.</li>
+      </ul>
+      <div class="note">
+        <span class="lbl">Discount lines</span>
+        <p>Where the extractor produces a charge and its discount as two lines, the pipeline nets them by reservation code before submitting, so a single budget line is matched against the net cost.</p>
+      </div>
+    </section>
+
+    <section id="imports">
+      <div class="sec-eyebrow">Pipelines</div>
+      <h2>Spreadsheet imports</h2>
+      <p>Every importer follows the same four steps. Files are stored under <code>writable/uploads/imports</code> and re-parsed at each step, so you can go back and remap.</p>
+      <ol class="steps">
+        <li><strong>Upload</strong> — choose an <code>.xlsx</code>, <code>.xls</code> or <code>.csv</code> file and the sheet.</li>
+        <li><strong>Map columns</strong> — tell the wizard which spreadsheet column is which field. Required fields are marked; some wizards also map account labels to your chart (aliases are remembered).</li>
+        <li><strong>Preview</strong> — a per-row table with a summary (ok / new / error counts) and every problem spelled out.</li>
+        <li><strong>Commit</strong> — creates the records. Most wizards can also post immediately, and offer a batch page with "post all drafts" / "revert drafts".</li>
+      </ol>
+      <div class="twrap">
+        <table>
+          <thead><tr><th>Importer</th><th>Where</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Journals</td><td><span class="path">Journals <i>&rsaquo;</i> Import</span></td><td>Rows sharing a "group" column = one journal. Auto-creates parties for subledger lines.</td></tr>
+            <tr><td>Purchase / Sales invoices</td><td><span class="path">Purchases / Sales <i>&rsaquo;</i> Import</span></td><td>Rows sharing a "group" = one invoice. Idempotent on an external id. Purchase lines land with <code>budget_amount = amount</code>.</td></tr>
+            <tr><td>Chart of accounts</td><td><span class="path">Chart of Accounts <i>&rsaquo;</i> Import</span></td><td>Upsert by code; a second pass wires parent accounts.</td></tr>
+            <tr><td>Jambix bookings</td><td><span class="path">Purchases <i>&rsaquo;</i> Jambix</span></td><td>Groups by supplier + DOSS NR into purchase invoices; auto-creates suppliers, customers and jobs; priced invoices post immediately.</td></tr>
+            <tr><td>Jobs</td><td><span class="path">Jobs <i>&rsaquo;</i> Import</span></td><td>Dossier reference data — pax, category, arrival dates, quoted figures.</td></tr>
+            <tr><td>Budgets</td><td><span class="path">Setup <i>&rsaquo;</i> Budgets <i>&rsaquo;</i> a version <i>&rsaquo;</i> Import</span></td><td>One row per account, one column per month. Replaces figures for the accounts in the sheet.</td></tr>
+            <tr><td>Bank statement</td><td><span class="path">Banking <i>&rsaquo;</i> Reconcile</span></td><td>Not a record import — a matching workspace (see Banking).</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note note--tip">
+        <span class="lbl">Templates</span>
+        <p>Blank templates for the purchase / sales import live in <code>templates/</code>. When your source spreadsheet has accounts stacked in sections that reuse the same codes (the Finance "Bud Realistic" sheet does this for Sales and COS), reshape it to one row per real account before importing.</p>
+      </div>
+    </section>
+
+    <section id="budgets">
+      <div class="sec-eyebrow">Pipelines</div>
+      <h2>Budgets</h2>
+      <p>A <strong>budget version</strong> ("Realistic 2026", "Optimistic 2026") holds one budgeted amount per P&amp;L account per month, for one company and year. One version per year can be the <strong>default</strong> — that's what the P&amp;L vs Budget report uses unless you pick another.</p>
+      <ol class="steps">
+        <li><strong>Create a version</strong> — <span class="path">Setup <i>&rsaquo;</i> Budgets <i>&rsaquo;</i> New</span>. Name, year, optional "default".</li>
+        <li><strong>Import your budget sheet</strong> — open the version, <strong>Import spreadsheet</strong>, map the account column and the twelve month columns. Header/non-P&amp;L rows are skipped with a note.</li>
+        <li><strong>Adjust individual accounts</strong> — the version's grid has an <em>Edit</em> link per account for a twelve-month row form. Re-importing replaces figures for the accounts in the sheet, so tweaks survive a partial re-import.</li>
+        <li><strong>Report</strong> — <span class="path">Reports <i>&rsaquo;</i> P&amp;L vs Budget</span>. Pick a period and a version. Columns: <em>Actual &middot; Budget &middot; Variance &middot; Achieved %</em>, grouped like the income statement. Every line that has an actual <em>or</em> a budget shows.</li>
+      </ol>
+      <div class="note">
+        <span class="lbl">Reading the numbers</span>
+        <p>"Achieved %" is Actual &divide; Budget. For expense lines, over 100% means overspent. The GROSS / OPERATING / NET profit lines only show a % when the budgeted profit is positive — a "&mdash;" there means the budget is only partly loaded (e.g. opex entered but not revenue).</p>
+      </div>
+    </section>
+
+    <section id="reports">
+      <div class="sec-eyebrow">Reporting</div>
+      <h2>Report Center</h2>
+      <p><span class="path">Reports</span> is an icon hub grouped into Financial, General Ledger, Cash &amp; Bank, Sales, Purchase and Job. Every report shares one filter bar and every report exports to Excel via the <strong>Ekspor Excel</strong> button (it's the same form, so filters carry through).</p>
+
+      <h3>The period widget</h3>
+      <dl class="terms">
+        <dt>Year + Period</dt>
+        <dd>Period is Full year, Q1–Q4, a single month, or Custom (free From/To).</dd>
+        <dt>As of</dt>
+        <dd>Balance-sheet-style reports take an as-of date instead of a range.</dd>
+        <dt>Compare by</dt>
+        <dd>P&amp;L, Balance Sheet and Cash Flow can split the span into month / quarter / year columns.</dd>
+        <dt>All chart accounts</dt>
+        <dd>Include zero-balance lines (statements hide them by default).</dd>
+      </dl>
+
+      <h3>What's where</h3>
+      <div class="twrap">
+        <table>
+          <thead><tr><th>Group</th><th>Reports</th></tr></thead>
+          <tbody>
+            <tr><td>Financial</td><td>Profit &amp; Loss (single / multi-period / multi-year), <strong>P&amp;L vs Budget</strong>, Balance Sheet (single / multi-period), Cash Flow (single / multi-period), Consolidated</td></tr>
+            <tr><td>General Ledger</td><td>Trial Balance, Journal List, Realized Gain/Loss, General Ledger (one account), GL Details (multi-account)</td></tr>
+            <tr><td>Cash &amp; Bank</td><td>Bank Book, Payment by Bank, Bank Reconciliation</td></tr>
+            <tr><td>Sales</td><td>Register, Monthly (+ pax &amp; avg/pax), <strong>Sales Overview</strong> (YTD vs last year, by customer / client group / country), Outstanding, AR Aging (summary / detail), Invoice Detail, Receipt List, Invoice Paid, Customer List</td></tr>
+            <tr><td>Purchase</td><td>Mirror of Sales, plus <strong>Payment List</strong> (unpaid lines by promise date)</td></tr>
+            <tr><td>Job</td><td>Job List (revenue / cost / margin per job), Job P&amp;L — Sales vs Purchase (per party, arrival window)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Reports built to replace spreadsheets</h3>
+      <ul class="plain">
+        <li><strong>Sales Overview</strong> — the app version of the "Overview-YTD" sheet: per customer (or client group / country), revenue and pax for the window vs the same window a year earlier, with averages. Needs <em>client group</em> / <em>country</em> filled on the customer records to group.</li>
+        <li><strong>P&amp;L vs Budget</strong> — the app version of the Operational report's actual-vs-budget matrix and the Finance report's budget columns. Needs a budget version loaded.</li>
+        <li><strong>Consolidated</strong> — straight sum by account code across companies sharing a base currency; no inter-company eliminations yet.</li>
+      </ul>
+      <div class="note">
+        <span class="lbl">Where the numbers can drift from your Excel</span>
+        <p>The app values everything at the posted invoice rate and only counts what's actually in the ledger. Your workbooks use set FX rates and sometimes include budget or draft rows. Expect differences until all history is posted in the app.</p>
+      </div>
+    </section>
+
+    <section id="monthend">
+      <div class="sec-eyebrow">Reporting</div>
+      <h2>Month-end checklist</h2>
+      <ol class="steps">
+        <li><strong>Post everything</strong> — no lingering draft purchase / sales invoices, journals, receipts or payments for the month.</li>
+        <li><strong>Run Invoice Review to empty</strong> — actualise the budgeted supplier lines you have real invoices for.</li>
+        <li><strong>Accruals</strong> — book the "extra COS" and any other accrual journals for costs known but not invoiced; note which reverse next month.</li>
+        <li><strong>FX</strong> — enter month-end exchange rates; book any revaluation journal for open foreign-currency balances.</li>
+        <li><strong>Bank reconciliation</strong> — reconcile every bank account to its statement; difference must be zero.</li>
+        <li><strong>Aged AR / AP</strong> — review AR Aging and AP Aging; chase or write off as needed.</li>
+        <li><strong>Review the statements</strong> — Trial Balance foots, P&amp;L and Balance Sheet look right, Cash Flow reconciles opening &rarr; closing cash.</li>
+        <li><strong>P&amp;L vs Budget</strong> — check the month against the current budget version; write the commentary.</li>
+        <li><strong>Lock the period</strong> — <span class="path">Setup <i>&rsaquo;</i> Periods</span>, so nothing back-dates in.</li>
+        <li><strong>Back up</strong> — run the DB backup script (see below).</li>
+      </ol>
+    </section>
+
+    <section id="settings">
+      <div class="sec-eyebrow">Admin</div>
+      <h2>Settings &amp; admin</h2>
+      <dl class="terms">
+        <dt>Companies</dt>
+        <dd>Create / edit branches, set the base currency (locked after transactions), logo. The consolidated report only combines companies sharing a base currency.</dd>
+        <dt>Control Accounts</dt>
+        <dd>The per-currency map of A/R, A/P, deposit and FX accounts. The report hub flags any gap.</dd>
+        <dt>Settings &rarr; Appearance</dt>
+        <dd>Default theme and language (users can override their own). The interface ships bilingual (English / Bahasa Indonesia); switch with the ID/EN toggle in the sidebar footer.</dd>
+        <dt>Settings &rarr; Tax</dt>
+        <dd>PPN and PPh&nbsp;23 rates and accounts used by the invoice forms.</dd>
+        <dt>Custom Fields</dt>
+        <dd>Define extra fields per entity (job, purchase invoice, customer, …). Types: text, number, date, select, checkbox. "Show in list" adds a filter column.</dd>
+        <dt>Announcements</dt>
+        <dd>A notice board. <em>Pinned</em> announcements show as a dismissible banner on every page and on the dashboard; tick <em>On login page</em> to also greet signed-out visitors (holiday greetings, closures). Optional start / end dates.</dd>
+        <dt>Periods</dt>
+        <dd>Fiscal periods; lock to freeze, reopen if you must post a correction.</dd>
+        <dt>Users / Roles</dt>
+        <dd>Roles are permission bundles. A user can be pinned to specific branches. Each user can upload a photo; they manage their own under <span class="path">My Profile</span>.</dd>
+        <dt>API Tokens</dt>
+        <dd>Machine credentials for the REST API — see below.</dd>
+      </dl>
+    </section>
+
+    <section id="api">
+      <div class="sec-eyebrow">Admin</div>
+      <h2>REST API</h2>
+      <p>A token-authenticated JSON API, built for Jambix and the n8n pipelines to push data in. Each token is bound to <em>one company</em>, so a request authenticates and scopes in a single step — no user session.</p>
+      <ul class="plain">
+        <li><strong>Tokens</strong> — <span class="path">Setup <i>&rsaquo;</i> API Tokens</span>. Choose abilities (<code>read</code>, <code>sales:write</code>, <code>purchase:write</code>). The raw token is shown once; only its hash is stored.</li>
+        <li><strong>Auth</strong> — send <code>Authorization: Bearer &lt;token&gt;</code> (or <code>X-Api-Key</code>).</li>
+        <li><strong>Endpoints</strong> (all under <code>/api/v1</code>): <code>GET ping</code>, lookups (<code>accounts</code>, <code>customers</code>, <code>suppliers</code>, <code>jobs</code>), <code>POST {sales|purchase}/invoices</code> (idempotent on an external id), <code>GET {sales|purchase}/invoices/{id}</code>, <code>POST jobs</code> (reference figures only — no ledger effect), <code>GET purchase/lines/pending</code>, <code>POST purchase/lines/costs</code>, <code>POST purchase/lines/review</code>.</li>
+        <li>Full request/response detail: <code>docs/API.md</code> and the styled <code>docs/api.html</code>; a Postman collection is in <code>postman/</code> (set your own token in the collection variable).</li>
+      </ul>
+    </section>
+
+    <section id="einvoice">
+      <div class="sec-eyebrow">Admin</div>
+      <h2>E-Invoice (MyInvois)</h2>
+      <p>For the Malaysia (MYR) company, to submit sales invoices to LHDN's MyInvois system. <strong>Phase&nbsp;1 only</strong> today.</p>
+      <ul class="plain">
+        <li><span class="path">Setup <i>&rsaquo;</i> E-Invoice (MyInvois)</span> — a per-company settings screen: environment (Sandbox / Production), API client ID &amp; secret (secret stored encrypted), and the company's tax profile (TIN, BRN, MSIC, SST, registered address).</li>
+        <li>Document format <strong>version 1.0</strong> needs no digital signature, so the auth &rarr; mapping &rarr; submit &rarr; status pipeline can be built and tested against the LHDN sandbox now.</li>
+        <li><strong>Still to come</strong>: the submission client itself, and a digital signing certificate from an approved Malaysian CA for version&nbsp;1.1.</li>
+      </ul>
+    </section>
+
+    <section id="backups">
+      <div class="sec-eyebrow">Admin</div>
+      <h2>Backups &amp; updates</h2>
+      <h4 class="mini">Backup</h4>
+      <p>From the project root:</p>
+      <p><code>powershell -ExecutionPolicy Bypass -File .\backup-db.ps1</code></p>
+      <p>It reads <code>.env</code>, writes a timestamped, zipped <code>mysqldump</code> to <code>backups/</code> and keeps the newest 20. That folder is git-ignored — copy the zips somewhere safe. On another machine the zip imports through phpMyAdmin.</p>
+      <h4 class="mini">Update loop</h4>
+      <ol class="plain">
+        <li>Local: edit &rarr; commit &rarr; push.</li>
+        <li>Server: <code>git pull</code> then <code>php spark migrate</code>.</li>
+      </ol>
+      <p>Full first-time deploy (shared hosting or VPS), the production <code>.env</code>, CSRF and backup notes are in <code>DEPLOY.md</code>.</p>
+      <div class="note note--warn">
+        <span class="lbl">Before a non-local deploy</span>
+        <p>Set <code>app.baseURL</code> to the real host, turn CSRF protection on in the production <code>.env</code>, and run <code>php spark key:generate</code> so the encryption key is set (the e-invoice secret depends on it).</p>
+      </div>
+    </section>
+
+    <section id="permissions">
+      <div class="sec-eyebrow">Reference</div>
+      <h2>Roles &amp; permissions</h2>
+      <p>Every screen and action is gated by a <b>permission</b>. Permissions are bundled into <b>roles</b> under <span class="path">Setup <i>&rsaquo;</i> Roles</span>, and each user is assigned one or more roles. The app ships with six starter roles — edit them, or build your own, on the Roles screen (the matrix there shows every role against every permission).</p>
+
+      <h3>Starter roles</h3>
+      <div class="twrap">
+        <table>
+          <thead><tr><th>Role</th><th>For</th></tr></thead>
+          <tbody>
+            <tr><td><b>Administrator</b></td><td>Everything: post / void, close periods, master data, all reports, the dashboard, settings, users and roles.</td></tr>
+            <tr><td><b>Accountant</b></td><td>Post &amp; void journals, manage master data, close periods, open every report and the dashboard. No settings, users or roles.</td></tr>
+            <tr><td><b>Manager</b></td><td>Read-only: the dashboard and every report. Cannot create, post or change anything.</td></tr>
+            <tr><td><b>Auditor / Consultant</b></td><td>Read-only: every report. No dashboard; cannot change anything.</td></tr>
+            <tr><td><b>Staff / Bookkeeper</b></td><td>Enter and post journals. No dashboard or reports; cannot void or close periods.</td></tr>
+            <tr><td><b>Data Entry</b></td><td>Create and edit draft journals only. Cannot post to the ledger; no dashboard or reports.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note"><p>Operational list and detail screens (Sales, Purchases, Journals, Jobs, master data) stay visible to any signed-in user — a "view-only" role is simply one with no editing permissions, so the New / Post / Edit buttons never appear for it.</p></div>
+
+      <h3>Permissions</h3>
+      <div class="twrap">
+        <table>
+          <thead><tr><th>Permission</th><th>Lets a user…</th></tr></thead>
+          <tbody>
+            <tr><td><code>journal.create</code></td><td>enter draft transactions (invoices, journals, imports)</td></tr>
+            <tr><td><code>journal.post</code></td><td>post drafts to the ledger and the posting-adjacent actions — banking, payments, receipts, bank reconciliation</td></tr>
+            <tr><td><code>journal.void</code></td><td>void posted journals</td></tr>
+            <tr><td><code>journal.delete</code></td><td>delete drafts, revert import batches</td></tr>
+            <tr><td><code>masterdata.manage</code></td><td>edit the chart of accounts, customers, suppliers, currencies, jobs</td></tr>
+            <tr><td><code>period.close</code></td><td>open and close accounting periods</td></tr>
+            <tr><td><code>dashboard.view</code></td><td>open the dashboard</td></tr>
+            <tr><td><code>reports.view</code></td><td>reach the Report Center hub (needed on top of a category permission below)</td></tr>
+            <tr><td><code>reports.financial</code></td><td>Financial reports — P&amp;L, Balance Sheet, Cash Flow, P&amp;L vs Budget</td></tr>
+            <tr><td><code>reports.gl</code></td><td>General Ledger reports — trial balance, journal list, general ledger, realized FX</td></tr>
+            <tr><td><code>reports.cashbank</code></td><td>Cash &amp; Bank reports and the bank reconciliation workspace</td></tr>
+            <tr><td><code>reports.sales</code></td><td>Sales reports</td></tr>
+            <tr><td><code>reports.purchase</code></td><td>Purchase reports</td></tr>
+            <tr><td><code>reports.job</code></td><td>Job reports</td></tr>
+            <tr><td><code>settings.manage</code></td><td>companies, control accounts, tax, budgets, custom fields, announcements, API tokens, e-invoice</td></tr>
+            <tr><td><code>users.manage</code> / <code>roles.manage</code></td><td>administer users / roles</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Report access</h3>
+      <p>The Report Center is gated in two layers: <code>reports.view</code> opens the hub, then one <code>reports.&lt;category&gt;</code> permission per category (Financial, General Ledger, Cash&nbsp;&amp;&nbsp;Bank, Sales, Purchase, Job) decides which cards a role sees and can open. A role needs <code>reports.view</code> <b>plus</b> at least one category permission to see anything; a card the user can't open is hidden from the hub. To give one report a permission different from its category, list it in <code>Config\Reports::$perms</code>.</p>
+
+      <h3>Branch (company) access</h3>
+      <p>Separate from roles: on a user's <span class="path">Setup <i>&rsaquo;</i> Users</span> record you can limit which companies they may switch into. Leave the branch list empty for "all active companies"; add rows to restrict them.</p>
+    </section>
+
+    <section id="glossary">
+      <div class="sec-eyebrow">Reference</div>
+      <h2>Glossary</h2>
+      <dl class="terms">
+        <dt>Base currency</dt><dd>The company's functional currency. Reports are always in it.</dd>
+        <dt>Control account</dt><dd>An account the system posts to automatically (A/R, A/P, deposits, FX, retained earnings, rounding).</dd>
+        <dt>Subledger</dt><dd>A control account whose balance is broken out by customer or supplier.</dd>
+        <dt>Dossier / Job</dt><dd>One tour booking. Its code is the Jambix DOSS NR.</dd>
+        <dt>Jambix</dt><dd>The tour-operations system. It pushes bookings and quoted figures to this app via the REST API; the ledger is not affected by those pushes.</dd>
+        <dt>GOP</dt><dd>Gross Operating Profit — revenue minus cost of sales, before operating expenses.</dd>
+        <dt>EBITDA</dt><dd>Here, revenue minus COS minus operating expenses (depreciation, interest, tax and FX all sit below it).</dd>
+        <dt>Budget / actual / manual</dt><dd>A purchase line's <code>cost_source</code>. <code>budget</code> = a quoted / expected cost; <code>actual</code> = confirmed from the real supplier invoice; <code>manual</code> = typed by hand with no separate budget.</dd>
+        <dt>Promise date</dt><dd>The date a supplier invoice is expected to be paid — a custom field on the purchase invoice, driven by Invoice Review, read by the Payment List report.</dd>
+        <dt>Res code</dt><dd>The supplier's own reservation reference. A match key in Invoice Review.</dd>
+        <dt>PPN</dt><dd>Indonesian VAT. Input PPN on purchases, output PPN on sales.</dd>
+        <dt>PPh 23</dt><dd>Indonesian withholding tax — deducted from a supplier payment (payable) or withheld from you by a customer (prepaid).</dd>
+        <dt>External id</dt><dd>A caller-supplied key that makes an imported / API-created invoice idempotent — re-sending the same key returns the existing record.</dd>
+        <dt>Pinned announcement</dt><dd>A notice that shows as a dismissible banner on every page; dismissal is remembered per browser.</dd>
+      </dl>
+    </section>
+
+    <p style="margin-top:4rem;color:var(--ink-2);font-size:.85rem;font-family:var(--f-mono)">End of handbook &middot; keep it next to <code>DEPLOY.md</code></p>
+  </main>
+</div>
+
+<script>
+  (function () {
+    // theme toggle (light <-> dark), persisted
+    var root = document.documentElement, btn = document.querySelector('[data-toggle-theme]');
+    try {
+      var saved = localStorage.getItem('handbook-theme');
+      if (saved) root.setAttribute('data-theme', saved);
+    } catch (e) {}
+    btn.addEventListener('click', function () {
+      var cur = root.getAttribute('data-theme');
+      var next = cur === 'dark' ? 'light'
+               : cur === 'light' ? 'dark'
+               : (matchMedia('(prefers-color-scheme: dark)').matches ? 'light' : 'dark');
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('handbook-theme', next); } catch (e) {}
+    });
+
+    // active section in the TOC
+    var links = Array.prototype.slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+    var map = {};
+    links.forEach(function (a) { map[a.getAttribute('href').slice(1)] = a; });
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          links.forEach(function (l) { l.classList.remove('is-active'); });
+          var a = map[en.target.id];
+          if (a) a.classList.add('is-active');
+        }
+      });
+    }, { rootMargin: '-10% 0px -75% 0px', threshold: 0 });
+    document.querySelectorAll('main section[id]').forEach(function (s) { obs.observe(s); });
+  })();
+</script>
