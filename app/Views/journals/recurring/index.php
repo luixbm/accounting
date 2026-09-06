@@ -35,18 +35,20 @@
             </td>
             <td class="right mono"><?= (int) $r['nlines'] ?></td>
             <td class="right mono"><?= money($r['net']) ?></td>
-            <td class="right nowrap">
-              <form method="post" action="<?= site_url('journals/recurring/' . $r['id'] . '/generate') ?>" class="inline">
-                <?= csrf_field() ?><button class="btn sm" type="submit"<?= $r['nlines'] ? '' : ' disabled' ?>><?= lang('Recurring.generate') ?></button>
-              </form>
-              <a class="btn sm ghost" href="<?= site_url('journals/recurring/' . $r['id'] . '/edit') ?>"><?= lang('App.edit') ?></a>
-              <form method="post" action="<?= site_url('journals/recurring/' . $r['id'] . '/toggle') ?>" class="inline">
-                <?= csrf_field() ?><button class="btn sm ghost" type="submit"><?= $r['is_active'] ? lang('Recurring.deactivate') : lang('Recurring.activate') ?></button>
-              </form>
-              <form method="post" action="<?= site_url('journals/recurring/' . $r['id'] . '/delete') ?>" class="inline"
-                onsubmit="return confirm('<?= esc(lang('Recurring.confirm_delete'), 'js') ?>')">
-                <?= csrf_field() ?><button class="btn sm ghost danger" type="submit"><?= lang('App.delete') ?></button>
-              </form>
+            <td class="right">
+              <div class="btn-group" style="justify-content:flex-end;flex-wrap:nowrap">
+                <form method="post" action="<?= site_url('journals/recurring/' . $r['id'] . '/generate') ?>">
+                  <?= csrf_field() ?><button class="btn sm" type="submit"<?= $r['nlines'] ? '' : ' disabled' ?>><?= lang('Recurring.generate') ?></button>
+                </form>
+                <a class="btn sm ghost" href="<?= site_url('journals/recurring/' . $r['id'] . '/edit') ?>"><?= lang('App.edit') ?></a>
+                <form method="post" action="<?= site_url('journals/recurring/' . $r['id'] . '/toggle') ?>">
+                  <?= csrf_field() ?><button class="btn sm ghost" type="submit"><?= $r['is_active'] ? lang('Recurring.deactivate') : lang('Recurring.activate') ?></button>
+                </form>
+                <form method="post" action="<?= site_url('journals/recurring/' . $r['id'] . '/delete') ?>"
+                  onsubmit="return confirm('<?= esc(lang('Recurring.confirm_delete'), 'js') ?>')">
+                  <?= csrf_field() ?><button class="btn sm ghost danger" type="submit"><?= lang('App.delete') ?></button>
+                </form>
+              </div>
             </td>
           </tr>
         <?php endforeach ?>
