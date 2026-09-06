@@ -194,46 +194,52 @@ $prevCol = ($month > 0 ? lang('Dashboard.ytd') . ' ' : '') . $prev;
   </div>
 </div>
 
-<div class="chart-grid">
-  <div class="card">
-    <h2><?= lang('Dashboard.chart_sales') ?> <span class="muted small"><?= $hasPrev ? $year . ' vs ' . $prev : $year ?></span></h2>
-    <?= $hasPrev
-        ? Svg::groupedBars($labels, [(string) $year => $revM, (string) $prev => $revPrevM], [Svg::BRAND, Svg::MUTED])
-        : Svg::signedBars($labels, $revM) ?>
-    <table class="grid tight" style="margin-top:10px">
-      <thead>
-        <tr>
-          <th><?= lang('Dashboard.col_month') ?></th>
-          <th class="right"><?= esc((string) $year) ?></th>
-          <th class="right muted"><?= esc((string) $prev) ?></th>
-          <th class="right"><?= lang('Dashboard.col_change') ?></th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach ($labels as $i => $lbl): ?>
-          <?php $cv = $revM[$i] ?? 0.0;
-          $pv = $revPrevM[$i] ?? 0.0; ?>
+<div class="card">
+  <div class="row" style="align-items:flex-start;gap:22px">
+    <div style="flex:1.4;min-width:320px">
+      <h2 style="margin-top:0"><?= lang('Dashboard.chart_sales') ?> <span class="muted small"><?= $hasPrev ? $year . ' vs ' . $prev : $year ?></span></h2>
+      <?= $hasPrev
+          ? Svg::groupedBars($labels, [(string) $year => $revM, (string) $prev => $revPrevM], [Svg::BRAND, Svg::MUTED])
+          : Svg::signedBars($labels, $revM) ?>
+    </div>
+    <div style="flex:1;min-width:300px;overflow-x:auto">
+      <table class="grid tight">
+        <thead>
           <tr>
-            <td><?= esc($lbl) ?></td>
-            <td class="right mono"><?= money_c($cv, false, 0) ?></td>
-            <td class="right mono muted"><?= money_c($pv, false, 0) ?></td>
-            <td class="right small"><?= $deltaCell($growth($cv, $pv)) ?></td>
+            <th><?= lang('Dashboard.col_month') ?></th>
+            <th class="right"><?= esc((string) $year) ?></th>
+            <th class="right muted"><?= esc((string) $prev) ?></th>
+            <th class="right"><?= lang('Dashboard.col_change') ?></th>
           </tr>
-        <?php endforeach ?>
-      </tbody>
-      <tfoot>
-        <?php $ct = array_sum($revM);
-        $pt = array_sum($revPrevM); ?>
-        <tr>
-          <td><?= lang('App.total') ?></td>
-          <td class="right mono"><?= money_c($ct, false, 0) ?></td>
-          <td class="right mono muted"><?= money_c($pt, false, 0) ?></td>
-          <td class="right small"><?= $deltaCell($growth($ct, $pt)) ?></td>
-        </tr>
-      </tfoot>
-    </table>
+        </thead>
+        <tbody>
+          <?php foreach ($labels as $i => $lbl): ?>
+            <?php $cv = $revM[$i] ?? 0.0;
+            $pv = $revPrevM[$i] ?? 0.0; ?>
+            <tr>
+              <td><?= esc($lbl) ?></td>
+              <td class="right mono"><?= money_c($cv, false, 0) ?></td>
+              <td class="right mono muted"><?= money_c($pv, false, 0) ?></td>
+              <td class="right small"><?= $deltaCell($growth($cv, $pv)) ?></td>
+            </tr>
+          <?php endforeach ?>
+        </tbody>
+        <tfoot>
+          <?php $ct = array_sum($revM);
+          $pt = array_sum($revPrevM); ?>
+          <tr>
+            <td><?= lang('App.total') ?></td>
+            <td class="right mono"><?= money_c($ct, false, 0) ?></td>
+            <td class="right mono muted"><?= money_c($pt, false, 0) ?></td>
+            <td class="right small"><?= $deltaCell($growth($ct, $pt)) ?></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
   </div>
+</div>
 
+<div class="chart-grid">
   <div class="card">
     <h2><?= lang('Dashboard.chart_gop') ?> <span class="muted small"><?= $year ?></span></h2>
     <?= Svg::barsAndLine($labels, [lang('Dashboard.sales') => $revM, lang('Dashboard.cost_of_sales') => $cosM], $gopPctM, lang('Dashboard.gop_pct')) ?>
@@ -261,6 +267,11 @@ $prevCol = ($month > 0 ? lang('Dashboard.ytd') . ' ' : '') . $prev;
   <div class="card">
     <h2><?= lang('Dashboard.chart_cash_move') ?> <span class="muted small"><?= $year ?></span></h2>
     <?= Svg::signedBars($labels, $cashMoveM) ?>
+  </div>
+
+  <div class="card">
+    <h2><?= lang('Dashboard.chart_cash_positions') ?> <span class="muted small"><?= lang('Dashboard.as_of', [date_id($winTo)]) ?></span></h2>
+    <?= Svg::hBars($cashPos) ?>
   </div>
 </div>
 

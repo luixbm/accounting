@@ -39,6 +39,7 @@ return [
     'chart_budget'      => 'Penjualan vs Anggaran',
     'chart_top_clients' => '10 Klien Teratas',
     'chart_cash_move'   => 'Pergerakan Kas Bulanan',
+    'chart_cash_positions' => 'Posisi Kas & Bank',
     'budget_soon'       => 'Aktif setelah modul anggaran dibuat dan target penjualan bulanan diisi.',
 
     'per_month'      => 'per bulan',

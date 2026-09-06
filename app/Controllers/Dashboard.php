@@ -81,6 +81,13 @@ class Dashboard extends BaseController
             $ap += $ledger->accountBalance($id, $winTo);
         }
 
+        // Cash & bank account positions as of the window end, high → low
+        $cashPos = [];
+        foreach ($accounts->cashAccounts() as $c) {
+            $cashPos[] = ['label' => $c['name'], 'value' => $ledger->accountBalance((int) $c['id'], $winTo)];
+        }
+        usort($cashPos, static fn ($a, $b) => $b['value'] <=> $a['value']);
+
         // MTD KPI figures (only when a month is picked)
         $mtd  = $month > 0 ? $ledger->incomeStatement($mFrom, $mTo) : null;
         $kMtd = $mtd !== null ? [
@@ -132,6 +139,7 @@ class Dashboard extends BaseController
             'ebitdaPrevM' => $ebitPrevM,
             'cashMoveM'  => $cashMoveM,
             'topClients' => $topClients,
+            'cashPos'    => $cashPos,
             'summary'    => $summary,
             'k'          => [
                 'revenue'   => $ytd['revenue'],

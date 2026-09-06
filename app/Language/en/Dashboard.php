@@ -39,6 +39,7 @@ return [
     'chart_budget'      => 'Sales vs Budget',
     'chart_top_clients' => 'Top 10 Clients',
     'chart_cash_move'   => 'Monthly Cash Movement',
+    'chart_cash_positions' => 'Cash & Bank Positions',
     'budget_soon'       => 'Activates once the budget module is built and monthly sales targets are entered.',
 
     'per_month'      => 'per month',
