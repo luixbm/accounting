@@ -23,14 +23,14 @@
           <tr>
             <td><?= esc($c['name']) ?></td>
             <td class="right mono nowrap"><?= money_c($c['balance']) ?></td>
-            <?php if (user_can('reports.view')): ?>
+            <?php if (user_can('reports.cashbank')): ?>
               <td class="right nowrap" style="width:1%"><a class="btn sm ghost" href="<?= site_url('reports/bank-book?account_id=' . $c['id']) ?>"><?= lang('Txn.bank_book') ?></a></td>
             <?php endif ?>
           </tr>
         <?php endforeach ?>
         <?php if (! $cash): ?><tr><td class="muted"><?= lang('Txn.no_cash_flagged') ?></td></tr><?php endif ?>
       </tbody>
-      <tfoot><tr><td><?= lang('App.total') ?></td><td class="right mono nowrap"><?= money_c($tot) ?></td><?php if (user_can('reports.view')): ?><td></td><?php endif ?></tr></tfoot>
+      <tfoot><tr><td><?= lang('App.total') ?></td><td class="right mono nowrap"><?= money_c($tot) ?></td><?php if (user_can('reports.cashbank')): ?><td></td><?php endif ?></tr></tfoot>
     </table>
   </div>
 

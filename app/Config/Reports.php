@@ -77,9 +77,10 @@ class Reports extends BaseConfig
     /**
      * Per-report permission overrides: report key => permission string.
      *
-     * A report not listed here needs only `reports.view` (the group gate) — so
-     * every existing report is unchanged and every NEW report is covered by
-     * default. To restrict one, add a line here, e.g.
+     * By default a report's permission is derived from its category —
+     * `reports.<category>` (e.g. reports.financial, reports.sales), one of the
+     * six category permissions in Setup → Roles. Add a line here only to give a
+     * single report a permission that differs from its category, e.g.
      *   'consolidation' => 'reports.consolidated',
      * then add that permission string in Setup → Roles.
      *
@@ -90,10 +91,19 @@ class Reports extends BaseConfig
         // key => 'permission.string'
     ];
 
-    /** The permission required to open a report, defaulting to reports.view. */
+    /**
+     * The permission required to open a report: an explicit override from
+     * $perms if set, otherwise `reports.<category>` derived from the catalogue.
+     * Falls back to `reports.view` only if a key has no category.
+     */
     public function permFor(string $key): string
     {
-        return $this->perms[$key] ?? 'reports.view';
+        if (isset($this->perms[$key])) {
+            return $this->perms[$key];
+        }
+        $cat = $this->items[$key][0] ?? '';
+
+        return $cat !== '' ? 'reports.' . $cat : 'reports.view';
     }
 
     /** Reverse-lookup: the report key whose route matches a URI path, or null. */

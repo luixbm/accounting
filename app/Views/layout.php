@@ -1,6 +1,7 @@
 <?php
 
 /** @var string $title */
+$canDash    = user_can('dashboard.view');
 $canReports = user_can('reports.view');
 $logo       = company_logo_url();
 
@@ -118,7 +119,7 @@ $renderGroup = static function (string $heading, array $links) use ($navFor) {
 
     <nav class="side-nav">
       <div class="side-group">
-        <?php if ($canReports): ?>
+        <?php if ($canDash): ?>
           <a class="side-link <?= $navFor('dashboard') ?>" href="<?= site_url('dashboard') ?>"><?= nav_icon('dashboard') ?><span><?= lang('Nav.dashboard') ?></span></a>
         <?php endif ?>
       </div>

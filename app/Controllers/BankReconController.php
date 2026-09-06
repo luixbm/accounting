@@ -37,6 +37,22 @@ class BankReconController extends BaseController
         return user_can('journal.post');
     }
 
+    /**
+     * Read gate for the reconciliation screens. This controller lives under the
+     * /banking group (session only), so App\Filters\ReportGate never runs for it
+     * even though the "Bank Reconciliation" report card points here. Anyone who
+     * can post journals still reconciles; otherwise it needs reports.cashbank.
+     */
+    private function canView(): bool
+    {
+        return user_can('reports.cashbank') || user_can('journal.post');
+    }
+
+    private function denyView()
+    {
+        return redirect()->to('/')->with('error', lang('App.not_allowed'));
+    }
+
     private function deny(string $msg = 'Not allowed.')
     {
         return redirect()->to('banking/reconcile')->with('error', $msg);
@@ -61,6 +77,9 @@ class BankReconController extends BaseController
 
     public function index()
     {
+        if (! $this->canView()) {
+            return $this->denyView();
+        }
         $rows  = $this->statements->recent();
         $accts = [];
         foreach ($this->accounts->cashAccounts() as $a) {
@@ -78,6 +97,10 @@ class BankReconController extends BaseController
 
     public function newForm()
     {
+        if (! $this->canView()) {
+            return $this->denyView();
+        }
+
         return view('banking/reconcile/new', [
             'title' => 'Import bank statement',
             'banks' => $this->accounts->cashAccounts(),
@@ -150,6 +173,9 @@ class BankReconController extends BaseController
 
     public function map(int $id)
     {
+        if (! $this->canView()) {
+            return $this->denyView();
+        }
         $st = $this->find($id);
         if (! $st) {
             return $this->deny('Statement not found.');
@@ -231,6 +257,9 @@ class BankReconController extends BaseController
 
     public function review(int $id)
     {
+        if (! $this->canView()) {
+            return $this->denyView();
+        }
         $st = $this->find($id);
         if (! $st) {
             return $this->deny('Statement not found.');
@@ -421,6 +450,9 @@ class BankReconController extends BaseController
 
     public function report(int $id)
     {
+        if (! $this->canView()) {
+            return $this->denyView();
+        }
         $st = $this->find($id);
         if (! $st) {
             return $this->deny('Statement not found.');

@@ -12,7 +12,15 @@ $routes->get('/', static function () {
         return redirect()->to('/login');
     }
 
-    return redirect()->to(auth()->user()->can('reports.view') ? '/dashboard' : '/journals');
+    $u = auth()->user();
+    if ($u->can('dashboard.view')) {
+        return redirect()->to('/dashboard');
+    }
+    if ($u->can('reports.view')) {
+        return redirect()->to('/reports');
+    }
+
+    return redirect()->to('/journals');
 });
 
 // Switch UI language (persisted in a cookie for one year).
@@ -48,7 +56,7 @@ $routes->group('api/v1', ['filter' => 'apiauth', 'namespace' => 'App\Controllers
 
 $routes->group('', ['filter' => 'session'], static function (RouteCollection $routes): void {
 
-    $routes->get('dashboard', 'Dashboard::index', ['filter' => 'permission:reports.view']);
+    $routes->get('dashboard', 'Dashboard::index', ['filter' => 'permission:dashboard.view']);
 
     // Self-service profile (photo) - any logged-in user
     $routes->get('profile', 'ProfileController::index');

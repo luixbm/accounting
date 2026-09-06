@@ -21,9 +21,25 @@ class AuthGroups extends ShieldAuthGroups
             'title'       => 'Administrator',
             'description' => 'Full access: post/void journals, close periods, manage master data, settings and users.',
         ],
+        'accountant' => [
+            'title'       => 'Accountant',
+            'description' => 'Post and void journals, manage master data, close periods, open every report and the dashboard. No access to settings, users or roles.',
+        ],
+        'manager' => [
+            'title'       => 'Manager',
+            'description' => 'Read-only: the dashboard and every report. Cannot create, post or change anything.',
+        ],
+        'auditor' => [
+            'title'       => 'Auditor / Consultant',
+            'description' => 'Read-only: every report. No dashboard, and cannot create, post or change anything.',
+        ],
         'staff' => [
             'title'       => 'Staff / Bookkeeper',
             'description' => 'Input and post journals. No access to the dashboard or reports; cannot void or close periods.',
+        ],
+        'dataentry' => [
+            'title'       => 'Data Entry',
+            'description' => 'Create and edit draft journals only. Cannot post to the ledger; no dashboard or reports.',
         ],
     ];
 
@@ -37,7 +53,14 @@ class AuthGroups extends ShieldAuthGroups
         'journal.delete'    => 'Delete draft journals',
         'masterdata.manage' => 'Manage chart of accounts, customers, suppliers, currencies, jobs',
         'period.close'      => 'Open and close accounting periods',
-        'reports.view'      => 'View dashboard and financial reports',
+        'dashboard.view'    => 'View the dashboard',
+        'reports.view'      => 'Open the Reports hub',
+        'reports.financial' => 'Open Financial reports (P&L, Balance Sheet, Cash Flow)',
+        'reports.gl'        => 'Open General Ledger reports',
+        'reports.cashbank'  => 'Open Cash & Bank reports',
+        'reports.sales'     => 'Open Sales reports',
+        'reports.purchase'  => 'Open Purchase reports',
+        'reports.job'       => 'Open Job reports',
         'settings.manage'   => 'Manage companies, settings and control accounts',
         'users.manage'      => 'Manage application users',
         'roles.manage'      => 'Manage roles and permissions',
@@ -49,11 +72,34 @@ class AuthGroups extends ShieldAuthGroups
     public array $matrix = [
         'admin' => [
             'journal.create', 'journal.post', 'journal.void', 'journal.delete',
-            'masterdata.manage', 'period.close', 'reports.view',
+            'masterdata.manage', 'period.close',
+            'dashboard.view', 'reports.view',
+            'reports.financial', 'reports.gl', 'reports.cashbank',
+            'reports.sales', 'reports.purchase', 'reports.job',
             'settings.manage', 'users.manage', 'roles.manage',
+        ],
+        'accountant' => [
+            'journal.create', 'journal.post', 'journal.void', 'journal.delete',
+            'masterdata.manage', 'period.close',
+            'dashboard.view', 'reports.view',
+            'reports.financial', 'reports.gl', 'reports.cashbank',
+            'reports.sales', 'reports.purchase', 'reports.job',
+        ],
+        'manager' => [
+            'dashboard.view', 'reports.view',
+            'reports.financial', 'reports.gl', 'reports.cashbank',
+            'reports.sales', 'reports.purchase', 'reports.job',
+        ],
+        'auditor' => [
+            'reports.view',
+            'reports.financial', 'reports.gl', 'reports.cashbank',
+            'reports.sales', 'reports.purchase', 'reports.job',
         ],
         'staff' => [
             'journal.create', 'journal.post',
+        ],
+        'dataentry' => [
+            'journal.create', 'journal.delete',
         ],
     ];
 }
