@@ -357,6 +357,7 @@ $routes->group('', ['filter' => 'session'], static function (RouteCollection $ro
         $routes->get('general-ledger', 'ReportController::generalLedger');
         $routes->get('balance-sheet', 'ReportController::balanceSheet');
         $routes->get('income-statement', 'ReportController::incomeStatement');
+        $routes->get('executive-summary', 'ReportController::executiveSummary');
         $routes->get('pnl-budget', 'BudgetReportController::pnlBudget');
         $routes->get('ar-aging', 'ReportController::arAging');
         $routes->get('ap-aging', 'ReportController::apAging');

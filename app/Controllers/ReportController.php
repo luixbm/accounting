@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Libraries\Accounting\Ledger;
+use App\Libraries\Report\ExecutiveSummary;
 use App\Libraries\Report\ReportExporter;
 use App\Libraries\Report\ReportFilter;
 use App\Models\AccountModel;
@@ -378,6 +379,75 @@ class ReportController extends BaseController
         return view('reports/income_statement', [
             'title' => $this->rlang('pnl', 'Profit & Loss'), 'f' => $f,
             'from'  => $f['from'], 'to' => $f['to'], 'compare' => '', 'data' => $data,
+        ]);
+    }
+
+    // ------------------------------------------------------------------ Executive Summary
+
+    public function executiveSummary()
+    {
+        $f = ReportFilter::resolve();
+
+        // The report is "selected period vs the same period one year earlier".
+        $shift = static fn (string $d): string => (((int) substr($d, 0, 4)) - 1) . substr($d, 4);
+        $win   = [
+            'from'     => $f['from'],
+            'to'       => $f['to'],
+            'asOf'     => $f['to'],
+            'prevFrom' => $shift($f['from']),
+            'prevTo'   => $shift($f['to']),
+            'prevAsOf' => $shift($f['to']),
+        ];
+        $summary = ExecutiveSummary::build($this->ledger, $win);
+        $title   = $this->rlang('exec-summary', 'Executive Summary');
+
+        if ($this->wantsXlsx()) {
+            $rows = [];
+            foreach ($summary['pnl'] as $row) {
+                $rows[] = [
+                    '_style' => $row['level'] === 'total' ? 'subtotal' : '',
+                    'name'   => ($row['level'] === 'child' ? '   ' : '') . $row['label'],
+                    'cur'    => $row['cur'],
+                    'prev'   => $row['prev'],
+                    'pct'    => $row['pctCur'] !== null ? number_format($row['pctCur'] * 100, 1) . '%' : '',
+                    'yoy'    => $row['yoy'] !== null ? number_format($row['yoy'] * 100, 1) . '%' : '',
+                ];
+            }
+            $rows[] = ['_style' => 'section', '_label' => ''];
+            foreach ($summary['bs'] as $row) {
+                if ($row['level'] === 'head') {
+                    $rows[] = ['_style' => 'section', '_label' => $row['label']];
+
+                    continue;
+                }
+                $rows[] = [
+                    '_style' => $row['level'] === 'total' ? 'subtotal' : '',
+                    'name'   => ($row['level'] === 'child' ? '   ' : '') . $row['label'],
+                    'cur'    => $row['cur'],
+                    'prev'   => $row['prev'],
+                ];
+            }
+
+            return ReportExporter::download([
+                'title'   => $title,
+                'meta'    => $this->metaFor($f),
+                'columns' => [
+                    ['key' => 'name', 'label' => lang('Report.es_line')],
+                    ['key' => 'cur', 'label' => lang('Report.es_this_period'), 'money' => true],
+                    ['key' => 'prev', 'label' => lang('Report.es_last_period'), 'money' => true],
+                    ['key' => 'pct', 'label' => lang('Report.es_pct_sales'), 'align' => 'right'],
+                    ['key' => 'yoy', 'label' => lang('Report.es_yoy'), 'align' => 'right'],
+                ],
+                'rows'    => $rows,
+            ]);
+        }
+
+        return view('reports/executive_summary', [
+            'title'   => $title,
+            'f'       => $f,
+            'summary' => $summary,
+            'from'    => $f['from'],
+            'to'      => $f['to'],
         ]);
     }
 
