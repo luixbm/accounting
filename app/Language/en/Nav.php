@@ -31,6 +31,7 @@ return [
     'api_tokens'    => 'API Tokens',
     'control_accounts' => 'Control Accounts',
     'einvoice'      => 'E-Invoice (MyInvois)',
+    'login_page'    => 'Login Page',
     'budgets'       => 'Budgets',
 
     'profile'  => 'My Profile',

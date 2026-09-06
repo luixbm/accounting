@@ -31,6 +31,7 @@ return [
     'api_tokens'    => 'Token API',
     'control_accounts' => 'Akun Kontrol',
     'einvoice'      => 'E-Invoice (MyInvois)',
+    'login_page'    => 'Halaman Login',
     'budgets'       => 'Anggaran',
 
     'profile'  => 'Profil Saya',

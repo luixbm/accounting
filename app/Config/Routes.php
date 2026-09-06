@@ -424,6 +424,11 @@ $routes->group('', ['filter' => 'session'], static function (RouteCollection $ro
         $routes->post('/', 'EinvoiceController::saveSettings');
     });
 
+    $routes->group('settings/login-page', ['filter' => 'permission:settings.manage'], static function (RouteCollection $routes): void {
+        $routes->get('/', 'LoginPageController::index');
+        $routes->post('/', 'LoginPageController::save');
+    });
+
     $routes->group('users', ['filter' => 'permission:users.manage'], static function (RouteCollection $routes): void {
         $routes->get('/', 'UserController::index');
         $routes->get('new', 'UserController::new');
