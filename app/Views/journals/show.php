@@ -13,8 +13,13 @@
     </div>
   </div>
   <div class="btn-group no-print">
+    <?php $canEditPosted = $journal['status'] === 'posted' && empty($journal['reversal_of'])
+        && in_array($journal['source'], \App\Models\JournalModel::MANUAL_SOURCES, true)
+        && user_can('journal.void') && user_can('journal.post'); ?>
+    <?php if (($journal['status'] === 'draft' && user_can('journal.create')) || $canEditPosted): ?>
+      <a class="btn ghost" href="<?= site_url('journals/' . $journal['id'] . '/edit') ?>"><?= lang('App.edit') ?></a>
+    <?php endif ?>
     <?php if ($journal['status'] === 'draft'): ?>
-      <?php if (user_can('journal.create')): ?><a class="btn ghost" href="<?= site_url('journals/' . $journal['id'] . '/edit') ?>"><?= lang('App.edit') ?></a><?php endif ?>
       <?php if (user_can('journal.post')): ?>
         <form method="post" action="<?= site_url('journals/' . $journal['id'] . '/post') ?>" onsubmit="return confirm('<?= esc(lang('Txn.post_confirm'), 'js') ?>')">
           <?= csrf_field() ?><button class="btn" type="submit"><?= lang('App.post') ?></button>

@@ -1,8 +1,9 @@
 <?= $this->extend('layout') ?>
 <?= $this->section('content') ?>
 <?php
-$isEdit = $journal !== null;
-$action = $isEdit ? site_url('journals/' . $journal['id']) : site_url('journals');
+$isEdit    = $journal !== null;
+$wasPosted = $isEdit && ($journal['status'] ?? '') === 'posted';
+$action    = $isEdit ? site_url('journals/' . $journal['id']) : site_url('journals');
 
 // Build the working set of line rows: old() input wins, then saved lines, else 2 blanks.
 $oldAcc = old('line_account');
@@ -66,6 +67,10 @@ $jobOptions = static function ($selected) use ($jobs) {
 ?>
 
 <div class="page-head"><h1><?= esc($title) ?></h1></div>
+
+<?php if ($wasPosted): ?>
+  <div class="alert alert-info"><?= lang('Txn.journal_posted_note') ?></div>
+<?php endif ?>
 
 <form method="post" action="<?= $action ?>" id="jform">
   <?= csrf_field() ?>
@@ -164,9 +169,13 @@ $jobOptions = static function ($selected) use ($jobs) {
 
   <div class="card">
     <div class="btn-group">
-      <button class="btn ghost" type="submit" name="action" value="draft"><?= lang('Txn.save_draft') ?></button>
-      <?php if ($canPost): ?>
-        <button class="btn" type="submit" name="action" value="post"><?= lang('Txn.save_post') ?></button>
+      <?php if ($wasPosted): ?>
+        <button class="btn" type="submit" name="action" value="post"><?= lang('Txn.save_repost') ?></button>
+      <?php else: ?>
+        <button class="btn ghost" type="submit" name="action" value="draft"><?= lang('Txn.save_draft') ?></button>
+        <?php if ($canPost): ?>
+          <button class="btn" type="submit" name="action" value="post"><?= lang('Txn.save_post') ?></button>
+        <?php endif ?>
       <?php endif ?>
       <a class="btn ghost" href="<?= site_url('journals') ?>"><?= lang('App.cancel') ?></a>
       <span class="muted small" style="align-self:center"><?= lang('Txn.must_balance') ?></span>

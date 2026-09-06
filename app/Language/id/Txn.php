@@ -79,6 +79,7 @@ return [
     'budget_subtotal' => 'Anggaran / Subtotal',
     'remove_line' => 'Hapus baris',
     'posted_note_full' => 'Faktur ini <b>sudah diposting</b>. Menyimpan akan membatalkan posting jurnalnya, menerapkan perubahan, lalu memposting ulang.',
+    'journal_posted_note' => 'Jurnal ini <b>sudah diposting</b>. Menyimpan akan membatalkan postingnya, menerapkan perubahan, lalu memposting ulang dengan nomor yang sama.',
     'supplier_ref_hint' => 'No. faktur pemasok, atau untuk impor Jambix kunci ID-pemasok + nomor-dosir',
     'ref_hint_dossier' => 'mis. referensi dosir / perjalanan',
     'budget_hint' => 'Anggaran awal — diatur saat impor, tidak dapat diubah',

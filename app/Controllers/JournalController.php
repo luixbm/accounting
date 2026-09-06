@@ -51,11 +51,22 @@ class JournalController extends BaseController
         if (! $journal) {
             return redirect()->to('journals')->with('error', 'Journal not found.');
         }
-        if ($journal['status'] !== 'draft') {
-            return redirect()->to('journals/' . $id)->with('error', 'Only draft journals can be edited.');
-        }
         if (! user_can('journal.create')) {
             return redirect()->to('journals')->with('error', 'Not allowed.');
+        }
+
+        // A posted, hand-keyed journal can be edited in place (un-post -> save ->
+        // re-post via JournalPoster::revise) by a user who can also void + post.
+        // Document-backed journals (invoices, payments, bank moves) stay locked.
+        $editablePosted = $journal['status'] === 'posted' && empty($journal['reversal_of'])
+            && in_array($journal['source'], JournalModel::MANUAL_SOURCES, true);
+        if ($journal['status'] !== 'draft' && ! $editablePosted) {
+            return redirect()->to('journals/' . $id)->with('error', $journal['status'] === 'void'
+                ? 'Void journals cannot be edited.'
+                : 'This posted journal was created by another module - edit it from its source document.');
+        }
+        if ($editablePosted && ! (user_can('journal.void') && user_can('journal.post'))) {
+            return redirect()->to('journals/' . $id)->with('error', 'Editing a posted journal needs the void and post permissions.');
         }
 
         $lines = model(JournalLineModel::class)->where('journal_id', $id)->orderBy('line_no')->findAll();
@@ -79,6 +90,27 @@ class JournalController extends BaseController
             return redirect()->to('journals')->with('error', 'Not allowed.');
         }
 
+        // Editing a posted journal re-posts it atomically (un-post -> save ->
+        // post) via JournalPoster::revise; drafts follow the normal save path.
+        $editingPosted = false;
+        if ($id !== null) {
+            $existing = $this->journals->find($id);
+            if (! $existing) {
+                return redirect()->to('journals')->with('error', 'Journal not found.');
+            }
+            if ($existing['status'] === 'posted') {
+                if (empty($existing['reversal_of'])
+                    && in_array($existing['source'], JournalModel::MANUAL_SOURCES, true)
+                    && user_can('journal.void') && user_can('journal.post')) {
+                    $editingPosted = true;
+                } else {
+                    return redirect()->to('journals/' . $id)->with('error', 'This posted journal cannot be edited here.');
+                }
+            } elseif ($existing['status'] !== 'draft') {
+                return redirect()->to('journals/' . $id)->with('error', 'Void journals cannot be edited.');
+            }
+        }
+
         $header = [
             'entry_date'    => $this->request->getPost('entry_date'),
             'reference'     => $this->request->getPost('reference'),
@@ -98,7 +130,9 @@ class JournalController extends BaseController
 
         $rawLines = $this->collectLines();
         $poster   = new JournalPoster();
-        $result   = $poster->save($header, $rawLines, $id);
+        $result   = $editingPosted
+            ? $poster->revise((int) $id, $header, $rawLines)
+            : $poster->save($header, $rawLines, $id);
 
         if (! $result['ok']) {
             return redirect()->back()->withInput()->with('errors', $result['errors']);
@@ -106,6 +140,10 @@ class JournalController extends BaseController
 
         $jid    = $result['id'];
         $action = $this->request->getPost('action');
+
+        if ($editingPosted) {
+            return redirect()->to('journals/' . $jid)->with('message', 'Journal updated and re-posted.');
+        }
 
         if ($action === 'post' && user_can('journal.post')) {
             $postResult = $poster->post($jid);

@@ -79,6 +79,7 @@ return [
     'budget_subtotal' => 'Budget / Subtotal',
     'remove_line' => 'Remove line',
     'posted_note_full' => 'This invoice is <b>posted</b>. Saving un-posts its ledger journal, applies your changes, and re-posts it.',
+    'journal_posted_note' => 'This journal is <b>posted</b>. Saving un-posts it, applies your changes, and re-posts it under the same number.',
     'supplier_ref_hint' => 'Supplier invoice no., or for a Jambix import the supplier-ID + dossier-number key',
     'ref_hint_dossier' => 'e.g. dossier / trip reference',
     'budget_hint' => 'Original budget — set on import, not editable',

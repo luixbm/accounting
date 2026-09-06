@@ -35,6 +35,13 @@ class JournalModel extends TenantModel
         'adjustment'   => 'Year-end Adjustment',
     ];
 
+    /**
+     * Sources for hand-keyed journals — the only ones that may be edited in
+     * place after posting (JournalPoster::revise). The rest are owned by a
+     * source document (invoice, payment, bank move) and must be edited there.
+     */
+    public const MANUAL_SOURCES = ['general', 'memorial', 'opening', 'adjustment'];
+
     public function listing(array $filters = [], int $perPage = 25)
     {
         $b = $this->select('journals.*, currencies.code AS currency_code')

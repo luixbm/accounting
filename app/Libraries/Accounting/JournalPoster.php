@@ -265,6 +265,71 @@ class JournalPoster
     }
 
     /**
+     * Edit a posted journal in place: un-post -> save the new header/lines ->
+     * re-post, atomically. A draft falls through to the normal save() path.
+     * Refuses when the journal is entangled (a reversing entry, already
+     * reversed, its period is closed, or a line is matched on a bank
+     * reconciliation) - void() is the tool for those.
+     *
+     * @return array{ok: bool, id?: int, errors?: list<string>}
+     */
+    public function revise(int $journalId, array $header, array $rawLines): array
+    {
+        $journal = $this->journals->find($journalId);
+        if (! $journal) {
+            return ['ok' => false, 'errors' => ['Journal not found.']];
+        }
+        if ($journal['status'] === 'draft') {
+            return $this->save($header, $rawLines, $journalId);
+        }
+        if ($journal['status'] !== 'posted') {
+            return ['ok' => false, 'errors' => ['Only draft or posted journals can be edited.']];
+        }
+        if (! in_array($journal['source'], \App\Models\JournalModel::MANUAL_SOURCES, true)) {
+            return ['ok' => false, 'errors' => ['This journal is owned by another module - edit it from its source document.']];
+        }
+        if (! empty($journal['reversal_of'])) {
+            return ['ok' => false, 'errors' => ['This journal is a reversing entry and cannot be edited.']];
+        }
+        if ($this->journals->where('reversal_of', $journalId)->countAllResults() > 0) {
+            return ['ok' => false, 'errors' => ['This journal has been voided; a reversing entry exists.']];
+        }
+        if ($this->periods->isDateLocked($journal['entry_date'])) {
+            return ['ok' => false, 'errors' => [sprintf('The accounting period containing %s is closed - void the journal instead.', $journal['entry_date'])]];
+        }
+
+        $db  = db_connect();
+        $hit = $db->table('bank_statement_lines bsl')
+            ->join('journal_lines jl', 'jl.id = bsl.matched_line_id')
+            ->where('jl.journal_id', $journalId)
+            ->countAllResults();
+        if ($hit > 0) {
+            return ['ok' => false, 'errors' => ['A bank reconciliation is matched to this entry - unmatch it first.']];
+        }
+
+        $db->transBegin();
+
+        $this->journals->update($journalId, ['status' => 'draft', 'posted_by' => null, 'posted_at' => null]);
+
+        $save = $this->save($header, $rawLines, $journalId);
+        if (! $save['ok']) {
+            $db->transRollback();
+
+            return $save;
+        }
+        $post = $this->post($journalId);
+        if (! $post['ok']) {
+            $db->transRollback();
+
+            return $post;
+        }
+
+        $db->transCommit();
+
+        return ['ok' => true, 'id' => $journalId];
+    }
+
+    /**
      * Post a draft journal.
      *
      * @return array{ok: bool, errors?: list<string>}
