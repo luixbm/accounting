@@ -643,19 +643,32 @@ class Ledger
      *
      * @return list<float>  aligned to $cols
      */
-    public function cashMovementByPeriod(array $cols): array
+    /**
+     * Per-period cash inflow, outflow (returned as a positive magnitude) and
+     * net across all cash/bank accounts. Drives the dashboard cash-flow line.
+     *
+     * @param list<array{from:string,to:string}> $cols
+     *
+     * @return array{inflow:list<float>, outflow:list<float>, net:list<float>}
+     */
+    public function cashFlowSplitByPeriod(array $cols): array
     {
-        $out = [];
+        $inflow = $outflow = $net = [];
         foreach ($cols as $c) {
             $row = $this->baseQuery($c['from'], $c['to'])
-                ->select('SUM(jl.debit_base - jl.credit_base) AS net')
+                ->select('SUM(jl.debit_base) AS d, SUM(jl.credit_base) AS c')
                 ->join('accounts a', 'a.id = jl.account_id')
                 ->where('a.is_cash', 1)
+                ->where('a.is_group', 0)
                 ->get()->getRowArray();
-            $out[] = (float) ($row['net'] ?? 0);
+            $in  = (float) ($row['d'] ?? 0);
+            $out = (float) ($row['c'] ?? 0);
+            $inflow[]  = $in;
+            $outflow[] = $out;
+            $net[]     = $in - $out;
         }
 
-        return $out;
+        return ['inflow' => $inflow, 'outflow' => $outflow, 'net' => $net];
     }
 
     /**

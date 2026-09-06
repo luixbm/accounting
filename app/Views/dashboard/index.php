@@ -270,7 +270,11 @@ $prevCol = ($month > 0 ? lang('Dashboard.ytd') . ' ' : '') . $prev;
 
   <div class="card">
     <h2><?= lang('Dashboard.chart_cash_move') ?> <span class="muted small"><?= $year ?></span></h2>
-    <?= Svg::signedBars($labels, $cashMoveM) ?>
+    <?= Svg::lines($labels, [
+        lang('Dashboard.inflow')  => $cashFlowM['inflow'],
+        lang('Dashboard.outflow') => $cashFlowM['outflow'],
+        lang('Dashboard.net')     => $cashFlowM['net'],
+    ], [Svg::GREEN, Svg::RED, Svg::BRAND]) ?>
   </div>
 
   <div class="card">

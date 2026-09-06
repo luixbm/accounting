@@ -63,7 +63,7 @@ class Dashboard extends BaseController
         $hasPrev   = (bool) array_filter($revPrevM, static fn ($v) => abs($v) > 0.005)
                   || (bool) array_filter($ebitPrevM, static fn ($v) => abs($v) > 0.005);
 
-        $cashMoveM  = $ledger->cashMovementByPeriod($cols);
+        $cashFlowM  = $ledger->cashFlowSplitByPeriod($cols);
         $topClients = $ledger->topCustomers($from, $winTo, 10);
 
         // YTD KPIs through the window end (+ same window last year for revenue-vs-LY)
@@ -142,7 +142,7 @@ class Dashboard extends BaseController
             'gopPctM'    => $gopPct,
             'ebitdaM'    => $ebitM,
             'ebitdaPrevM' => $ebitPrevM,
-            'cashMoveM'  => $cashMoveM,
+            'cashFlowM'  => $cashFlowM,
             'topClients' => $topClients,
             'cashPos'    => $cashPos,
             'salesBudgetM' => $salesBudgetM,

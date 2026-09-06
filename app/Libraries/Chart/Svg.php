@@ -347,6 +347,71 @@ class Svg
         return $svg . '</svg>';
     }
 
+    /**
+     * Multi-series line chart with circular markers. Handles negative values
+     * (draws a zero baseline). Series values are aligned to $labels.
+     *
+     * @param list<string>              $labels
+     * @param array<string,list<float>> $series  name => values
+     * @param list<string>|null         $colors
+     */
+    public static function lines(array $labels, array $series, ?array $colors = null): string
+    {
+        $all = $series ? array_merge(...array_values($series)) : [0.0];
+        if (! array_filter($all, static fn ($v) => abs($v) > 0.005)) {
+            return self::empty('No data for this range');
+        }
+        $max = max(max($all), 0.0);
+        $min = min(min($all), 0.0);
+
+        $padL  = 46;
+        $padR  = 10;
+        $padT  = 22;
+        $padB  = 34;
+        $plotW = self::W - $padL - $padR;
+        $plotH = self::H - $padT - $padB;
+        $range = ($max - $min) ?: 1;
+        $names = array_keys($series);
+        $cols  = $colors ?? [self::GREEN, self::RED, self::BRAND];
+
+        $n    = count($labels);
+        $slot = $plotW / max($n, 1);
+        $px   = static fn (int $i): float => $padL + $slot * $i + $slot / 2;
+        $py   = static fn (float $v): float => $padT + ($max - $v) / $range * $plotH;
+
+        $svg  = self::open();
+        $svg .= self::yGrid($padL, $padR, $padT, $plotH, $min, $max);
+
+        if ($min < 0) {
+            $zy = $py(0.0);
+            $svg .= '<line x1="' . $padL . '" y1="' . round($zy, 1) . '" x2="' . (self::W - $padR)
+                . '" y2="' . round($zy, 1) . '" stroke="' . self::MUTED . '" stroke-width="1"/>';
+        }
+
+        foreach ($labels as $i => $label) {
+            $svg .= self::xLabel($px($i), self::H - $padB + 13, $label);
+        }
+
+        foreach ($names as $s => $name) {
+            $col = $cols[$s % count($cols)];
+            $pts = [];
+            foreach ($labels as $i => $label) {
+                $pts[] = round($px($i), 1) . ',' . round($py($series[$name][$i] ?? 0.0), 1);
+            }
+            $svg .= '<polyline points="' . implode(' ', $pts) . '" fill="none" stroke="' . $col
+                . '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+            foreach ($labels as $i => $label) {
+                [$cx, $cy] = explode(',', $pts[$i]);
+                $svg .= '<circle cx="' . $cx . '" cy="' . $cy . '" r="2.6" fill="' . $col . '">'
+                    . '<title>' . htmlspecialchars($name . ' · ' . $label . ' : ' . self::abbr($series[$name][$i] ?? 0.0)) . '</title></circle>';
+            }
+        }
+
+        $svg .= self::legend($padL, 13, $names, $cols);
+
+        return $svg . '</svg>';
+    }
+
     // ----------------------------------------------------------------- helpers
 
     private static function yGrid(int $padL, int $padR, int $padT, float $plotH, float $min, float $max): string
