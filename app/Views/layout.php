@@ -59,17 +59,30 @@ if (($allowedCo = allowed_company_ids()) !== null) {
     $allCompanies = array_values(array_filter($allCompanies, static fn ($c) => in_array((int) $c['id'], $allowedCo, true)));
 }
 
-$renderGroup = static function (string $heading, array $links) use ($navFor) {
+$renderGroup = static function (string $heading, array $links, ?string $collapseKey = null) use ($navFor, $activeSeg) {
     $visible = array_filter($links, static fn ($l) => $l[4]);
     if (! $visible) {
         return;
     }
-    echo '<div class="side-group"><h4>' . esc($heading) . '</h4>';
+    // Collapsible groups start collapsed unless the current page lives inside
+    // them (so the active link stays visible); JS then restores the user's choice.
+    $collapsible = $collapseKey !== null;
+    $forceOpen   = $collapsible && in_array($activeSeg, array_column($visible, 0), true);
+    $collapsed   = $collapsible && ! $forceOpen;
+
+    echo '<div class="side-group' . ($collapsed ? ' collapsed' : '') . '"'
+        . ($collapsible ? ' data-navgroup="' . esc($collapseKey, 'attr') . '"' : '') . '>';
+    if ($collapsible) {
+        echo '<button type="button" class="side-group-h">' . esc($heading)
+            . '<span class="side-caret" aria-hidden="true">&#9656;</span></button><div class="side-sub">';
+    } else {
+        echo '<h4>' . esc($heading) . '</h4>';
+    }
     foreach ($visible as [$seg, $url, $icon, $langKey]) {
         echo '<a class="side-link ' . $navFor($seg) . '" href="' . site_url($url) . '">'
             . nav_icon($icon) . '<span>' . lang('Nav.' . $langKey) . '</span></a>';
     }
-    echo '</div>';
+    echo ($collapsible ? '</div>' : '') . '</div>';
 };
 ?>
 <!DOCTYPE html>
@@ -136,7 +149,7 @@ $renderGroup = static function (string $heading, array $links) use ($navFor) {
         </div>
       <?php endif ?>
 
-      <?php $renderGroup(lang('Nav.group_setup'), $setup) ?>
+      <?php $renderGroup(lang('Nav.group_setup'), $setup, 'setup') ?>
     </nav>
 
     <div class="side-foot">
@@ -157,6 +170,28 @@ $renderGroup = static function (string $heading, array $links) use ($navFor) {
       </div>
     </div>
   </aside>
+
+  <script>
+    // Collapsible sidebar groups - restore each group's remembered state, and
+    // save it on click. A group the server force-opened (active page inside)
+    // stays open unless the user collapses it here.
+    (function () {
+      document.querySelectorAll('.side-group[data-navgroup]').forEach(function (g) {
+        var key = 'sa-nav-' + g.getAttribute('data-navgroup');
+        var head = g.querySelector('.side-group-h');
+        if (!head) return;
+        try {
+          var saved = localStorage.getItem(key);
+          if (saved === 'open') g.classList.remove('collapsed');
+          else if (saved === 'closed' && !g.querySelector('.side-link.active')) g.classList.add('collapsed');
+        } catch (e) {}
+        head.addEventListener('click', function () {
+          var collapsed = g.classList.toggle('collapsed');
+          try { localStorage.setItem(key, collapsed ? 'closed' : 'open'); } catch (e) {}
+        });
+      });
+    })();
+  </script>
 
   <div class="content">
     <main class="wrap">
