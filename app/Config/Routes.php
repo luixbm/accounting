@@ -144,10 +144,11 @@ $routes->group('', ['filter' => 'session'], static function (RouteCollection $ro
         $routes->get('/', 'InvoiceReviewController::index');
         $routes->post('(:num)/confirm', 'InvoiceReviewController::confirmItem/$1');
         $routes->post('(:num)/recheck', 'InvoiceReviewController::recheck/$1');
-        $routes->post('(:num)/promise-date', 'InvoiceReviewController::promiseDate/$1');
+        $routes->post('batch/(:num)/invoice/(:num)/promise-date', 'InvoiceReviewController::invoicePromiseDate/$1/$2');
         $routes->post('batch/(:num)/confirm', 'InvoiceReviewController::confirmBatch/$1');
         $routes->post('batch/(:num)/recheck', 'InvoiceReviewController::recheckBatch/$1');
         $routes->post('batch/(:num)/delete', 'InvoiceReviewController::deleteBatch/$1');
+        $routes->post('clear-confirmed', 'InvoiceReviewController::clearConfirmed');
     });
 
     // --- Banking ------------------------------------------------------------

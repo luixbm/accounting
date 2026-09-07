@@ -188,31 +188,31 @@ class PurchaseCostReview
     }
 
     /**
-     * Set/clear the planned-payment date on one unconfirmed item. If the item
-     * is already matched to an invoice, the date is pushed to that invoice's
-     * "Promise Date" custom field right away - the review-item column is only
-     * a staging value for items not matched yet.
+     * Set (or clear, with a blank date) the planned-payment date for ONE
+     * purchase invoice from the review queue. Writes the invoice's "Promise
+     * Date" custom field and mirrors the value onto every review line of that
+     * invoice in the batch for display.
      */
-    public function setPromiseDate(int $itemId, ?string $date): bool
+    public function setInvoicePromiseDate(int $batchId, int $invoiceId, ?string $date): bool
     {
-        $row = $this->items->find($itemId);
-        if (! $row || ! empty($row['confirmed_at'])) {
-            return false;
-        }
-        $norm = $date !== null ? $this->date($date) : null;
-        $this->items->update($itemId, ['promise_date' => $norm]);
+        $norm = ($date !== null && trim($date) !== '') ? $this->date($date) : null;
 
-        if ($norm !== null && ! empty($row['invoice_id'])) {
-            $this->pushPromiseDate((int) $row['invoice_id'], $norm);
-        }
+        $this->pushPromiseDate($invoiceId, $norm ?? '');
+        $this->items
+            ->where('company_id', active_company_id())
+            ->where('batch_id', $batchId)
+            ->where('invoice_id', $invoiceId)
+            ->set('promise_date', $norm)
+            ->update();
 
         return true;
     }
 
     /**
-     * Merge one value into the invoice's custom fields without disturbing
-     * any other custom field already set on it (PO Number, etc.) - the
-     * underlying save() call expects the full field_key => value map.
+     * Merge the promise date into the invoice's custom fields without
+     * disturbing any other custom field already set on it - the underlying
+     * save() call expects the full field_key => value map. A blank date
+     * clears it.
      */
     private function pushPromiseDate(int $invoiceId, string $date): void
     {
@@ -277,8 +277,8 @@ class PurchaseCostReview
                 'party_name'       => $this->str($item['party_name'] ?? null),
                 'description'      => $this->str($item['description'] ?? null),
                 'requested_amount' => is_numeric($cost) ? (float) $cost : null,
-                // starting default - the payer can nudge it earlier/later per booking
-                'promise_date'     => $serviceDate,
+                // no default - the payer sets it per purchase invoice in Review
+                'promise_date'     => null,
             ] + $row;
         }
 

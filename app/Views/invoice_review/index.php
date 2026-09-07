@@ -24,18 +24,28 @@ $badge = static function (array $it): array {
 $canAct = static fn (array $it): bool => empty($it['confirmed_at']) && in_array($it['match_status'], ['would_apply', 'unchanged'], true);
 $diff   = static fn (?float $budget, ?float $req): ?float => $budget === null || $req === null ? null : round($budget - $req, 2);
 
-$promiseCell = static function (array $it): string {
-    if (! empty($it['confirmed_at'])) {
-        return '<span class="mono">' . esc($it['promise_date'] ? date_id($it['promise_date']) : '—') . '</span>';
+// One promise-date control per purchase invoice in the batch. $showRow is true
+// only on the first review line of each invoice (and the first unmatched line).
+$promiseCell = static function (array $it, int $batchId, bool $showRow, string $curDate): string {
+    if (! $showRow) {
+        return '';
+    }
+    if (empty($it['invoice_id'])) {
+        return '<span class="muted small">' . esc(lang('Review.promise_when_matched')) . '</span>';
     }
 
-    return '<form method="post" action="' . site_url('purchases/review/' . $it['id'] . '/promise-date') . '" style="display:inline">'
+    return '<form method="post" action="' . site_url('purchases/review/batch/' . $batchId . '/invoice/' . (int) $it['invoice_id'] . '/promise-date') . '" style="display:inline">'
         . csrf_field()
-        . '<input type="date" name="promise_date" value="' . esc($it['promise_date'] ?? '', 'attr') . '" onchange="this.form.requestSubmit()" style="padding:2px 4px;font-size:.82rem">'
+        . '<input type="date" name="promise_date" value="' . esc($curDate, 'attr') . '" onchange="this.form.requestSubmit()" style="padding:2px 4px;font-size:.82rem">'
         . '</form>';
 };
 
 $actionCell = static function (array $it) use ($canAct): string {
+    if (empty($it['confirmed_at']) && ! empty($it['over_budget'])
+        && $it['match_status'] === 'would_apply' && ! empty($it['invoice_id'])) {
+        return '<a class="btn sm" href="' . site_url('purchases/' . (int) $it['invoice_id'] . '/edit') . '">'
+            . esc(lang('Review.open_invoice')) . '</a>';
+    }
     if ($canAct($it)) {
         return '<form method="post" action="' . site_url('purchases/review/' . $it['id'] . '/confirm') . '" style="display:inline">' . csrf_field()
             . '<button class="btn sm" type="submit">' . esc(lang('Review.confirm')) . '</button></form>';
@@ -58,13 +68,27 @@ $deleteBtn = static function (int $batchId): string {
 <div class="page-head">
   <div><h1><?= esc(lang('Review.title')) ?></h1><div class="muted small"><?= esc(lang('Review.subtitle')) ?></div></div>
   <div class="btn-group no-print">
+    <?php $qs = ($q !== '' ? '&q=' . urlencode($q) : '') . ($state !== 'all' ? '&state=' . urlencode($state) : ''); ?>
     <form method="get" action="<?= site_url('purchases/review') ?>" style="display:contents">
       <input type="hidden" name="status" value="<?= esc($status, 'attr') ?>">
-      <input type="search" name="q" value="<?= esc($q, 'attr') ?>" placeholder="<?= esc(lang('Review.search_ph'), 'attr') ?>" style="min-width:180px;width:auto">
+      <input type="search" name="q" value="<?= esc($q, 'attr') ?>" placeholder="<?= esc(lang('Review.search_ph'), 'attr') ?>" style="min-width:170px;width:auto">
+      <select name="state" onchange="this.form.submit()" style="width:auto">
+        <option value="all"><?= esc(lang('Review.state_all')) ?></option>
+        <?php foreach (['confirmed', 'matched', 'overbudget', 'pending', 'error'] as $s): ?>
+          <option value="<?= $s ?>" <?= $state === $s ? 'selected' : '' ?>><?= esc(lang('Review.state_' . $s)) ?></option>
+        <?php endforeach ?>
+      </select>
       <button class="btn sm ghost" type="submit"><?= esc(lang('Review.search')) ?></button>
     </form>
-    <a class="btn sm <?= $status === 'open' ? '' : 'ghost' ?>" href="<?= site_url('purchases/review?status=open' . ($q !== '' ? '&q=' . urlencode($q) : '')) ?>"><?= esc(lang('Review.filter_open')) ?></a>
-    <a class="btn sm <?= $status === 'all' ? '' : 'ghost' ?>" href="<?= site_url('purchases/review?status=all' . ($q !== '' ? '&q=' . urlencode($q) : '')) ?>"><?= esc(lang('Review.filter_all')) ?></a>
+    <a class="btn sm <?= $status === 'open' ? '' : 'ghost' ?>" href="<?= site_url('purchases/review?status=open' . $qs) ?>"><?= esc(lang('Review.filter_open')) ?></a>
+    <a class="btn sm <?= $status === 'all' ? '' : 'ghost' ?>" href="<?= site_url('purchases/review?status=all' . $qs) ?>"><?= esc(lang('Review.filter_all')) ?></a>
+    <?php if (($confirmedBatches ?? 0) > 0): ?>
+      <form method="post" action="<?= site_url('purchases/review/clear-confirmed') ?>" style="display:contents"
+        onsubmit="return confirm(<?= esc(json_encode(lang('Review.clear_confirmed_confirm')), 'attr') ?>)">
+        <?= csrf_field() ?>
+        <button class="btn sm ghost danger" type="submit"><?= esc(lang('Review.clear_confirmed', [$confirmedBatches])) ?></button>
+      </form>
+    <?php endif ?>
   </div>
 </div>
 
@@ -104,7 +128,7 @@ $deleteBtn = static function (int $batchId): string {
               <td class="right mono"><?= $it['matched_budget'] !== null ? money((float) $it['matched_budget']) : '—' ?></td>
               <td class="right mono" style="color:<?= $d === null ? 'inherit' : ($d < 0 ? 'var(--red)' : 'var(--green)') ?>"><?= $d === null ? '—' : money($d) ?></td>
               <td><span class="badge <?= $cls ?>"><?= esc($label) ?></span><?php if ($it['match_message']): ?><br><span class="muted small"><?= esc($it['match_message']) ?></span><?php endif ?></td>
-              <td><?= $promiseCell($it) ?></td>
+              <td><?= $promiseCell($it, (int) $b['id'], true, $promiseByInvoice[(int) ($it['invoice_id'] ?? 0)] ?? (string) ($it['promise_date'] ?? '')) ?></td>
               <td class="right no-print"><div class="btn-group"><?= $actionCell($it) . $deleteBtn((int) $b['id']) ?></div></td>
             </tr>
           <?php else: ?>
@@ -140,8 +164,17 @@ $deleteBtn = static function (int $batchId): string {
                 </div>
               </td>
             </tr>
+            <?php $shownInv = []; ?>
             <?php foreach ($items as $it): ?>
-              <?php [$cls, $label] = $badge($it); $d = $diff($it['matched_budget'] !== null ? (float) $it['matched_budget'] : null, $it['requested_amount'] !== null ? (float) $it['requested_amount'] : null); ?>
+              <?php
+              [$cls, $label] = $badge($it);
+              $d      = $diff($it['matched_budget'] !== null ? (float) $it['matched_budget'] : null, $it['requested_amount'] !== null ? (float) $it['requested_amount'] : null);
+              $pInv   = (int) ($it['invoice_id'] ?? 0);
+              $pKey   = $pInv > 0 ? 'i' . $pInv : 'unm';
+              $showP  = empty($shownInv[$pKey]);
+              $shownInv[$pKey] = true;
+              $curP   = $pInv > 0 ? ($promiseByInvoice[$pInv] ?? (string) ($it['promise_date'] ?? '')) : '';
+              ?>
               <tr class="<?= $grpId ?>">
                 <td class="muted small" style="padding-left:24px"><?= esc($it['description'] ?: '—') ?></td>
                 <td><?= esc($it['party_name'] ?: '—') ?></td>
@@ -151,7 +184,7 @@ $deleteBtn = static function (int $batchId): string {
                 <td class="right mono"><?= $it['matched_budget'] !== null ? money((float) $it['matched_budget']) : '—' ?></td>
                 <td class="right mono" style="color:<?= $d === null ? 'inherit' : ($d < 0 ? 'var(--red)' : 'var(--green)') ?>"><?= $d === null ? '—' : money($d) ?></td>
                 <td><span class="badge <?= $cls ?>"><?= esc($label) ?></span><?php if ($it['match_message']): ?><br><span class="muted small"><?= esc($it['match_message']) ?></span><?php endif ?></td>
-                <td><?= $promiseCell($it) ?></td>
+                <td><?= $promiseCell($it, (int) $b['id'], $showP, $curP) ?></td>
                 <td class="right no-print"><?= $actionCell($it) ?></td>
               </tr>
             <?php endforeach ?>
