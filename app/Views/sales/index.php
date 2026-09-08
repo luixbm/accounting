@@ -17,7 +17,10 @@ $cols[] = ['status', lang('App.status')];
     <a class="btn ghost" href="<?= site_url('sales/import') ?>"><?= lang('App.import') ?></a>
     <a class="btn ghost" href="<?= site_url('sales/receipts') ?>"><?= lang('Txn.receipts') ?></a>
     <?php if (user_can('journal.post')): ?><a class="btn ghost" href="<?= site_url('sales/receipts/new') ?>"><?= lang('Txn.receive_payment_btn') ?></a><?php endif ?>
-    <?php if (user_can('journal.create')): ?><a class="btn" href="<?= site_url('sales/new') ?>"><?= lang('Txn.new_invoice_btn') ?></a><?php endif ?>
+    <?php if (user_can('journal.create')): ?>
+      <a class="btn ghost" href="<?= site_url('sales/new/credit-note') ?>"><?= lang('Txn.new_credit_note') ?></a>
+      <a class="btn" href="<?= site_url('sales/new') ?>"><?= lang('Txn.new_invoice_btn') ?></a>
+    <?php endif ?>
   </div>
 </div>
 
@@ -41,6 +44,14 @@ $cols[] = ['status', lang('App.status')];
       <?php endforeach ?>
     </select>
   </div>
+  <div class="field">
+    <label><?= lang('Txn.doc_invoice') ?></label>
+    <select name="doc_type">
+      <option value=""><?= lang('Txn.filter_doc_all') ?></option>
+      <option value="invoice" <?= ($f['doc_type'] ?? '') === 'invoice' ? 'selected' : '' ?>><?= lang('Txn.doc_invoice') ?></option>
+      <option value="credit_note" <?= ($f['doc_type'] ?? '') === 'credit_note' ? 'selected' : '' ?>><?= lang('Txn.doc_credit_note') ?></option>
+    </select>
+  </div>
   <div class="field"><label><?= lang('App.from') ?></label><input type="date" name="from" value="<?= esc($f['from']) ?>"></div>
   <div class="field"><label><?= lang('App.to') ?></label><input type="date" name="to" value="<?= esc($f['to']) ?>"></div>
   <button class="btn" type="submit"><?= lang('App.filter') ?></button>
@@ -61,7 +72,7 @@ $cols[] = ['status', lang('App.status')];
     <tbody>
       <?php foreach ($rows as $r): ?>
         <tr>
-          <td class="mono nowrap"><a href="<?= site_url('sales/' . $r['id']) ?>"><?= esc($r['internal_no']) ?></a></td>
+          <td class="mono nowrap"><a href="<?= site_url('sales/' . $r['id']) ?>"><?= esc($r['internal_no']) ?></a><?php if (($r['doc_type'] ?? '') === 'credit_note'): ?> <span class="badge badge-amber" title="<?= esc(lang('Txn.doc_credit_note'), 'attr') ?>">CN</span><?php endif ?></td>
           <td class="nowrap" data-col="date"><?= date_id($r['invoice_date']) ?></td>
           <td data-col="customer"><?= esc($r['customer_name']) ?></td>
           <td class="small" data-col="ref"><?= esc($r['customer_ref']) ?></td>

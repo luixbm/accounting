@@ -73,14 +73,18 @@ ksort($ccyOptions);
         <thead><tr><th><?= lang('Report.col_no') ?></th><th><?= lang('App.date') ?></th><th><?= lang('Report.col_ref') ?></th><th><?= lang('Txn.cur') ?></th><th class="right"><?= lang('Txn.outstanding') ?></th><th class="right"><?= lang('Txn.pay_this') ?></th></tr></thead>
         <tbody>
           <?php foreach ($open as $inv): ?>
-            <?php $code = $inv['currency_code'] ?: $baseCode; $out = round((float) $inv['outstanding'], 2); ?>
-            <tr data-ccy="<?= esc($code, 'attr') ?>">
-              <td class="mono nowrap"><?= esc($inv['internal_no']) ?></td>
+            <?php
+              $code = $inv['currency_code'] ?: $baseCode;
+              $out  = round((float) $inv['outstanding'], 2);
+              $isCn = ($inv['doc_type'] ?? 'invoice') === 'credit_note';
+            ?>
+            <tr data-ccy="<?= esc($code, 'attr') ?>" data-cn="<?= $isCn ? '1' : '0' ?>">
+              <td class="mono nowrap"><?= esc($inv['internal_no']) ?><?php if ($isCn): ?> <span class="badge badge-amber" title="<?= esc(lang('Txn.doc_credit_note'), 'attr') ?>">CN</span><?php endif ?></td>
               <td class="nowrap"><?= date_id($inv['invoice_date']) ?></td>
               <td class="small"><?= esc($inv['supplier_ref']) ?></td>
               <td class="mono small"><?= esc($code) ?></td>
-              <td class="right mono"><?= money($out) ?></td>
-              <td><input class="right mono alloc" name="alloc[<?= $inv['id'] ?>]" inputmode="decimal" data-max="<?= $out ?>" value="" title="<?= esc(lang('Txn.pay_this_hint'), 'attr') ?>"></td>
+              <td class="right mono"><?= $isCn ? '(' . money($out) . ')' : money($out) ?></td>
+              <td><input class="right mono alloc" name="alloc[<?= $inv['id'] ?>]" inputmode="decimal" data-max="<?= $out ?>" data-sign="<?= $isCn ? '-1' : '1' ?>" value="" title="<?= esc(lang('Txn.pay_this_hint'), 'attr') ?>"></td>
             </tr>
           <?php endforeach ?>
         </tbody>
@@ -113,7 +117,9 @@ ksort($ccyOptions);
     function tot() {
       var t = 0;
       rows.forEach(function (r) {
-        if (r.getAttribute('data-ccy') === cur()) t += num(r.querySelector('.alloc').value);
+        if (r.getAttribute('data-ccy') !== cur()) return;
+        var inp = r.querySelector('.alloc');
+        t += num(inp.value) * (parseFloat(inp.getAttribute('data-sign')) || 1);
       });
       document.getElementById('payTot').textContent = t.toLocaleString('en-US',{minimumFractionDigits:2});
     }

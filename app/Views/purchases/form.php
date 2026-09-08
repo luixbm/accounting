@@ -63,15 +63,19 @@ $jobOpt = static function ($sel) use ($jobs) {
 };
 ?>
 
-<div class="page-head"><h1><?= esc($title) ?></h1></div>
+<?php $isCn = ($docType ?? 'invoice') === 'credit_note'; ?>
+<div class="page-head"><h1><?= esc($title) ?><?php if ($isCn): ?> <span class="badge badge-amber"><?= lang('Txn.credit_note') ?></span><?php endif ?></h1></div>
 
 <?php $wasPosted = $isEdit && ($inv['status'] ?? '') === 'posted'; ?>
 <?php if ($wasPosted): ?>
   <div class="alert alert-info"><?= lang('Txn.posted_note_full') ?></div>
+<?php elseif ($isCn): ?>
+  <div class="alert alert-info"><?= lang('Txn.cn_note_purchase') ?></div>
 <?php endif ?>
 
 <form method="post" action="<?= $action ?>" id="piform">
   <?= csrf_field() ?>
+  <input type="hidden" name="doc_type" value="<?= esc($docType ?? 'invoice') ?>">
 
   <div class="card">
     <div class="row">
@@ -197,7 +201,7 @@ $jobOpt = static function ($sel) use ($jobs) {
         <button class="btn" type="submit" name="action" value="post"><?= lang('Txn.save_repost') ?></button>
       <?php else: ?>
         <button class="btn ghost" type="submit" name="action" value="draft"><?= lang('Txn.save_draft') ?></button>
-        <?php if ($canPost): ?><button class="btn" type="submit" name="action" value="post"><?= lang('Txn.save_post') ?></button><?php endif ?>
+        <?php if ($canPost): ?><button class="btn" type="submit" name="action" value="post"><?= $isCn ? lang('Txn.cn_save_post') : lang('Txn.save_post') ?></button><?php endif ?>
       <?php endif ?>
       <a class="btn ghost" href="<?= site_url('purchases') ?>"><?= lang('App.cancel') ?></a>
       
@@ -289,5 +293,7 @@ $jobOpt = static function ($sel) use ($jobs) {
   recalc();
 })();
 </script>
+
+<?= view('partials/job_drawer') ?>
 
 <?= $this->endSection() ?>

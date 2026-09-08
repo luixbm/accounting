@@ -9,7 +9,7 @@ class PurchaseInvoiceModel extends TenantModel
     protected $returnType    = 'array';
     protected $useTimestamps  = true;
     protected $allowedFields = [
-        'internal_no', 'supplier_ref', 'supplier_id', 'invoice_date', 'due_date',
+        'internal_no', 'doc_type', 'supplier_ref', 'supplier_id', 'invoice_date', 'due_date',
         'currency_id', 'exchange_rate', 'description',
         'subtotal', 'ppn_amount', 'pph_amount', 'total', 'total_base', 'paid_base', 'paid',
         'status', 'journal_id', 'import_batch_id', 'external_id', 'source', 'created_by', 'posted_by', 'posted_at',
@@ -27,6 +27,9 @@ class PurchaseInvoiceModel extends TenantModel
         }
         if (! empty($filters['supplier_id'])) {
             $b->where('purchase_invoices.supplier_id', $filters['supplier_id']);
+        }
+        if (! empty($filters['doc_type'])) {
+            $b->where('purchase_invoices.doc_type', $filters['doc_type']);
         }
         if (! empty($filters['q'])) {
             $q    = trim((string) $filters['q']);
@@ -72,9 +75,9 @@ class PurchaseInvoiceModel extends TenantModel
             ->findAll();
     }
 
-    public function nextNo(): string
+    public function nextNo(string $docType = 'invoice'): string
     {
-        $stem = 'PI-' . date('ym') . '-';
+        $stem = ($docType === 'credit_note' ? 'PCN-' : 'PI-') . date('ym') . '-';
         $row  = $this->like('internal_no', $stem, 'after')->orderBy('internal_no', 'DESC')->first();
         $seq  = $row ? (int) substr($row['internal_no'], -4) + 1 : 1;
 

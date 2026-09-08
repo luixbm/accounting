@@ -29,7 +29,7 @@ class SalesController extends BaseController
 
     public function index()
     {
-        $filters = sticky_filters('sales', ['status', 'customer_id', 'q', 'from', 'to']);
+        $filters = sticky_filters('sales', ['status', 'customer_id', 'q', 'from', 'to', 'doc_type']);
         if ($filters instanceof \CodeIgniter\HTTP\RedirectResponse) {
             return $filters;
         }
@@ -47,13 +47,14 @@ class SalesController extends BaseController
         ]);
     }
 
-    public function new()
+    public function new(?string $type = null)
     {
         if (! $this->canEdit()) {
             return redirect()->to('sales')->with('error', 'Not allowed.');
         }
+        $docType = $type === 'credit-note' ? 'credit_note' : 'invoice';
 
-        return view('sales/form', $this->formData(null));
+        return view('sales/form', $this->formData(null, [], $docType));
     }
 
     public function edit(int $id)
@@ -124,6 +125,7 @@ class SalesController extends BaseController
         }
 
         $header = [
+            'doc_type'      => $this->request->getPost('doc_type'),
             'customer_ref'  => $this->request->getPost('customer_ref'),
             'customer_id'   => $this->request->getPost('customer_id'),
             'invoice_date'  => $this->request->getPost('invoice_date'),
@@ -144,8 +146,11 @@ class SalesController extends BaseController
         }
         $this->cf->save('sales_invoice', $res['id'], $cf);
 
+        $noun = $this->request->getPost('doc_type') === 'credit_note'
+            ? lang('Txn.doc_credit_note') : lang('Txn.doc_invoice');
+
         if ($editingPosted) {
-            return redirect()->to('sales/' . $res['id'])->with('message', 'Invoice updated and re-posted.');
+            return redirect()->to('sales/' . $res['id'])->with('message', $noun . ' updated and re-posted.');
         }
 
         if ($this->request->getPost('action') === 'post' && user_can('journal.post')) {
@@ -154,10 +159,10 @@ class SalesController extends BaseController
                 return redirect()->to('sales/' . $res['id'])->with('errors', $p['errors']);
             }
 
-            return redirect()->to('sales/' . $res['id'])->with('message', 'Invoice saved and posted.');
+            return redirect()->to('sales/' . $res['id'])->with('message', $noun . ' saved and posted.');
         }
 
-        return redirect()->to('sales/' . $res['id'])->with('message', 'Invoice saved as draft.');
+        return redirect()->to('sales/' . $res['id'])->with('message', $noun . ' saved as draft.');
     }
 
     public function show(int $id)
@@ -272,10 +277,14 @@ class SalesController extends BaseController
      *
      * @return array<string,mixed>
      */
-    private function formData(?array $inv, array $lines = []): array
+    private function formData(?array $inv, array $lines = [], string $docType = 'invoice'): array
     {
+        $docType = $inv['doc_type'] ?? $docType;
+        $noun    = $docType === 'credit_note' ? lang('Txn.doc_credit_note') : lang('Txn.doc_invoice');
+
         return [
-            'title'      => $inv ? 'Edit ' . $inv['internal_no'] : 'New Sales Invoice',
+            'title'      => $inv ? 'Edit ' . $inv['internal_no'] : lang('Txn.new_x', [$noun]),
+            'docType'    => $docType,
             'inv'        => $inv,
             'lines'      => $lines,
             'customers'  => model(CustomerModel::class)->active(),

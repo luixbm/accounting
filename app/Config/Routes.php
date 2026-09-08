@@ -119,6 +119,7 @@ $routes->group('', ['filter' => 'session'], static function (RouteCollection $ro
 
         $routes->get('/', 'PurchaseController::index');
         $routes->get('new', 'PurchaseController::new');
+        $routes->get('new/(:segment)', 'PurchaseController::new/$1');
         $routes->post('/', 'PurchaseController::create');
         $routes->get('(:num)', 'PurchaseController::show/$1');
         $routes->get('(:num)/edit', 'PurchaseController::edit/$1');
@@ -204,6 +205,7 @@ $routes->group('', ['filter' => 'session'], static function (RouteCollection $ro
 
         $routes->get('/', 'SalesController::index');
         $routes->get('new', 'SalesController::new');
+        $routes->get('new/(:segment)', 'SalesController::new/$1');
         $routes->post('/', 'SalesController::create');
         $routes->get('(:num)', 'SalesController::show/$1');
         $routes->get('(:num)/edit', 'SalesController::edit/$1');

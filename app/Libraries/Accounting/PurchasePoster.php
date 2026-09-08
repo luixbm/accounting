@@ -90,6 +90,8 @@ class PurchasePoster
         }
         $rate = $this->currencies->isBase((int) $currency['id']) ? 1.0 : max(0.0, (float) ($header['exchange_rate'] ?? 1));
 
+        $docType = ($header['doc_type'] ?? 'invoice') === 'credit_note' ? 'credit_note' : 'invoice';
+
         $clean   = [];
         $no      = 1;
         $subtotal = 0.0;
@@ -153,8 +155,9 @@ class PurchasePoster
 
         if ($id === null) {
             $data['status']      = 'draft';
+            $data['doc_type']    = $docType;
             $data['created_by']  = auth()->id();
-            $data['internal_no'] = $this->invoices->nextNo();
+            $data['internal_no'] = $this->invoices->nextNo($docType);
             $id                  = (int) $this->invoices->insert($data, true);
         } else {
             $existing = $this->invoices->find($id);
@@ -235,10 +238,19 @@ class PurchasePoster
             'supplier_id' => $inv['supplier_id'],
         ];
 
+        // A credit note is the invoice's mirror - swap every debit/credit.
+        $isCn = ($inv['doc_type'] ?? 'invoice') === 'credit_note';
+        if ($isCn) {
+            foreach ($rawLines as &$r) {
+                [$r['debit'], $r['credit']] = [(float) ($r['credit'] ?? 0), (float) ($r['debit'] ?? 0)];
+            }
+            unset($r);
+        }
+
         $save = $this->journalPoster->save([
             'entry_date'    => $inv['invoice_date'],
             'reference'     => $inv['supplier_ref'] ?: $inv['internal_no'],
-            'description'   => 'Pembelian ' . $inv['internal_no'] . ($inv['description'] ? ' - ' . $inv['description'] : ''),
+            'description'   => ($isCn ? 'Nota Kredit Pembelian ' : 'Pembelian ') . $inv['internal_no'] . ($inv['description'] ? ' - ' . $inv['description'] : ''),
             'source'        => 'purchase',
             'currency_id'   => $inv['currency_id'],
             'exchange_rate' => $inv['exchange_rate'],
@@ -481,34 +493,41 @@ class PurchasePoster
         $apBaseTot  = 0.0;
         $totalTxn   = 0.0;
 
-        foreach ($allocations as $invId => $txn) {
-            $inv = $this->invoices->find((int) $invId);
-            if (! $inv || (int) $inv['supplier_id'] !== $supplierId || ! in_array($inv['status'], ['posted', 'partial'], true)) {
-                return ['ok' => false, 'errors' => ['Invoice ' . $invId . ' is not payable for this supplier.']];
+        foreach ($allocations as $docId => $txn) {
+            $doc = $this->invoices->find((int) $docId);
+            if (! $doc || (int) $doc['supplier_id'] !== $supplierId || ! in_array($doc['status'], ['posted', 'partial'], true)) {
+                return ['ok' => false, 'errors' => ['Document ' . $docId . ' is not open for this supplier.']];
             }
-            if ((int) $inv['currency_id'] !== $ccyId) {
-                return ['ok' => false, 'errors' => ['Invoice ' . $inv['internal_no'] . ' is in ' . $this->ccyCode((int) $inv['currency_id']) . ', not ' . $ccy['code'] . ' — settle it with a separate payment.']];
+            if ((int) $doc['currency_id'] !== $ccyId) {
+                return ['ok' => false, 'errors' => [$doc['internal_no'] . ' is in ' . $this->ccyCode((int) $doc['currency_id']) . ', not ' . $ccy['code'] . ' — settle it with a separate payment.']];
             }
-            if (strtotime((string) $header['payment_date']) < strtotime((string) $inv['invoice_date'])) {
-                return ['ok' => false, 'errors' => ['Payment date is before invoice ' . $inv['internal_no'] . ' (' . $inv['invoice_date'] . '). Hold it as a supplier deposit instead.']];
+            $isCn = ($doc['doc_type'] ?? 'invoice') === 'credit_note';
+            if (! $isCn && strtotime((string) $header['payment_date']) < strtotime((string) $doc['invoice_date'])) {
+                return ['ok' => false, 'errors' => ['Payment date is before invoice ' . $doc['internal_no'] . ' (' . $doc['invoice_date'] . '). Hold it as a supplier deposit instead.']];
             }
-            $outstanding = round((float) $inv['total'] - (float) $inv['paid'], 2);
-            if ($txn - $outstanding > 0.01) {
-                return ['ok' => false, 'errors' => ['Allocation for ' . $inv['internal_no'] . ' exceeds its outstanding ' . number_format($outstanding, 2) . ' ' . $ccy['code'] . '.']];
+            $remaining = round((float) $doc['total'] - (float) $doc['paid'], 2);
+            if ($txn - $remaining > 0.01) {
+                return ['ok' => false, 'errors' => [$doc['internal_no'] . ' allocation exceeds its ' . ($isCn ? 'remaining credit ' : 'outstanding ') . number_format($remaining, 2) . ' ' . $ccy['code'] . '.']];
             }
 
-            $apBase   = round($txn * (float) $inv['exchange_rate'], 2);
+            // Credit notes reduce the payment: -1 on the money math, but their
+            // consumed amount (positive) still bumps the CN's "paid" so it clears.
+            $sign     = $isCn ? -1 : 1;
+            $apBase   = round($txn * (float) $doc['exchange_rate'], 2);
             $cashBase = round($txn * $rate, 2);
-            $fx        += $apBase - $cashBase; // + = gain (paid fewer base units than owed)
-            $bankBase  += $cashBase;
-            $apBaseTot += $apBase;
-            $totalTxn  += $txn;
-            $rows[]     = ['invoice_id' => (int) $invId, 'amount' => $txn, 'amount_base' => $apBase];
+            $fx        += $sign * ($apBase - $cashBase); // + = gain (paid fewer base units than owed)
+            $bankBase  += $sign * $cashBase;
+            $apBaseTot += $sign * $apBase;
+            $totalTxn  += $sign * $txn;
+            $rows[]     = ['invoice_id' => (int) $docId, 'amount' => $txn, 'amount_base' => $apBase];
         }
         $fx        = round($fx, 2);
         $bankBase  = round($bankBase, 2);
         $apBaseTot = round($apBaseTot, 2);
         $totalTxn  = round($totalTxn, 2);
+        if ($totalTxn <= 0.005) {
+            return ['ok' => false, 'errors' => ['The credit notes cover this whole payment — record any refund with a separate entry.']];
+        }
 
         $fxId = null;
         if (abs($fx) >= 0.005) {

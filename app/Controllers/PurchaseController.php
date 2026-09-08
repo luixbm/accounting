@@ -29,7 +29,7 @@ class PurchaseController extends BaseController
 
     public function index()
     {
-        $filters = sticky_filters('purchases', ['status', 'supplier_id', 'q', 'from', 'to']);
+        $filters = sticky_filters('purchases', ['status', 'supplier_id', 'q', 'from', 'to', 'doc_type']);
         if ($filters instanceof \CodeIgniter\HTTP\RedirectResponse) {
             return $filters;
         }
@@ -47,13 +47,14 @@ class PurchaseController extends BaseController
         ]);
     }
 
-    public function new()
+    public function new(?string $type = null)
     {
         if (! $this->canEdit()) {
             return redirect()->to('purchases')->with('error', 'Not allowed.');
         }
+        $docType = $type === 'credit-note' ? 'credit_note' : 'invoice';
 
-        return view('purchases/form', $this->formData(null));
+        return view('purchases/form', $this->formData(null, [], $docType));
     }
 
     public function edit(int $id)
@@ -124,6 +125,7 @@ class PurchaseController extends BaseController
         }
 
         $header = [
+            'doc_type'      => $this->request->getPost('doc_type'),
             'supplier_ref'  => $this->request->getPost('supplier_ref'),
             'supplier_id'   => $this->request->getPost('supplier_id'),
             'invoice_date'  => $this->request->getPost('invoice_date'),
@@ -146,8 +148,11 @@ class PurchaseController extends BaseController
 
         $this->cf->save('purchase_invoice', $res['id'], $cf);
 
+        $noun = $this->request->getPost('doc_type') === 'credit_note'
+            ? lang('Txn.doc_credit_note') : lang('Txn.doc_invoice');
+
         if ($editingPosted) {
-            return redirect()->to('purchases/' . $res['id'])->with('message', 'Invoice updated and re-posted.');
+            return redirect()->to('purchases/' . $res['id'])->with('message', $noun . ' updated and re-posted.');
         }
 
         if ($this->request->getPost('action') === 'post' && user_can('journal.post')) {
@@ -156,10 +161,10 @@ class PurchaseController extends BaseController
                 return redirect()->to('purchases/' . $res['id'])->with('errors', $p['errors']);
             }
 
-            return redirect()->to('purchases/' . $res['id'])->with('message', 'Invoice saved and posted.');
+            return redirect()->to('purchases/' . $res['id'])->with('message', $noun . ' saved and posted.');
         }
 
-        return redirect()->to('purchases/' . $res['id'])->with('message', 'Invoice saved as draft.');
+        return redirect()->to('purchases/' . $res['id'])->with('message', $noun . ' saved as draft.');
     }
 
     public function show(int $id)
@@ -283,10 +288,14 @@ class PurchaseController extends BaseController
      *
      * @return array<string,mixed>
      */
-    private function formData(?array $inv, array $lines = []): array
+    private function formData(?array $inv, array $lines = [], string $docType = 'invoice'): array
     {
+        $docType = $inv['doc_type'] ?? $docType;
+        $noun    = $docType === 'credit_note' ? lang('Txn.doc_credit_note') : lang('Txn.doc_invoice');
+
         return [
-            'title'      => $inv ? 'Edit ' . $inv['internal_no'] : 'New Purchase Invoice',
+            'title'      => $inv ? 'Edit ' . $inv['internal_no'] : lang('Txn.new_x', [$noun]),
+            'docType'    => $docType,
             'inv'        => $inv,
             'lines'      => $lines,
             'suppliers'  => model(SupplierModel::class)->active(),

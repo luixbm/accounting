@@ -9,6 +9,7 @@ $statusLabel = ['draft' => 'draft', 'posted' => 'posted', 'partial' => 'draft', 
 <div class="page-head">
   <div>
     <h1><?= esc($inv['internal_no']) ?> <?= status_badge($statusLabel) ?>
+      <?php if (($inv['doc_type'] ?? '') === 'credit_note'): ?><span class="badge badge-amber"><?= lang('Txn.doc_credit_note') ?></span><?php endif ?>
       <?php if ($inv['status'] === 'partial'): ?><span class="badge badge-gray"><?= lang('App.partial') ?></span><?php endif ?>
       <?php if ($inv['status'] === 'paid'): ?><span class="badge badge-green"><?= lang('App.paid') ?></span><?php endif ?>
     </h1>

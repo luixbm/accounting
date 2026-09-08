@@ -9,7 +9,7 @@ class SalesInvoiceModel extends TenantModel
     protected $returnType    = 'array';
     protected $useTimestamps  = true;
     protected $allowedFields = [
-        'internal_no', 'customer_ref', 'customer_id', 'invoice_date', 'due_date',
+        'internal_no', 'doc_type', 'customer_ref', 'customer_id', 'invoice_date', 'due_date',
         'currency_id', 'exchange_rate', 'description',
         'subtotal', 'ppn_amount', 'pph_amount', 'total', 'total_base', 'received_base', 'received',
         'status', 'journal_id', 'import_batch_id', 'external_id', 'source', 'created_by', 'posted_by', 'posted_at',
@@ -27,6 +27,9 @@ class SalesInvoiceModel extends TenantModel
         }
         if (! empty($filters['customer_id'])) {
             $b->where('sales_invoices.customer_id', $filters['customer_id']);
+        }
+        if (! empty($filters['doc_type'])) {
+            $b->where('sales_invoices.doc_type', $filters['doc_type']);
         }
         if (! empty($filters['q'])) {
             $b->groupStart()
@@ -59,9 +62,9 @@ class SalesInvoiceModel extends TenantModel
             ->findAll();
     }
 
-    public function nextNo(): string
+    public function nextNo(string $docType = 'invoice'): string
     {
-        $stem = 'SI-' . date('ym') . '-';
+        $stem = ($docType === 'credit_note' ? 'SCN-' : 'SI-') . date('ym') . '-';
         $row  = $this->like('internal_no', $stem, 'after')->orderBy('internal_no', 'DESC')->first();
         $seq  = $row ? (int) substr($row['internal_no'], -4) + 1 : 1;
 
