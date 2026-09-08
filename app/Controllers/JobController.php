@@ -270,6 +270,33 @@ class JobController extends BaseController
         ]);
     }
 
+    /**
+     * Read-only JSON job search for the quick-look drawer on the purchase /
+     * sales invoice forms. Matches code, name or customer; newest arrivals
+     * first; capped so a blank query still returns something useful.
+     */
+    public function lookup()
+    {
+        if (! $this->guard()) {
+            return $this->response->setStatusCode(403)->setJSON(['error' => 'forbidden']);
+        }
+
+        $q = trim((string) $this->request->getGet('q'));
+
+        $b = $this->jobs
+            ->select('jobs.code, jobs.name, jobs.status, jobs.start_date, jobs.end_date, jobs.pax, customers.name AS customer_name')
+            ->join('customers', 'customers.id = jobs.customer_id', 'left')
+            ->orderBy('jobs.start_date', 'DESC')->orderBy('jobs.code', 'DESC');
+
+        if ($q !== '') {
+            $b->groupStart()
+                ->like('jobs.code', $q)->orLike('jobs.name', $q)->orLike('customers.name', $q)
+                ->groupEnd();
+        }
+
+        return $this->response->setJSON(['jobs' => $b->findAll(50)]);
+    }
+
     public function toggle(int $id)
     {
         if (! $this->guard()) {

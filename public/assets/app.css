@@ -431,3 +431,57 @@ legend{font-weight:700;font-size:12px;color:var(--muted);padding:0 6px}
   .card{border:none;padding:0}
   table.grid thead th{position:static}
 }
+
+/* ============================================================ job quick-look drawer */
+.jobdrawer{position:fixed;top:0;right:0;height:100%;z-index:60;pointer-events:none}
+.jobdrawer-tab{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:61;pointer-events:auto;
+  writing-mode:vertical-rl;text-orientation:mixed;cursor:pointer;
+  padding:14px 6px;border:1px solid var(--line);border-right:0;border-radius:8px 0 0 8px;
+  background:var(--panel);color:var(--brand);font:600 12px/1 inherit;letter-spacing:.06em;
+  box-shadow:-2px 0 8px rgba(15,23,35,.08)}
+.jobdrawer-tab:hover{background:var(--hover)}
+.jobdrawer.is-open .jobdrawer-tab{right:360px}
+.jobdrawer-tab-txt{text-transform:uppercase}
+
+.jobdrawer-panel{position:fixed;top:0;right:0;width:360px;max-width:92vw;height:100%;
+  pointer-events:auto;display:flex;flex-direction:column;
+  background:var(--panel);border-left:1px solid var(--line);
+  box-shadow:-10px 0 30px rgba(15,23,35,.14);
+  transform:translateX(100%);transition:transform .2s ease}
+.jobdrawer.is-open .jobdrawer-panel{transform:translateX(0)}
+@media (prefers-reduced-motion:reduce){
+  .jobdrawer-panel{transition:none}
+  .jobdrawer.is-open .jobdrawer-tab{transition:none}
+}
+
+.jd-head{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;border-bottom:1px solid var(--line)}
+.jd-head strong{font-size:14px}
+.jd-close{background:none;border:0;font-size:22px;line-height:1;cursor:pointer;color:var(--muted);padding:0 4px}
+.jd-close:hover{color:var(--ink)}
+.jd-search{padding:12px 14px 6px}
+.jd-search input{width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:7px;
+  background:var(--field-bg);color:var(--ink);font-size:13px}
+.jd-search input:focus{outline:2px solid var(--focus);outline-offset:0;border-color:var(--brand)}
+.jd-hint{padding:0 14px 8px;margin:0}
+.jd-results{flex:1 1 auto;overflow-y:auto;padding:0 8px 10px}
+.jd-results.is-loading{opacity:.55}
+.jd-empty,.jd-item + .jd-empty{padding:14px}
+
+.jd-list{list-style:none;margin:0;padding:0}
+.jd-item{padding:9px 10px;border-radius:8px;cursor:pointer;border:1px solid transparent}
+.jd-item:hover{background:var(--hover)}
+.jd-item:focus{outline:2px solid var(--focus);outline-offset:0}
+.jd-item.is-copied{background:var(--green-bg);border-color:var(--green-line)}
+.jd-row1{display:flex;align-items:center;gap:8px}
+.jd-code{font-weight:700;font-size:13px;color:var(--brand)}
+.jd-status{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:999px;
+  background:var(--gray-bg);color:var(--muted)}
+.jd-status-open{background:var(--green-bg);color:var(--green)}
+.jd-status-closed{background:var(--gray-bg);color:var(--muted)}
+.jd-name{font-size:12.5px;color:var(--ink);margin-top:2px}
+.jd-meta{margin-top:2px}
+.jd-foot{padding:10px 14px;border-top:1px solid var(--line);font-size:12px}
+.jd-foot a{color:var(--brand)}
+
+@media print{.jobdrawer,.jobdrawer-tab{display:none!important}}

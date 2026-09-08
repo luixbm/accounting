@@ -344,6 +344,7 @@ $routes->group('', ['filter' => 'session'], static function (RouteCollection $ro
         });
 
         $routes->get('new', 'JobController::new');
+        $routes->get('lookup', 'JobController::lookup');
         $routes->post('/', 'JobController::create');
         $routes->get('(:num)', 'JobController::show/$1');
         $routes->get('(:num)/edit', 'JobController::edit/$1');
