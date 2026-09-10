@@ -132,9 +132,10 @@ $prevCol = ($month > 0 ? lang('Dashboard.ytd') . ' ' : '') . $prev;
     <h2 style="margin:0"><?= lang('Dashboard.summary_title') ?></h2>
     <a class="btn sm ghost no-print" href="<?= site_url('reports/executive-summary?year=' . $year . ($month > 0 ? '&period=m' . $month : '')) ?>"><?= lang('Dashboard.open_report') ?></a>
   </div>
-  <div class="row" style="align-items:flex-start;gap:22px">
-    <div style="flex:1.15;min-width:320px;overflow-x:auto">
-      <h3 style="font-size:13px;margin:4px 0 6px"><?= lang('Dashboard.summary_pl') ?></h3>
+  <div class="dash-split">
+    <section class="dash-pane" style="flex:1.15">
+      <h3 class="dash-pane-h"><?= lang('Dashboard.summary_pl') ?></h3>
+    <div style="overflow-x:auto">
       <table class="grid tight">
         <thead>
           <tr>
@@ -166,10 +167,12 @@ $prevCol = ($month > 0 ? lang('Dashboard.ytd') . ' ' : '') . $prev;
           <?php endforeach ?>
         </tbody>
       </table>
-    </div>
+      </div>
+    </section>
 
-    <div style="flex:1;min-width:280px;overflow-x:auto">
-      <h3 style="font-size:13px;margin:4px 0 6px"><?= lang('Dashboard.summary_bs') ?> <span class="muted small"><?= lang('Dashboard.as_of', [date_id($sumMeta['asOf'])]) ?></span></h3>
+    <section class="dash-pane" style="flex:1">
+      <h3 class="dash-pane-h"><?= lang('Dashboard.summary_bs') ?> <span class="muted small"><?= lang('Dashboard.as_of', [date_id($sumMeta['asOf'])]) ?></span></h3>
+      <div style="overflow-x:auto">
       <table class="grid tight">
         <thead>
           <tr><th></th><th class="right"><?= esc($year) ?></th><th class="right muted"><?= esc((string) $prev) ?></th></tr>
@@ -191,6 +194,7 @@ $prevCol = ($month > 0 ? lang('Dashboard.ytd') . ' ' : '') . $prev;
         </tbody>
       </table>
     </div>
+    </section>
   </div>
 </div>
 
@@ -198,9 +202,9 @@ $prevCol = ($month > 0 ? lang('Dashboard.ytd') . ' ' : '') . $prev;
   <div class="row" style="align-items:flex-start;gap:22px">
     <div style="flex:1.4;min-width:320px">
       <h2 style="margin-top:0"><?= lang('Dashboard.chart_sales') ?> <span class="muted small"><?= $hasPrev ? $year . ' vs ' . $prev : $year ?></span></h2>
-      <?= $hasPrev
-          ? Svg::groupedBars($labels, [(string) $year => $revM, (string) $prev => $revPrevM], [Svg::BRAND, Svg::MUTED])
-          : Svg::signedBars($labels, $revM) ?>
+      <?= Svg::series($labels,
+          $hasPrev ? [(string) $year => $revM, (string) $prev => $revPrevM] : [(string) $year => $revM],
+          [Svg::BRAND, Svg::MUTED], ! $hasPrev) ?>
     </div>
     <div style="flex:1;min-width:300px;overflow-x:auto">
       <table class="grid tight">
@@ -247,15 +251,15 @@ $prevCol = ($month > 0 ? lang('Dashboard.ytd') . ' ' : '') . $prev;
 
   <div class="card">
     <h2><?= lang('Dashboard.ebitda') ?> <span class="muted small"><?= $hasPrev ? $year . ' vs ' . $prev : $year ?></span></h2>
-    <?= $hasPrev
-        ? Svg::groupedBars($labels, [(string) $year => $ebitdaM, (string) $prev => $ebitdaPrevM], [Svg::BRAND, Svg::MUTED])
-        : Svg::signedBars($labels, $ebitdaM) ?>
+    <?= Svg::series($labels,
+        $hasPrev ? [(string) $year => $ebitdaM, (string) $prev => $ebitdaPrevM] : [(string) $year => $ebitdaM],
+        [Svg::BRAND, Svg::MUTED], ! $hasPrev) ?>
   </div>
 
   <div class="card">
     <h2><?= lang('Dashboard.chart_budget') ?> <span class="muted small"><?= $year ?></span></h2>
     <?php if ($salesBudgetM !== null): ?>
-      <?= Svg::groupedBars($labels, [lang('Dashboard.actual') => $revM, lang('Dashboard.budget') => $salesBudgetM], [Svg::BRAND, Svg::MUTED]) ?>
+      <?= Svg::series($labels, [lang('Dashboard.actual') => $revM, lang('Dashboard.budget') => $salesBudgetM], [Svg::BRAND, Svg::MUTED]) ?>
     <?php else: ?>
       <div class="chart-placeholder">
         <p><?= lang('Dashboard.budget_none', [$year]) ?></p>

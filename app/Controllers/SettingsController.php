@@ -24,6 +24,8 @@ class SettingsController extends BaseController
         }
         $current['theme']  = setting()->get('Accounting.theme') ?: 'light';
         $current['locale'] = setting()->get('Accounting.locale') ?: 'id';
+        $current['design']     = active_design();
+        $current['chartStyle'] = chart_style();
 
         return view('settings/index', [
             'title'    => 'Settings',
@@ -38,6 +40,10 @@ class SettingsController extends BaseController
         setting()->set('Accounting.theme', trim((string) $this->request->getPost('theme')));
         $loc = $this->request->getPost('locale');
         setting()->set('Accounting.locale', in_array($loc, ['id', 'en'], true) ? $loc : 'id');
+        $dsn = (string) $this->request->getPost('design');
+        setting()->set('Accounting.design', array_key_exists($dsn, \Config\Design::DESIGNS) ? $dsn : \Config\Design::DEFAULT);
+        $cst = (string) $this->request->getPost('chartStyle');
+        setting()->set('Accounting.chartStyle', array_key_exists($cst, \Config\Charts::STYLES) ? $cst : \Config\Charts::DEFAULT);
 
         foreach (self::COMPANY_KEYS as $k) {
             acc_setting_set($k, trim((string) $this->request->getPost($k)));

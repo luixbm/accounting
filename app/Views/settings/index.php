@@ -28,6 +28,24 @@ $acctSelect = static function (string $name, string $value) use ($accounts): str
   <div class="card" style="max-width:680px">
     <h2><?= lang('Setup.appearance_h') ?></h2>
     <div class="row">
+      <div class="field" style="max-width:300px">
+        <label><?= lang('Setup.design') ?> <span class="muted"><?= lang('Setup.design_note') ?></span></label>
+        <select name="design">
+          <?php foreach (\Config\Design::DESIGNS as $k => $lbl): ?>
+            <option value="<?= esc($k, 'attr') ?>" <?= ($current['design'] ?? \Config\Design::DEFAULT) === $k ? 'selected' : '' ?>><?= esc($lbl) ?></option>
+          <?php endforeach ?>
+        </select>
+      </div>
+      <div class="field" style="max-width:220px">
+        <label><?= lang('Setup.chart_style') ?> <span class="muted"><?= lang('Setup.design_note') ?></span></label>
+        <select name="chartStyle">
+          <?php foreach (\Config\Charts::STYLES as $k => $lbl): ?>
+            <option value="<?= esc($k, 'attr') ?>" <?= ($current['chartStyle'] ?? \Config\Charts::DEFAULT) === $k ? 'selected' : '' ?>><?= esc($lbl) ?></option>
+          <?php endforeach ?>
+        </select>
+      </div>
+    </div>
+    <div class="row">
       <div class="field" style="max-width:260px">
         <label><?= lang('Setup.default_theme') ?> <span class="muted"><?= lang('Setup.users_switch_own') ?></span></label>
         <select name="theme">

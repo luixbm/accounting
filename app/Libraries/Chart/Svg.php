@@ -71,6 +71,35 @@ class Svg
     }
 
     /**
+     * A monthly value chart in the user's chosen model (Setup -> Settings ->
+     * Chart style): bars | lines | area. `$series` is name => values aligned to
+     * $labels. Set $signedSingle when a lone series should be coloured green/red
+     * by sign in bar mode.
+     *
+     * @param list<string>              $labels
+     * @param array<string,list<float>> $series
+     * @param list<string>|null         $colors
+     */
+    public static function series(array $labels, array $series, ?array $colors = null, bool $signedSingle = false): string
+    {
+        $style = function_exists('chart_style') ? chart_style() : 'bars';
+
+        if ($style === 'lines') {
+            return self::lines($labels, $series, $colors);
+        }
+        if ($style === 'area') {
+            return count($series) === 1
+                ? self::area($labels, array_values((array) reset($series)), $colors[0] ?? self::BRAND)
+                : self::lines($labels, $series, $colors);   // area reads cleanly for one series only
+        }
+        if ($signedSingle && count($series) === 1) {
+            return self::signedBars($labels, array_values((array) reset($series)));
+        }
+
+        return self::groupedBars($labels, $series, $colors);
+    }
+
+    /**
      * Grouped vertical bars.
      *
      * @param list<string>              $labels

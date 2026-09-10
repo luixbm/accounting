@@ -236,6 +236,32 @@ if (! function_exists('app_theme')) {
     }
 }
 
+if (! function_exists('active_design')) {
+    /**
+     * Active UI design (shell layout): classic | modern. Global setting, falls
+     * back to Config\Design::DEFAULT.
+     */
+    function active_design(): string
+    {
+        $d = (string) acc_setting('design');
+
+        return array_key_exists($d, \Config\Design::DESIGNS) ? $d : \Config\Design::DEFAULT;
+    }
+}
+
+if (! function_exists('chart_style')) {
+    /**
+     * Active rendering model for the dashboard's monthly value charts:
+     * bars | lines | area. Global setting, falls back to Config\Charts::DEFAULT.
+     */
+    function chart_style(): string
+    {
+        $s = (string) acc_setting('chartStyle');
+
+        return array_key_exists($s, \Config\Charts::STYLES) ? $s : \Config\Charts::DEFAULT;
+    }
+}
+
 if (! function_exists('acc_setting')) {
     /**
      * Read an Accounting config value: per-company override first, then a

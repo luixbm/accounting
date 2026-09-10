@@ -1,0 +1,121 @@
+/* ============================================================================
+   Modern design — full-width sticky top bar, roomier canvas.
+   Loaded only when active_design() === 'modern'. Every colour comes from the
+   app.css theme tokens, so light / green / blue / dark all work here too.
+   Shared components (.card, .btn, .grid, .kpis, forms, tables) are untouched.
+   ========================================================================== */
+
+:root[data-design="modern"] { --m-bar-h: 58px; }
+
+.m-app { min-height: 100vh; display: flex; flex-direction: column; background: var(--bg); }
+
+/* ---- top bar ------------------------------------------------------------- */
+.m-bar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; gap: 18px;
+  height: var(--m-bar-h); padding: 0 20px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 1px 3px rgba(15, 23, 35, .05);
+}
+
+.m-brand { display: flex; align-items: center; gap: 9px; flex: 0 0 auto; color: var(--ink); }
+.m-brand:hover { text-decoration: none; }
+.m-brand img { max-height: 26px; max-width: 118px; object-fit: contain; display: block; }
+.m-brand-mark {
+  width: 28px; height: 28px; border-radius: 7px;
+  display: grid; place-items: center;
+  background: var(--brand); color: var(--brand-ink);
+  font-weight: 700; font-size: 12px; letter-spacing: .02em;
+}
+.m-brand-name { font-weight: 650; font-size: 14.5px; white-space: nowrap; }
+
+/* ---- primary nav ------------------------------------------------------------ */
+.m-nav { display: flex; align-items: center; gap: 2px; flex: 1 1 auto; min-width: 0; }
+
+.m-navlink, .m-navbtn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 11px; border-radius: 7px;
+  font-size: 13px; font-weight: 500; line-height: 1;
+  color: var(--muted); background: none; border: 0; cursor: pointer;
+  white-space: nowrap; font-family: inherit;
+}
+.m-navlink:hover, .m-navbtn:hover { color: var(--ink); background: var(--hover); text-decoration: none; }
+.m-navlink.active, .m-navitem.on > .m-navbtn { color: var(--brand); background: var(--brand-soft); }
+.m-caret { font-size: 9px; opacity: .7; }
+
+.m-navitem { position: relative; }
+.m-menu {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 60;
+  min-width: 208px; padding: 6px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(15, 23, 35, .16);
+  display: none;
+}
+.m-menu-right { left: auto; right: 0; }
+.m-navitem.open > .m-menu { display: block; }
+
+.m-menu-link {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px; border-radius: 7px;
+  font-size: 12.5px; color: var(--ink); white-space: nowrap;
+}
+.m-menu-link:hover { background: var(--hover); text-decoration: none; }
+.m-menu-link.active { background: var(--brand-soft); color: var(--brand); font-weight: 600; }
+.m-menu-link .ic { width: 15px; text-align: center; opacity: .8; flex: 0 0 auto; }
+
+/* ---- right cluster ---------------------------------------------------------- */
+.m-right { display: flex; align-items: center; gap: 12px; flex: 0 0 auto; margin-left: auto; }
+.m-company select {
+  font-size: 12.5px; padding: 5px 8px; max-width: 150px;
+  background: var(--field-bg); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 6px;
+}
+.m-right .theme-picker,
+.m-right .lang-picker { margin: 0; }
+.m-right .lang-picker a { border-color: var(--line); color: var(--muted); }
+.m-right .lang-picker a.on { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+
+.m-user .m-navbtn { padding: 5px 7px; }
+.m-user .avatar-sm { width: 24px; height: 24px; }
+
+.m-burger { display: none; background: none; border: 0; font-size: 20px; cursor: pointer; color: var(--ink); padding: 4px 6px; }
+
+/* ---- canvas -------------------------------------------------------------- */
+:root[data-design="modern"] .content { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+:root[data-design="modern"] .wrap { width: 100%; max-width: 1320px; margin: 26px auto 40px; padding: 0 28px; }
+:root[data-design="modern"] .page-head h1 { letter-spacing: -.01em; }
+
+/* a touch more air on the dashboard's stat band + cards */
+:root[data-design="modern"] .kpis { gap: 14px; }
+:root[data-design="modern"] .kpi { border-radius: 12px; }
+:root[data-design="modern"] .card { border-radius: 12px; }
+
+/* ---- responsive ------------------------------------------------------------- */
+@media (max-width: 960px) {
+  .m-burger { display: block; order: 3; margin-left: auto; }
+  .m-right { order: 4; gap: 8px; }
+  .m-brand-name { display: none; }
+  .m-nav {
+    order: 5; flex-basis: 100%;
+    flex-direction: column; align-items: stretch; gap: 2px;
+    padding: 8px 0 4px;
+    display: none;
+  }
+  .m-nav.open { display: flex; }
+  .m-bar { flex-wrap: wrap; height: auto; padding: 8px 14px; row-gap: 6px; }
+  .m-navlink, .m-navbtn { width: 100%; justify-content: flex-start; padding: 10px 12px; font-size: 13.5px; }
+  .m-navitem { width: 100%; }
+  .m-menu {
+    position: static; display: block; box-shadow: none; border: 0;
+    border-radius: 0; padding: 0 0 6px 20px; min-width: 0;
+    background: none;
+  }
+  .m-menu-right { right: auto; }
+  :root[data-design="modern"] .wrap { padding: 0 16px; margin-top: 18px; }
+}
+
+@media print {
+  .m-bar, .m-burger { display: none !important; }
+  :root[data-design="modern"] .wrap { margin: 0; max-width: none; padding: 0; }
+}

@@ -1,0 +1,8 @@
+/* ============================================================================
+   Classic design — left sidebar.
+   The classic shell's layout lives in app.css (.app / .sidebar / .side-* /
+   .content / .wrap / .topbar-m ...). This file is the hook for classic-only
+   tweaks; kept intentionally light so app.css stays the single source.
+   ========================================================================== */
+
+:root[data-design="classic"] .wrap { max-width: 1200px; }
