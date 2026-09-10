@@ -158,7 +158,7 @@ class BudgetReportController extends BaseController
         if ($this->request->getGet('format') === 'xlsx') {
             return ReportExporter::download([
                 'title'   => $title,
-                'meta'    => ['Company' => company_name(), 'Period' => $f['label'] . '  (' . $f['from'] . ' — ' . $f['to'] . ')'],
+                'meta'    => ['Company' => company_legal_name(), 'Period' => $f['label'] . '  (' . $f['from'] . ' — ' . $f['to'] . ')'],
                 'columns' => $columns,
                 'rows'    => $rows,
             ]);

@@ -27,7 +27,7 @@ $block = static function (array $group): string {
 <?= view('reports/_period', ['f' => $f, 'showAsOf' => true, 'showCompare' => true, 'showZeros' => true]) ?>
 
 <div class="report-title">
-  <div class="co"><?= esc(company_name()) ?></div>
+  <div class="co"><?= esc(company_legal_name()) ?></div>
   <h1><?= esc($title) ?></h1>
   <div class="muted"><?= lang('App.as_of', [date_id($asOf)]) ?></div>
 </div>

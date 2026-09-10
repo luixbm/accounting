@@ -14,7 +14,7 @@ $acctPicker .= '</select></div>';
 
 <?php if ($account && $data): ?>
   <div class="report-title">
-    <div class="co"><?= esc(company_name()) ?></div>
+    <div class="co"><?= esc(company_legal_name()) ?></div>
     <h1><?= esc($title) ?> — <?= esc($account["code"] . " " . $account["name"]) ?></h1>
     <div class="muted"><?= date_id($from) ?> — <?= date_id($to) ?></div>
   </div>

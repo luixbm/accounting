@@ -13,7 +13,7 @@
 
 <div class="report-title">
   <?php if ($u = company_logo_url()): ?><img src="<?= esc($u) ?>"><?php endif ?>
-  <div class="co"><?= esc(company_name()) ?></div>
+  <div class="co"><?= esc(company_legal_name()) ?></div>
   <h1><?= lang('Import.bk_rep_title', [esc($bank['code'] . ' ' . $bank['name'])]) ?></h1>
   <div class="muted"><?= lang('Import.bk_rep_as_of', [date_id($st['statement_date'])]) ?><?= $st['status'] === 'reconciled' ? lang('Import.bk_rep_reconciled') : lang('Import.bk_rep_draft') ?></div>
 </div>

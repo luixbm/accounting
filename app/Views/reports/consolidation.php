@@ -40,7 +40,7 @@ $coPicker .= '</div></div>';
 <?= view('reports/_period', ['f' => $f, 'showAsOf' => true, 'extra' => $coPicker]) ?>
 
 <div class="report-title">
-  <div class="co"><?= esc(company_name()) ?> — <?= lang('Report.v_group') ?></div>
+  <div class="co"><?= esc(company_legal_name()) ?> — <?= lang('Report.v_group') ?></div>
   <h1><?= esc($title) ?></h1>
   <div class="muted">
     <?= esc(implode(' + ', array_map(static fn ($c) => $c['code'], array_filter($companies, static fn ($c) => in_array((int) $c['id'], $picked, true))))) ?>

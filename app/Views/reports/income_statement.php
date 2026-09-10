@@ -28,7 +28,7 @@ $section = static function (array $group): string {
 <?= view('reports/_period', ['f' => $f, 'showCompare' => true, 'showZeros' => true]) ?>
 
 <div class="report-title">
-  <div class="co"><?= esc(company_name()) ?></div>
+  <div class="co"><?= esc(company_legal_name()) ?></div>
   <h1><?= esc($title) ?></h1>
   <div class="muted"><?= date_id($from) ?> — <?= date_id($to) ?></div>
 </div>

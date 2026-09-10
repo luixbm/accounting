@@ -25,7 +25,7 @@ class ReportController extends BaseController
     private function metaFor(array $f): array
     {
         return [
-            'Company' => company_name(),
+            'Company' => company_legal_name(),
             'Period'  => $f['label'] . '  (' . $f['from'] . ' — ' . $f['to'] . ')',
         ];
     }
@@ -291,7 +291,7 @@ class ReportController extends BaseController
 
             return ReportExporter::download([
                 'title'   => $this->rlang('bs', 'Balance Sheet'),
-                'meta'    => ['Company' => company_name(), 'As of' => date_id($f['asOf'])],
+                'meta'    => ['Company' => company_legal_name(), 'As of' => date_id($f['asOf'])],
                 'columns' => [['key' => 'name', 'label' => 'Account'], ['key' => 'amt', 'label' => 'Amount (Rp)', 'money' => true]],
                 'rows'    => $rows,
             ]);
@@ -530,7 +530,7 @@ class ReportController extends BaseController
 
             return ReportExporter::download([
                 'title'   => $title,
-                'meta'    => ['Company' => company_name(), 'As of' => date_id($f['asOf'])],
+                'meta'    => ['Company' => company_legal_name(), 'As of' => date_id($f['asOf'])],
                 'columns' => [
                     ['key' => 'name', 'label' => $kind === 'customer' ? 'Customer' : 'Supplier'],
                     ['key' => 'cur', 'label' => 'Current', 'money' => true], ['key' => 'b30', 'label' => '1-30', 'money' => true],

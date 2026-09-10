@@ -176,6 +176,19 @@ if (! function_exists('company_name')) {
     }
 }
 
+if (! function_exists('company_legal_name')) {
+    /**
+     * The registered legal name, for formal output (reports, statements,
+     * e-invoice). Falls back to the display name when no legal name is set.
+     */
+    function company_legal_name(): string
+    {
+        $c = active_company();
+
+        return trim((string) ($c['legal_name'] ?? '')) ?: company_name();
+    }
+}
+
 if (! function_exists('company_logo_url')) {
     /**
      * Public URL of the active company's logo, or null if none set.

@@ -6,7 +6,7 @@
 <?= view('reports/_period', ['f' => $f, 'showAsOf' => true]) ?>
 
 <div class="report-title">
-  <div class="co"><?= esc(company_name()) ?></div>
+  <div class="co"><?= esc(company_legal_name()) ?></div>
   <h1><?= esc($heading) ?> — <?= lang('Report.v_aging_suffix') ?></h1>
   <div class="muted"><?= lang('App.as_of', [date_id($asOf)]) ?> &middot; <?= lang('Report.v_bucketed_note') ?></div>
 </div>

@@ -24,7 +24,7 @@ $xlsxUrl = site_url('jobs') . '?' . http_build_query($qs + ['format' => 'xlsx'])
 
 <div class="report-title print-only">
   <?php if ($u = company_logo_url()): ?><img src="<?= esc($u) ?>"><?php endif ?>
-  <div class="co"><?= esc(company_name()) ?></div>
+  <div class="co"><?= esc(company_legal_name()) ?></div>
   <h1><?= lang('Nav.jobs') ?></h1>
   <?php if (! empty($subtitle)): ?><div class="muted"><?= esc($subtitle) ?></div><?php endif ?>
 </div>

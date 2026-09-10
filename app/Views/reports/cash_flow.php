@@ -20,7 +20,7 @@ $section = static function (array $g): string {
 
 <div class="report-title">
   <?php if ($u = company_logo_url()): ?><img src="<?= esc($u) ?>"><?php endif ?>
-  <div class="co"><?= esc(company_name()) ?></div>
+  <div class="co"><?= esc(company_legal_name()) ?></div>
   <h1><?= esc($title) ?></h1>
   <div class="muted"><?= date_id($f['from']) ?> — <?= date_id($f['to']) ?> · <?= lang('Report.v_direct_method') ?></div>
 </div>

@@ -146,7 +146,7 @@ class JobController extends BaseController
 
         return ReportExporter::download([
             'title'   => 'Jobs',
-            'meta'    => ['Company' => company_name(), 'Filter' => $subtitle, 'Generated' => date('Y-m-d H:i')],
+            'meta'    => ['Company' => company_legal_name(), 'Filter' => $subtitle, 'Generated' => date('Y-m-d H:i')],
             'columns' => [
                 ['key' => 'code', 'label' => 'Code'],
                 ['key' => 'name', 'label' => 'Name'],

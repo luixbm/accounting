@@ -19,7 +19,7 @@ $acctPicker .= '</select></div>';
   ?>
   <div class="report-title">
     <?php if ($u = company_logo_url()): ?><img src="<?= esc($u) ?>"><?php endif ?>
-    <div class="co"><?= esc(company_name()) ?></div>
+    <div class="co"><?= esc(company_legal_name()) ?></div>
     <h1><?= esc($title) ?> — <?= esc($account["code"] . " " . $account["name"]) ?></h1>
     <div class="muted"><?= date_id($from) ?> — <?= date_id($to) ?></div>
   </div>

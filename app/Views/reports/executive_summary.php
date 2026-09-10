@@ -26,7 +26,7 @@ $deltaCell = static function (?float $f): string {
 <?= view('reports/_period', ['f' => $f, 'showCompare' => false, 'showZeros' => false]) ?>
 
 <div class="report-title">
-  <div class="co"><?= esc(company_name()) ?></div>
+  <div class="co"><?= esc(company_legal_name()) ?></div>
   <h1><?= esc($title) ?></h1>
   <div class="muted"><?= esc($f['label']) ?> &nbsp;·&nbsp; <?= date_id($m['from']) ?> — <?= date_id($m['to']) ?></div>
 </div>

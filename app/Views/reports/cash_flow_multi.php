@@ -24,7 +24,7 @@ $section = static function (array $g) use ($cells): string {
 <?= view('reports/_period', ['f' => $f, 'showCompare' => true]) ?>
 
 <div class="report-title">
-  <div class="co"><?= esc(company_name()) ?></div>
+  <div class="co"><?= esc(company_legal_name()) ?></div>
   <h1><?= esc($title) ?></h1>
   <div class="muted"><?= date_id($f['from']) ?> — <?= date_id($f['to']) ?> · <?= lang('App.' . $f['compare']) ?></div>
 </div>
