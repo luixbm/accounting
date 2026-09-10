@@ -262,6 +262,20 @@ if (! function_exists('active_design')) {
     }
 }
 
+if (! function_exists('table_header_style')) {
+    /**
+     * Look of table / report column-header rows: plain | accent | line.
+     * `accent` fills the header row with the theme's brand colour (the coloured
+     * band look). Global setting, default `plain`.
+     */
+    function table_header_style(): string
+    {
+        $s = (string) acc_setting('tableHeader');
+
+        return in_array($s, ['plain', 'accent', 'line'], true) ? $s : 'plain';
+    }
+}
+
 if (! function_exists('chart_style')) {
     /**
      * Active rendering model for the dashboard's monthly value charts:

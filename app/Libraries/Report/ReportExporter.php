@@ -56,9 +56,13 @@ class ReportExporter
         foreach ($cols as $i => $c) {
             $sheet->setCellValue([$i + 1, $r], $c['label'] ?? $c['key']);
         }
-        $sheet->getStyle([1, $r, $nCols, $r])->getFont()->setBold(true);
+        // Header row look follows Setup -> Appearance -> Table header.
+        $accent = function_exists('table_header_style') && table_header_style() === 'accent';
+        $brand  = ['green' => '1A7F45', 'blue' => '1F5F8B', 'dark' => '2C6E9B'][function_exists('app_theme') ? app_theme() : 'light'] ?? '1F5F8B';
+        $sheet->getStyle([1, $r, $nCols, $r])->getFont()->setBold(true)
+            ->getColor()->setRGB($accent ? 'FFFFFF' : '000000');
         $sheet->getStyle([1, $r, $nCols, $r])->getFill()
-            ->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('EEF2F6');
+            ->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB($accent ? $brand : 'EEF2F6');
         $r++;
 
         // body

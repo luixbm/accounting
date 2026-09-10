@@ -61,7 +61,7 @@ $cols[] = ['status', lang('App.status')];
 </form>
 
 <div class="card">
-  <div style="overflow-x:auto">
+  <div class="tbl-scroll">
   <table class="grid tight" id="purchaseTable">
     <thead>
       <tr>

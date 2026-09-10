@@ -87,7 +87,7 @@ $span          = count($columns) + 1;
 </form>
 
 <div class="card">
-  <div style="overflow-x:auto">
+  <div class="tbl-scroll">
     <table class="grid tight" id="partyTable">
       <thead>
         <tr>

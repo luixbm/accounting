@@ -271,9 +271,22 @@ td.avatar-cell{width:1%;padding-top:4px;padding-bottom:4px}
 table.grid{width:100%;border-collapse:collapse;font-size:13px}
 table.grid th,table.grid td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
 table.grid thead th{background:var(--panel-2);font-weight:600;color:var(--muted);border-bottom:2px solid var(--line);position:sticky;top:0}
+/* Setup -> Appearance -> Table header */
+:root[data-thead="accent"] table.grid thead th{background:var(--brand);color:var(--brand-ink);border-bottom-color:var(--brand);font-weight:600;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+:root[data-thead="accent"] table.grid thead th a{color:var(--brand-ink);text-decoration:underline}
+:root[data-thead="line"] table.grid thead th{background:transparent;color:var(--ink);font-weight:700;border-bottom:2px solid var(--brand)}
 table.grid tbody tr:hover{background:var(--hover)}
 table.grid tfoot td{border-top:2px solid var(--line);font-weight:700;background:var(--panel-2)}
 table.grid.tight th,table.grid.tight td{padding:4px 8px}
+
+/* long lists: the table body scrolls inside a bounded box so the header row
+   stays locked while scrolling (plain position:sticky breaks inside an
+   overflow-x wrapper). Also scrolls sideways for wide tables. */
+.tbl-scroll{overflow:auto;max-height:calc(100dvh - 232px)}
+.tbl-scroll table.grid thead th{position:sticky;top:0;z-index:2}
+.tbl-scroll table.grid tfoot td{position:sticky;bottom:0;z-index:2}
+@media (max-width:760px){.tbl-scroll{max-height:calc(100dvh - 180px)}}
+@media print{.tbl-scroll{overflow:visible;max-height:none}}
 .grp-row td{background:var(--brand-soft);font-weight:700}
 .subtotal td{border-top:1px solid var(--line);font-weight:700}
 .hdr-row td{background:var(--panel-2);font-weight:600;padding-top:7px}

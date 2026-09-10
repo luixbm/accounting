@@ -93,7 +93,7 @@ $deleteBtn = static function (int $batchId): string {
 </div>
 
 <div class="card">
-  <div style="overflow-x:auto">
+  <div class="tbl-scroll">
     <table class="grid tight" id="reviewTable">
       <thead>
         <tr>

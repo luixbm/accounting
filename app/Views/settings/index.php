@@ -44,6 +44,14 @@ $acctSelect = static function (string $name, string $value) use ($accounts): str
           <?php endforeach ?>
         </select>
       </div>
+      <div class="field" style="max-width:220px">
+        <label><?= lang('Setup.table_header') ?> <span class="muted"><?= lang('Setup.design_note') ?></span></label>
+        <select name="tableHeader">
+          <?php foreach (['plain' => lang('Setup.thead_plain'), 'accent' => lang('Setup.thead_accent'), 'line' => lang('Setup.thead_line')] as $k => $lbl): ?>
+            <option value="<?= $k ?>" <?= ($current['tableHeader'] ?? 'plain') === $k ? 'selected' : '' ?>><?= esc($lbl) ?></option>
+          <?php endforeach ?>
+        </select>
+      </div>
     </div>
     <div class="row">
       <div class="field" style="max-width:260px">

@@ -10,7 +10,7 @@
 $design = active_design();
 ?>
 <!DOCTYPE html>
-<html lang="<?= esc(app_locale()) ?>" data-theme="<?= esc(app_theme()) ?>" data-design="<?= esc($design) ?>">
+<html lang="<?= esc(app_locale()) ?>" data-theme="<?= esc(app_theme()) ?>" data-design="<?= esc($design) ?>" data-thead="<?= esc(table_header_style()) ?>">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
