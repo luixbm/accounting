@@ -182,13 +182,17 @@ class SalesController extends BaseController
             ->where('sra.invoice_id', $id)->where('sr.status', 'posted')
             ->orderBy('sr.receipt_date', 'ASC')->get()->getResultArray();
 
+        $ei = model(\App\Models\EinvoiceSettingModel::class)->current();
+
         return view('sales/show', [
-            'title'    => $inv['internal_no'],
-            'inv'      => $inv,
-            'lines'    => model(SalesInvoiceLineModel::class)->forInvoice($id),
-            'allocs'   => $allocs,
-            'cfDefs'   => $this->cf->defs('sales_invoice'),
-            'cfValues' => $this->cf->valuesFor('sales_invoice', $id),
+            'title'     => $inv['internal_no'],
+            'inv'       => $inv,
+            'lines'     => model(SalesInvoiceLineModel::class)->forInvoice($id),
+            'allocs'    => $allocs,
+            'cfDefs'    => $this->cf->defs('sales_invoice'),
+            'cfValues'  => $this->cf->valuesFor('sales_invoice', $id),
+            'eiEnabled' => (bool) ($ei['enabled'] ?? false),
+            'eiEnv'     => (string) ($ei['environment'] ?? 'sandbox'),
         ]);
     }
 

@@ -13,6 +13,8 @@ class SalesInvoiceModel extends TenantModel
         'currency_id', 'exchange_rate', 'description',
         'subtotal', 'ppn_amount', 'pph_amount', 'total', 'total_base', 'received_base', 'received',
         'status', 'journal_id', 'import_batch_id', 'external_id', 'source', 'created_by', 'posted_by', 'posted_at',
+        'einvoice_status', 'einvoice_uuid', 'einvoice_long_id', 'einvoice_submission_uid',
+        'einvoice_submitted_at', 'einvoice_validated_at', 'einvoice_error',
     ];
 
     public function listing(array $filters = [], int $perPage = 25)

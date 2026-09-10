@@ -2,9 +2,15 @@
 
 namespace App\Controllers;
 
+use App\Libraries\CustomFields;
 use App\Libraries\Einvoice\MyInvoisAuth;
+use App\Libraries\Einvoice\MyInvoisClient;
 use App\Libraries\Einvoice\Secret;
+use App\Libraries\Einvoice\UblInvoiceBuilder;
+use App\Models\CompanyModel;
 use App\Models\EinvoiceSettingModel;
+use App\Models\SalesInvoiceLineModel;
+use App\Models\SalesInvoiceModel;
 
 /**
  * LHDN MyInvois e-Invoice: company credentials/profile (this file) plus, once
@@ -147,5 +153,134 @@ class EinvoiceController extends BaseController
         }
 
         return mb_substr($raw, 0, 200) ?: 'unknown error';
+    }
+
+    // ================================================================ submission
+
+    /** Build the UBL document for a posted sales invoice and submit it to LHDN. */
+    public function submit(int $id)
+    {
+        if (! user_can('journal.post')) {
+            return redirect()->to('sales/' . $id)->with('error', lang('Einvoice.ei_not_allowed'));
+        }
+
+        [$inv, $err] = $this->submittableInvoice($id);
+        if ($err !== null) {
+            return redirect()->to('sales/' . $id)->with('error', $err);
+        }
+
+        $settings = $this->model()->current();
+        $company  = model(CompanyModel::class)->find(active_company_id());
+        $lines    = model(SalesInvoiceLineModel::class)->where('invoice_id', $id)->orderBy('line_no')->findAll();
+        $customer = db_connect()->table('customers')->where('id', $inv['customer_id'])->get()->getRowArray() ?: [];
+        $buyerCf  = (new CustomFields())->valuesFor('customer', (int) $inv['customer_id']);
+
+        $doc    = UblInvoiceBuilder::build($inv, $lines, $settings, $company ?? [], $customer, $buyerCf);
+        $client = new MyInvoisClient($settings);
+        $res    = $client->submitInvoice((string) $inv['internal_no'], $doc);
+
+        $sales = model(SalesInvoiceModel::class);
+        if (! empty($res['ok'])) {
+            $sales->update($id, [
+                'einvoice_status'         => 'submitted',
+                'einvoice_uuid'           => $res['uuid'] ?: null,
+                'einvoice_submission_uid' => $res['submissionUid'] ?: null,
+                'einvoice_submitted_at'   => date('Y-m-d H:i:s'),
+                'einvoice_long_id'        => null,
+                'einvoice_validated_at'   => null,
+                'einvoice_error'          => null,
+            ]);
+
+            return redirect()->to('sales/' . $id)->with('message', lang('Einvoice.ei_submitted'));
+        }
+
+        $sales->update($id, [
+            'einvoice_status' => 'invalid',
+            'einvoice_error'  => mb_substr((string) ($res['error'] ?? 'Submission failed.'), 0, 4000),
+        ]);
+
+        return redirect()->to('sales/' . $id)->with('error', lang('Einvoice.ei_submit_failed', [mb_substr((string) ($res['error'] ?? ''), 0, 300)]));
+    }
+
+    /** Poll the submission and record Valid / Invalid. */
+    public function checkStatus(int $id)
+    {
+        if (! user_can('journal.post')) {
+            return redirect()->to('sales/' . $id)->with('error', lang('Einvoice.ei_not_allowed'));
+        }
+
+        $sales = model(SalesInvoiceModel::class);
+        $inv   = $sales->find($id);
+        if (! $inv || empty($inv['einvoice_submission_uid'])) {
+            return redirect()->to('sales/' . $id)->with('error', lang('Einvoice.ei_nothing_to_check'));
+        }
+
+        $client = new MyInvoisClient($this->model()->current());
+        $res    = $client->getSubmission((string) $inv['einvoice_submission_uid'], (string) ($inv['einvoice_uuid'] ?? '') ?: null);
+
+        if (empty($res['ok'])) {
+            return redirect()->to('sales/' . $id)->with('error', lang('Einvoice.ei_submit_failed', [mb_substr((string) ($res['error'] ?? ''), 0, 300)]));
+        }
+
+        if (($res['overallStatus'] ?? '') === 'in progress' || (($res['doc']['status'] ?? '') === 'Submitted')) {
+            return redirect()->to('sales/' . $id)->with('message', lang('Einvoice.ei_still_processing'));
+        }
+
+        $doc    = $res['doc'] ?? [];
+        $status = strtolower((string) ($doc['status'] ?? $res['overallStatus'] ?? ''));
+
+        if ($status === 'valid') {
+            $sales->update($id, [
+                'einvoice_status'       => 'valid',
+                'einvoice_uuid'         => $doc['uuid'] ?? $inv['einvoice_uuid'],
+                'einvoice_long_id'      => $doc['longId'] ?? null,
+                'einvoice_validated_at' => date('Y-m-d H:i:s'),
+                'einvoice_error'        => null,
+            ]);
+
+            return redirect()->to('sales/' . $id)->with('message', lang('Einvoice.ei_valid'));
+        }
+
+        if ($status === 'cancelled') {
+            $sales->update($id, ['einvoice_status' => 'cancelled']);
+
+            return redirect()->to('sales/' . $id)->with('message', lang('Einvoice.ei_cancelled'));
+        }
+
+        $sales->update($id, [
+            'einvoice_status' => 'invalid',
+            'einvoice_error'  => mb_substr(json_encode($doc['validationResults'] ?? $doc ?: $res['raw'] ?? []), 0, 4000),
+        ]);
+
+        return redirect()->to('sales/' . $id)->with('error', lang('Einvoice.ei_invalid'));
+    }
+
+    /**
+     * @return array{0: array<string,mixed>|null, 1: string|null}  [invoice, error]
+     */
+    private function submittableInvoice(int $id): array
+    {
+        $inv = model(SalesInvoiceModel::class)
+            ->select('sales_invoices.*, currencies.code AS currency_code')
+            ->join('currencies', 'currencies.id = sales_invoices.currency_id', 'left')
+            ->find($id);
+
+        if (! $inv) {
+            return [null, lang('Einvoice.ei_inv_not_found')];
+        }
+        if (! (int) ($this->model()->current()['enabled'] ?? 0)) {
+            return [null, lang('Einvoice.ei_disabled')];
+        }
+        if (! in_array($inv['status'], ['posted', 'partial', 'paid'], true)) {
+            return [null, lang('Einvoice.ei_not_posted')];
+        }
+        if (in_array($inv['einvoice_status'] ?? '', ['submitted', 'valid'], true)) {
+            return [null, lang('Einvoice.ei_already', [$inv['einvoice_status']])];
+        }
+        if (empty($inv['customer_id'])) {
+            return [null, lang('Einvoice.ei_no_customer')];
+        }
+
+        return [$inv, null];
     }
 }

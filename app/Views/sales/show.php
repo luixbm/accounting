@@ -152,6 +152,58 @@ $foot = $hasDetail ? 5 : 3;
   </div>
 <?php endif ?>
 
+<?php if (! empty($eiEnabled)): ?>
+  <?php
+  $eiSt   = $inv['einvoice_status'] ?? null;
+  $posted = in_array($inv['status'], ['posted', 'partial', 'paid'], true);
+  $portal = ($eiEnv ?? 'sandbox') === 'production' ? 'https://myinvois.hasil.gov.my' : 'https://preprod.myinvois.hasil.gov.my';
+  $shareUrl = ($eiSt === 'valid' && ! empty($inv['einvoice_uuid']) && ! empty($inv['einvoice_long_id']))
+      ? $portal . '/' . rawurlencode($inv['einvoice_uuid']) . '/share/' . rawurlencode($inv['einvoice_long_id'])
+      : null;
+  $badge = ['submitted' => 'badge-gray', 'valid' => 'badge-green', 'invalid' => 'badge-red', 'cancelled' => 'badge-amber'][$eiSt] ?? 'badge-gray';
+  $stLabel = ['submitted' => lang('Einvoice.ei_st_submitted'), 'valid' => lang('Einvoice.ei_st_valid'), 'invalid' => lang('Einvoice.ei_st_invalid'), 'cancelled' => lang('Einvoice.ei_st_cancelled')][$eiSt] ?? ucfirst((string) $eiSt);
+  ?>
+  <div class="card no-print" style="max-width:560px">
+    <div class="announce-card-head">
+      <h2 style="margin:0"><?= lang('Einvoice.ei_panel_h') ?></h2>
+      <?php if ($eiSt): ?><span class="badge <?= $badge ?>"><?= esc($stLabel) ?></span><?php endif ?>
+    </div>
+
+    <?php if (! $posted): ?>
+      <p class="muted small"><?= lang('Einvoice.ei_post_first') ?></p>
+
+    <?php elseif ($eiSt === null || $eiSt === 'invalid'): ?>
+      <?php if ($eiSt === 'invalid' && ! empty($inv['einvoice_error'])): ?>
+        <div class="alert alert-error small" style="white-space:pre-wrap"><?= esc(mb_substr((string) $inv['einvoice_error'], 0, 800)) ?></div>
+      <?php endif ?>
+      <form method="post" action="<?= site_url('sales/' . $inv['id'] . '/einvoice/submit') ?>"
+        onsubmit="return confirm('<?= esc(lang('Einvoice.ei_submit_confirm', [$eiEnv]), 'js') ?>')">
+        <?= csrf_field() ?>
+        <button class="btn" type="submit"><?= $eiSt === 'invalid' ? lang('Einvoice.ei_resubmit') : lang('Einvoice.ei_submit') ?></button>
+        <span class="muted small"><?= lang('Einvoice.ei_env_note', [esc($eiEnv)]) ?></span>
+      </form>
+
+    <?php elseif ($eiSt === 'submitted'): ?>
+      <p class="small"><?= lang('Einvoice.ei_awaiting', [date_id(substr((string) $inv['einvoice_submitted_at'], 0, 10))]) ?></p>
+      <p class="muted small mono"><?= esc($inv['einvoice_submission_uid']) ?></p>
+      <form method="post" action="<?= site_url('sales/' . $inv['id'] . '/einvoice/status') ?>" class="inline">
+        <?= csrf_field() ?>
+        <button class="btn ghost" type="submit"><?= lang('Einvoice.ei_check') ?></button>
+      </form>
+
+    <?php elseif ($eiSt === 'valid'): ?>
+      <p class="small"><?= lang('Einvoice.ei_validated', [date_id(substr((string) $inv['einvoice_validated_at'], 0, 10))]) ?></p>
+      <?php if ($shareUrl): ?>
+        <p><a class="btn ghost sm" href="<?= esc($shareUrl) ?>" target="_blank" rel="noopener"><?= lang('Einvoice.ei_view_lhdn') ?> &nearr;</a></p>
+      <?php endif ?>
+      <p class="muted small mono"><?= esc($inv['einvoice_uuid']) ?></p>
+
+    <?php elseif ($eiSt === 'cancelled'): ?>
+      <p class="muted small"><?= lang('Einvoice.ei_is_cancelled') ?></p>
+    <?php endif ?>
+  </div>
+<?php endif ?>
+
 <?php if (in_array($inv['status'], ['posted', 'partial'], true) && user_can('journal.void')): ?>
   <div class="card">
     <h2><?= lang('Txn.void_invoice') ?></h2>
