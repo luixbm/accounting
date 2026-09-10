@@ -79,4 +79,13 @@
   <div class="card"><button class="btn" type="submit"><?= lang('Setup.save_settings') ?></button></div>
 </form>
 
+<form method="post" action="<?= site_url('settings/einvoice/test') ?>">
+  <?= csrf_field() ?>
+  <div class="card" style="max-width:680px">
+    <h2><?= lang('Einvoice.test_h') ?></h2>
+    <p class="muted small"><?= lang('Einvoice.test_hint') ?></p>
+    <button class="btn ghost" type="submit"><?= lang('Einvoice.test_btn') ?></button>
+  </div>
+</form>
+
 <?= $this->endSection() ?>

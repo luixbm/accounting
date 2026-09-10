@@ -2,6 +2,7 @@
 
 return [
     'saved' => 'Pengaturan E-Invoice disimpan.',
+    'saved_no_secret' => 'Tersimpan — tetapi Client secret untuk perusahaan ini belum ada. Tempel di kolom Client secret lalu simpan lagi.',
 
     'intro' => 'Hubungkan perusahaan ini ke sistem e-Invoice MyInvois LHDN. Mulai dengan Sandbox dan pastikan pengiriman tervalidasi di sana sebelum beralih ke Production.',
 
@@ -15,6 +16,14 @@ return [
     'client_secret'  => 'Client secret',
     'client_secret_set'    => 'Secret sudah tersimpan. Biarkan kosong untuk mempertahankannya.',
     'client_secret_unset'  => 'Belum diatur.',
+
+    'test_h'    => 'Tes koneksi',
+    'test_hint' => 'Meminta token dari LHDN menggunakan Client ID dan secret yang tersimpan. Simpan dulu jika Anda baru mengubahnya.',
+    'test_btn'  => 'Tes koneksi',
+    'test_missing'    => 'Masukkan dan simpan Client ID serta secret terlebih dahulu.',
+    'test_secret_bad' => 'Secret tersimpan tidak dapat didekripsi — masukkan ulang lalu simpan.',
+    'test_ok'   => 'Terhubung ke {0} — token diterima (kedaluwarsa sekitar {1}).',
+    'test_fail' => 'LHDN menolak login: {0}',
 
     'profile_h'    => 'Profil pajak perusahaan (untuk LHDN)',
     'tax_id'       => 'TIN (Tax Identification Number)',

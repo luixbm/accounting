@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\Einvoice\MyInvoisAuth;
 use App\Libraries\Einvoice\Secret;
 use App\Models\EinvoiceSettingModel;
 
@@ -72,6 +73,79 @@ class EinvoiceController extends BaseController
 
         $model->update($row['id'], $data);
 
+        // "Save" with an empty secret box keeps whatever was stored - which is
+        // nothing on a first save. Warn instead of silently leaving the company
+        // half-configured (it will keep failing the connection test otherwise).
+        $secretStored = ($data['client_secret_enc'] ?? $row['client_secret_enc'] ?? '') !== '';
+        if (! $secretStored && ($data['client_id'] || $data['enabled'])) {
+            return redirect()->to('settings/einvoice')->with('error', lang('Einvoice.saved_no_secret'));
+        }
+
         return redirect()->to('settings/einvoice')->with('message', lang('Einvoice.saved'));
+    }
+
+    /**
+     * Try a client_credentials token exchange against the saved credentials and
+     * report the outcome. Forces a fresh call (ignores any cached token) and
+     * never reveals the secret or the token itself.
+     */
+    public function testConnection()
+    {
+        $row = $this->model()->current();
+        $back = redirect()->to('settings/einvoice');
+
+        if (empty($row['client_id']) || empty($row['client_secret_enc'])) {
+            return $back->with('error', lang('Einvoice.test_missing'));
+        }
+
+        // confirm the stored secret still decrypts with the current key
+        try {
+            Secret::decrypt($row['client_secret_enc']);
+        } catch (\Throwable $e) {
+            return $back->with('error', lang('Einvoice.test_secret_bad'));
+        }
+
+        $probe                     = $row;
+        $probe['cached_token']     = null;
+        $probe['token_expires_at'] = null;
+
+        $res = MyInvoisAuth::token($probe);
+
+        if (! empty($res['ok'])) {
+            $fresh = $this->model()->find($row['id']);
+            $exp   = $fresh['token_expires_at'] ?? null;
+
+            return $back->with('message', lang('Einvoice.test_ok', [
+                MyInvoisAuth::host($row['environment'] ?? 'sandbox'),
+                $exp ? date('H:i', strtotime($exp)) : '~60m',
+            ]));
+        }
+
+        return $back->with('error', lang('Einvoice.test_fail', [$this->sanitiseAuthError((string) ($res['error'] ?? ''))]));
+    }
+
+    /**
+     * Reduce MyInvois's token-endpoint error to something safe and short: the
+     * OAuth `error` / `error_description` when the body is JSON, otherwise a
+     * trimmed status line. LHDN never echoes the secret back, but trim anyway.
+     */
+    private function sanitiseAuthError(string $raw): string
+    {
+        if (preg_match('/HTTP (\d{3})/', $raw, $m)) {
+            $status = $m[1];
+            if (preg_match('/\{.*\}/s', $raw, $j) && is_array($body = json_decode($j[0], true))) {
+                $bits = array_filter([
+                    $body['error'] ?? null,
+                    $body['error_description'] ?? null,
+                ]);
+                if ($bits) {
+                    return 'HTTP ' . $status . ' — ' . mb_substr(implode(': ', $bits), 0, 200);
+                }
+            }
+
+            return 'HTTP ' . $status;
+        }
+
+        return mb_substr($raw, 0, 200) ?: 'unknown error';
     }
 }

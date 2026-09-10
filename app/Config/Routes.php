@@ -426,6 +426,7 @@ $routes->group('', ['filter' => 'session'], static function (RouteCollection $ro
     $routes->group('settings/einvoice', ['filter' => 'permission:settings.manage'], static function (RouteCollection $routes): void {
         $routes->get('/', 'EinvoiceController::settings');
         $routes->post('/', 'EinvoiceController::saveSettings');
+        $routes->post('test', 'EinvoiceController::testConnection');
     });
 
     $routes->group('settings/login-page', ['filter' => 'permission:settings.manage'], static function (RouteCollection $routes): void {
