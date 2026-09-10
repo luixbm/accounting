@@ -293,6 +293,16 @@ input[type=checkbox],input[type=radio]{width:16px;height:16px;padding:0;border-r
 .row{display:flex;gap:14px;flex-wrap:wrap}
 .row > .field{flex:1;min-width:180px}
 .inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* type-to-search customer / supplier picker (partials/party_combo) */
+.party-combo{position:relative;width:100%}
+.party-combo .combo-input{width:100%;background-image:none}
+.combo-pop .combo-opt.po{white-space:normal;padding:7px 10px;line-height:1.35}
+.combo-pop .po-row{display:flex;align-items:baseline;gap:10px;justify-content:space-between}
+.combo-pop .po-name{font-weight:600;color:var(--ink)}
+.combo-pop .po-code{flex:0 0 auto;font:600 12px/1 ui-monospace,Menlo,Consolas,monospace;color:var(--muted)}
+.combo-pop .po-sub{margin-top:2px;font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.combo-pop .combo-opt.po.on,.combo-pop .combo-opt.po:hover{background:var(--brand-soft)}
 fieldset{border:1px solid var(--line);border-radius:6px;padding:12px 14px;margin:0 0 14px}
 legend{font-weight:700;font-size:12px;color:var(--muted);padding:0 6px}
 

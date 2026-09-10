@@ -80,12 +80,13 @@ $jobOpt = static function ($sel) use ($jobs) {
     <div class="row">
       <div class="field">
         <label><?= lang('Txn.customer') ?></label>
-        <select name="customer_id" required>
-          <option value=""><?= lang('App.choose') ?></option>
-          <?php foreach ($customers as $s): ?>
-            <option value="<?= $s['id'] ?>" <?= (string) old('customer_id', $inv['customer_id'] ?? '') === (string) $s['id'] ? 'selected' : '' ?>><?= esc($s['name']) ?></option>
-          <?php endforeach ?>
-        </select>
+        <?= view('partials/party_combo', [
+            'field'       => 'customer_id',
+            'items'       => $customers,
+            'selected'    => old('customer_id', $inv['customer_id'] ?? ''),
+            'placeholder' => lang('Txn.party_search_customer'),
+            'required'    => true,
+        ]) ?>
       </div>
       <div class="field" style="max-width:200px"><label><?= lang('Txn.customer_inv_no') ?></label><input name="customer_ref" value="<?= esc(old('customer_ref', $inv['customer_ref'] ?? '')) ?>"></div>
       <div class="field" style="max-width:160px"><label><?= lang('Txn.invoice_date') ?></label><input type="date" name="invoice_date" value="<?= esc(old('invoice_date', $inv['invoice_date'] ?? date('Y-m-d'))) ?>" required></div>

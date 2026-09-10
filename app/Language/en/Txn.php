@@ -49,6 +49,8 @@ return [
     'invoice_date'     => 'Invoice date',
     'supplier'         => 'Supplier',
     'customer'         => 'Customer',
+    'party_search_customer' => 'Search / choose customer…',
+    'party_search_supplier' => 'Search / choose supplier…',
     'supplier_ref'     => 'Supplier ref.',
     'customer_ref'     => 'Customer ref.',
     'their_ref'        => 'Their ref / PO no.',

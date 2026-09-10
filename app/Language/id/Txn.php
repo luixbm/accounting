@@ -49,6 +49,8 @@ return [
     'invoice_date'     => 'Tanggal faktur',
     'supplier'         => 'Pemasok',
     'customer'         => 'Pelanggan',
+    'party_search_customer' => 'Cari / pilih pelanggan…',
+    'party_search_supplier' => 'Cari / pilih pemasok…',
     'supplier_ref'     => 'Ref. pemasok',
     'customer_ref'     => 'Ref. pelanggan',
     'their_ref'        => 'Ref / no. PO mereka',
