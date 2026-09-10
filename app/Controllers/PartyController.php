@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Libraries\Accounting\Ledger;
 use App\Libraries\CustomFields;
+use App\Libraries\Import\PartyPorter;
 use CodeIgniter\Model;
 
 /**
@@ -211,6 +212,98 @@ abstract class PartyController extends BaseController
             'cfDefs'    => $this->cf->defs($this->kind),
             'cfValues'  => $this->cf->valuesFor($this->kind, $id),
         ]);
+    }
+
+    // ---------------------------------------------------------------- export / import
+
+    /** Download the whole list (all fields + custom fields) as .xlsx. */
+    public function export()
+    {
+        $all  = $this->model()->orderBy('name', 'ASC')->findAll();
+        $defs = $this->cf->defs($this->kind);
+        $vals = $this->cf->valuesForMany($this->kind, array_column($all, 'id'));
+
+        $body = PartyPorter::export($this->kind, $all, $defs, $vals);
+        $name = $this->label . 's_' . date('Ymd_His') . '.xlsx';
+
+        return $this->response
+            ->setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $name . '"')
+            ->setBody($body);
+    }
+
+    public function importForm()
+    {
+        if (! $this->guard()) {
+            return redirect()->to($this->route)->with('error', 'Not allowed.');
+        }
+
+        return view('parties/import', [
+            'title'   => 'Import ' . $this->label . 's',
+            'route'   => $this->route,
+            'label'   => $this->label,
+            'preview' => null,
+        ]);
+    }
+
+    public function importUpload()
+    {
+        if (! $this->guard()) {
+            return redirect()->to($this->route)->with('error', 'Not allowed.');
+        }
+
+        $file = $this->request->getFile('file');
+        if (! $file || ! $file->isValid()) {
+            return redirect()->back()->with('error', 'Choose a .xlsx, .xls or .csv file.');
+        }
+        if (! in_array(strtolower($file->getClientExtension()), ['xlsx', 'xls', 'csv'], true)) {
+            return redirect()->back()->with('error', 'Only .xlsx, .xls or .csv files.');
+        }
+
+        $dir  = WRITEPATH . 'uploads/tmp';
+        is_dir($dir) || mkdir($dir, 0775, true);
+        $tmp = $dir . '/party_' . bin2hex(random_bytes(6)) . '.' . strtolower($file->getClientExtension());
+        $file->move(dirname($tmp), basename($tmp));
+
+        try {
+            $parsed = PartyPorter::parse($tmp, $this->kind, $this->cf->defs($this->kind), $this->model());
+        } catch (\Throwable $e) {
+            @unlink($tmp);
+
+            return redirect()->back()->with('error', 'Could not read the file: ' . $e->getMessage());
+        }
+        @unlink($tmp);
+
+        if (! $parsed['items']) {
+            return redirect()->back()->with('error', 'No rows found — the sheet needs a header row with at least "Code" and "Name" columns.');
+        }
+
+        return view('parties/import', [
+            'title'   => 'Import ' . $this->label . 's',
+            'route'   => $this->route,
+            'label'   => $this->label,
+            'preview' => $parsed,
+            'payload' => base64_encode(json_encode($parsed['items'])),
+        ]);
+    }
+
+    public function importCommit()
+    {
+        if (! $this->guard()) {
+            return redirect()->to($this->route)->with('error', 'Not allowed.');
+        }
+
+        $items = json_decode(base64_decode((string) $this->request->getPost('payload')), true);
+        if (! is_array($items) || ! $items) {
+            return redirect()->to($this->route . '/import')->with('error', 'The import preview expired — upload the file again.');
+        }
+
+        $res = PartyPorter::commit($this->kind, $this->model(), $this->cf, $items);
+        $msg = "{$res['created']} created, {$res['updated']} updated"
+            . ($res['failed'] ? ", {$res['failed']} failed" : '')
+            . ($res['errors'] ? ' — ' . implode(' | ', array_slice($res['errors'], 0, 6)) : '');
+
+        return redirect()->to($this->route)->with($res['failed'] ? 'error' : 'message', $msg);
     }
 
     protected function payload(): array

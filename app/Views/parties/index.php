@@ -41,7 +41,9 @@ $span          = count($columns) + 1;
         <?php endforeach ?>
       </div>
     </details>
+    <a class="btn ghost" href="<?= site_url($route . '/export') ?>">Export</a>
     <?php if (user_can('masterdata.manage')): ?>
+      <a class="btn ghost" href="<?= site_url($route . '/import') ?>">Import</a>
       <a class="btn" href="<?= site_url($route . '/new') ?>">+ New <?= esc($label) ?></a>
     <?php endif ?>
   </div>

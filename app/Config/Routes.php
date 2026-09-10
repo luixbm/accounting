@@ -268,6 +268,10 @@ $routes->group('', ['filter' => 'session'], static function (RouteCollection $ro
 
     $routes->group('customers', static function (RouteCollection $routes): void {
         $routes->get('/', 'CustomerController::index');
+        $routes->get('export', 'CustomerController::export');
+        $routes->get('import', 'CustomerController::importForm');
+        $routes->post('import', 'CustomerController::importUpload');
+        $routes->post('import/commit', 'CustomerController::importCommit');
         $routes->get('new', 'CustomerController::new');
         $routes->post('/', 'CustomerController::create');
         $routes->get('(:num)', 'CustomerController::show/$1');
@@ -277,6 +281,10 @@ $routes->group('', ['filter' => 'session'], static function (RouteCollection $ro
 
     $routes->group('suppliers', static function (RouteCollection $routes): void {
         $routes->get('/', 'SupplierController::index');
+        $routes->get('export', 'SupplierController::export');
+        $routes->get('import', 'SupplierController::importForm');
+        $routes->post('import', 'SupplierController::importUpload');
+        $routes->post('import/commit', 'SupplierController::importCommit');
         $routes->get('new', 'SupplierController::new');
         $routes->post('/', 'SupplierController::create');
         $routes->get('(:num)', 'SupplierController::show/$1');
