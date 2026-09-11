@@ -393,6 +393,23 @@ legend{font-weight:700;font-size:12px;color:var(--muted);padding:0 6px}
 .chart-grid .card{margin-bottom:0}
 .chart-grid .card h2{margin-top:0;margin-bottom:6px;font-size:14px}
 .chart-grid svg{max-width:100%;overflow:visible}
+
+/* chart entrance animation (app/Libraries/Chart/Svg.php): bars grow from the
+   baseline, lines draw themselves in, dots fade up after. Each shape carries
+   its own animation-delay inline for the stagger; skipped entirely for
+   people who've asked for less motion. */
+@media (prefers-reduced-motion: no-preference){
+  .svg-bar{transform-box:fill-box;transform-origin:bottom;animation:svg-bar-grow .5s cubic-bezier(.22,1,.36,1) both}
+  .svg-hbar{transform-box:fill-box;transform-origin:left;animation:svg-hbar-grow .5s cubic-bezier(.22,1,.36,1) both}
+  .svg-line{stroke-dasharray:1000;animation:svg-line-draw .9s ease both}
+  .svg-area-fill{animation:svg-fade-in .7s ease both}
+  .svg-dot{transform-box:fill-box;transform-origin:center;animation:svg-dot-in .3s ease both}
+}
+@keyframes svg-bar-grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes svg-hbar-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes svg-line-draw{from{stroke-dashoffset:1000}to{stroke-dashoffset:0}}
+@keyframes svg-fade-in{from{opacity:0}to{opacity:1}}
+@keyframes svg-dot-in{from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
 .chart-placeholder{
   display:flex;align-items:center;justify-content:center;text-align:center;
   min-height:150px;padding:16px;border:1px dashed var(--line);border-radius:6px;

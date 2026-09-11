@@ -142,7 +142,7 @@ class Svg
                 $bh = abs($v) / $range * $plotH;
                 $x  = $cx - $gw / 2 + $bw * $s;
                 $y  = $v >= 0 ? $zeroY - $bh : $zeroY;
-                $svg .= '<rect x="' . round($x, 1) . '" y="' . round($y, 1) . '" width="' . round($bw, 1)
+                $svg .= '<rect class="svg-bar" style="animation-delay:' . self::delay($i * $gCount + $s) . '" x="' . round($x, 1) . '" y="' . round($y, 1) . '" width="' . round($bw, 1)
                     . '" height="' . round(max($bh, 0.5), 1) . '" rx="1.5" fill="' . $cols[$s % count($cols)] . '">'
                     . '<title>' . htmlspecialchars($name . ' · ' . $label . ' : ' . self::abbr($v)) . '</title></rect>';
             }
@@ -191,7 +191,7 @@ class Svg
             $cx  = $padL + $slot * $i + $slot / 2;
             $bh  = abs($v) / $range * $plotH;
             $y   = $v >= 0 ? $zeroY - $bh : $zeroY;
-            $svg .= '<rect x="' . round($cx - $bw / 2, 1) . '" y="' . round($y, 1) . '" width="' . round($bw, 1)
+            $svg .= '<rect class="svg-bar" style="animation-delay:' . self::delay($i) . '" x="' . round($cx - $bw / 2, 1) . '" y="' . round($y, 1) . '" width="' . round($bw, 1)
                 . '" height="' . round(max($bh, 0.5), 1) . '" rx="1.5" fill="' . ($v >= 0 ? self::GREEN : self::RED) . '">'
                 . '<title>' . htmlspecialchars($label . ' : ' . self::abbr($v)) . '</title></rect>';
             $svg .= self::xLabel($cx, self::H - $padB + 13, $label);
@@ -249,7 +249,7 @@ class Svg
                 $v  = $barSeries[$name][$i] ?? 0;
                 $bh = max(abs($v) / $max * $plotH, 0.5);
                 $x  = $cx - $gw / 2 + $bw * $s;
-                $svg .= '<rect x="' . round($x, 1) . '" y="' . round($padT + $plotH - $bh, 1) . '" width="' . round($bw, 1)
+                $svg .= '<rect class="svg-bar" style="animation-delay:' . self::delay($i * $gCount + $s) . '" x="' . round($x, 1) . '" y="' . round($padT + $plotH - $bh, 1) . '" width="' . round($bw, 1)
                     . '" height="' . round($bh, 1) . '" rx="1.5" fill="' . $cols[$s % count($cols)] . '">'
                     . '<title>' . htmlspecialchars($name . ' · ' . $label . ' : ' . self::abbr($v)) . '</title></rect>';
             }
@@ -272,11 +272,11 @@ class Svg
             $cy   = $padT + $plotH - (max(min($frac, $pctTop), 0) / $pctTop) * $plotH;
             $pts[] = round($cx, 1) . ',' . round($cy, 1);
         }
-        $svg .= '<polyline points="' . implode(' ', $pts) . '" fill="none" stroke="' . self::GREEN
+        $svg .= '<polyline class="svg-line" pathLength="1000" points="' . implode(' ', $pts) . '" fill="none" stroke="' . self::GREEN
             . '" stroke-width="2" stroke-linejoin="round"/>';
         foreach ($labels as $i => $label) {
             [$cx, $cy] = explode(',', $pts[$i]);
-            $svg .= '<circle cx="' . $cx . '" cy="' . $cy . '" r="2.6" fill="' . self::GREEN . '">'
+            $svg .= '<circle class="svg-dot" style="animation-delay:' . self::delay($i, 550) . '" cx="' . $cx . '" cy="' . $cy . '" r="2.6" fill="' . self::GREEN . '">'
                 . '<title>' . htmlspecialchars($pctLabel . ' · ' . $label . ' : ' . round(($pct[$i] ?? 0) * 100, 1) . '%') . '</title></circle>';
         }
 
@@ -327,12 +327,12 @@ class Svg
 
         $svg  = self::open();
         $svg .= self::yGrid($padL, $padR, $padT, $plotH, $min, $max);
-        $svg .= '<path d="' . $areaPath . '" fill="' . $color . '" fill-opacity="0.14"/>';
-        $svg .= '<polyline points="' . implode(' ', $line) . '" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linejoin="round"/>';
+        $svg .= '<path class="svg-area-fill" d="' . $areaPath . '" fill="' . $color . '" fill-opacity="0.14"/>';
+        $svg .= '<polyline class="svg-line" pathLength="1000" points="' . implode(' ', $line) . '" fill="none" stroke="' . $color . '" stroke-width="2" stroke-linejoin="round"/>';
 
         foreach ($values as $i => $v) {
             [$x, $y] = explode(',', $pt($i, $v));
-            $svg .= '<circle cx="' . $x . '" cy="' . $y . '" r="2.5" fill="' . $color . '">'
+            $svg .= '<circle class="svg-dot" style="animation-delay:' . self::delay($i, 650) . '" cx="' . $x . '" cy="' . $y . '" r="2.5" fill="' . $color . '">'
                 . '<title>' . htmlspecialchars(($labels[$i] ?? '') . ' : ' . self::abbr($v)) . '</title></circle>';
             if ($i % max(1, (int) ceil($n / 8)) === 0 || $i === $n - 1) {
                 $svg .= self::xLabel((float) $x, self::H - $padB + 13, $labels[$i] ?? '');
@@ -367,7 +367,7 @@ class Svg
             $c  = self::PALETTE[$i % count(self::PALETTE)];
             $svg .= '<text x="' . ($padL - 8) . '" y="' . round($y + 3.5, 1) . '" text-anchor="end" font-size="10.5" fill="' . self::INK . '">'
                 . htmlspecialchars(mb_strimwidth($r['label'], 0, 24, '…')) . '</text>';
-            $svg .= '<rect x="' . $padL . '" y="' . round($y - $rowH * 0.34, 1) . '" width="' . round(max($w, 1), 1)
+            $svg .= '<rect class="svg-hbar" style="animation-delay:' . self::delay($i) . '" x="' . $padL . '" y="' . round($y - $rowH * 0.34, 1) . '" width="' . round(max($w, 1), 1)
                 . '" height="' . round($rowH * 0.68, 1) . '" rx="2" fill="' . $c . '"/>';
             $svg .= '<text x="' . round($padL + $w + 6, 1) . '" y="' . round($y + 3.5, 1) . '" font-size="10" fill="' . self::MUTED . '">'
                 . self::abbr($r['value']) . '</text>';
@@ -427,11 +427,11 @@ class Svg
             foreach ($labels as $i => $label) {
                 $pts[] = round($px($i), 1) . ',' . round($py($series[$name][$i] ?? 0.0), 1);
             }
-            $svg .= '<polyline points="' . implode(' ', $pts) . '" fill="none" stroke="' . $col
+            $svg .= '<polyline class="svg-line" pathLength="1000" style="animation-delay:' . self::delay($s, 0, 250) . '" points="' . implode(' ', $pts) . '" fill="none" stroke="' . $col
                 . '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
             foreach ($labels as $i => $label) {
                 [$cx, $cy] = explode(',', $pts[$i]);
-                $svg .= '<circle cx="' . $cx . '" cy="' . $cy . '" r="2.6" fill="' . $col . '">'
+                $svg .= '<circle class="svg-dot" style="animation-delay:' . self::delay($i, 500 + $s * 150) . '" cx="' . $cx . '" cy="' . $cy . '" r="2.6" fill="' . $col . '">'
                     . '<title>' . htmlspecialchars($name . ' · ' . $label . ' : ' . self::abbr($series[$name][$i] ?? 0.0)) . '</title></circle>';
             }
         }
@@ -442,6 +442,12 @@ class Svg
     }
 
     // ----------------------------------------------------------------- helpers
+
+    /** Stagger delay for the entrance animation: $base + $i steps of $step ms. */
+    private static function delay(int $i, int $base = 0, int $step = 25): string
+    {
+        return ($base + $i * $step) . 'ms';
+    }
 
     private static function yGrid(int $padL, int $padR, int $padT, float $plotH, float $min, float $max): string
     {

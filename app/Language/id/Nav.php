@@ -2,6 +2,7 @@
 
 return [
     'dashboard'        => 'Dasbor',
+    'tagline'          => 'Akuntansi',
     'group_master'     => 'Data Induk',
     'group_txn'        => 'Transaksi',
     'group_reports'    => 'Laporan',

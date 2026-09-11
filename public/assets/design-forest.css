@@ -1,0 +1,138 @@
+/* ============================================================================
+   Forest design — gradient banner header, primary nav rendered as tabs that
+   blend into the page below when active. Loaded only when
+   active_design() === 'forest'. The header gradient is derived from the
+   active colour theme's --brand token (color-mix), so it shifts with the
+   light/green/blue/dark picker just like the rest of the app; only the
+   overall "banner header + tabs" shape is fixed.
+   ========================================================================== */
+
+.f-app {
+  --fg-950: color-mix(in srgb, var(--brand) 30%, black);
+  --fg-800: color-mix(in srgb, var(--brand) 65%, black);
+  --fg-600: var(--brand);
+  --fg-500: color-mix(in srgb, var(--brand) 80%, white);
+  --fg-leaf-300: color-mix(in srgb, var(--brand) 40%, white);
+  --fg-ink: #f3f6f4;
+  min-height: 100vh; display: flex; flex-direction: column; background: var(--bg);
+}
+
+/* ---- header ---------------------------------------------------------------- */
+.f-header {
+  position: sticky; top: 0; z-index: 50;
+  background: linear-gradient(135deg, var(--fg-950), var(--fg-800) 60%, var(--fg-600));
+  color: var(--fg-ink);
+  box-shadow: 0 6px 20px -6px color-mix(in srgb, var(--fg-950) 35%, transparent);
+}
+.f-row1 { display: flex; align-items: center; gap: 14px; padding: 14px 22px 0; flex-wrap: wrap; }
+
+.f-brand { display: flex; align-items: center; gap: 11px; color: var(--fg-ink); flex: 0 0 auto; }
+.f-brand:hover { text-decoration: none; }
+.f-brand-mark {
+  width: 34px; height: 34px; border-radius: 9px; flex: 0 0 auto; overflow: hidden;
+  background: linear-gradient(160deg, var(--fg-leaf-300), var(--fg-500));
+  color: var(--fg-950); display: grid; place-items: center;
+  font-weight: 800; font-size: 12.5px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25);
+}
+.f-brand-mark img { width: 100%; height: 100%; object-fit: contain; }
+.f-brand-text { display: flex; flex-direction: column; line-height: 1.25; }
+.f-brand-text strong { font-size: 15px; font-weight: 800; letter-spacing: .1px; }
+.f-brand-text small { font-size: 10.5px; color: var(--fg-leaf-300); font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+
+.f-pill {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .16);
+  padding: 6px 12px; border-radius: 999px; font-size: 12px; color: var(--fg-leaf-300); font-weight: 600;
+}
+.f-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--fg-leaf-300); box-shadow: 0 0 0 3px rgba(143, 217, 168, .25); }
+
+.f-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+.f-right .m-company select {
+  font-size: 12.5px; padding: 5px 8px; max-width: 150px; border-radius: 6px;
+  background: rgba(255, 255, 255, .1); color: var(--fg-ink); border: 1px solid rgba(255, 255, 255, .22);
+}
+.f-right .theme-picker, .f-right .lang-picker { margin: 0; }
+.f-right .lang-picker a { border-color: rgba(255, 255, 255, .28); color: var(--fg-leaf-300); }
+.f-right .lang-picker a.on { background: var(--fg-leaf-300); color: var(--fg-950); border-color: var(--fg-leaf-300); }
+/* base reset shared by every nav trigger (tabs AND the user menu button) -
+   without this, a plain <button> outside .f-tabs (i.e. the user menu) falls
+   back to the browser's native button chrome instead of an icon button. */
+.m-navlink, .m-navbtn {
+  display: inline-flex; align-items: center; gap: 5px;
+  border: none; background: none; cursor: pointer; font-family: inherit;
+  border-radius: 7px; padding: 7px 11px; font-size: 13px; font-weight: 500;
+  color: var(--fg-ink); line-height: 1; white-space: nowrap;
+}
+
+.f-right .m-user .m-navbtn { padding: 5px 7px; }
+.f-right .m-user .m-navbtn:hover { background: rgba(255, 255, 255, .14); }
+.f-right .m-user .avatar-sm { width: 24px; height: 24px; }
+
+.f-burger { display: none; background: none; border: 0; font-size: 20px; cursor: pointer; color: var(--fg-ink); padding: 4px 6px; margin-left: auto; }
+
+/* ---- tab row (the active tab visually merges into the page below) --------- */
+/* No overflow-x here: setting only overflow-x forces overflow-y to "auto" too
+   (per the CSS overflow spec), which turns .f-tabs into a clipping/scroll
+   container for its open .m-menu dropdowns (they're absolutely positioned
+   but still painted as descendants of this box) — the dropdown gets cut off
+   and .f-tabs grows a phantom scrollbar whenever a menu is open. The tab
+   count is small and fixed, so a row that just wraps (or is hidden behind
+   the burger below 960px) is enough; it never needs its own scrollbar. */
+.f-tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 14px 18px 0; }
+
+.f-tabs .m-navlink, .f-tabs .m-navbtn {
+  display: inline-flex; align-items: center; gap: 5px;
+  border: none; background: transparent; color: rgba(234, 250, 240, .68);
+  padding: 10px 16px; font-size: 13.5px; font-weight: 700; cursor: pointer;
+  border-radius: 10px 10px 0 0; white-space: nowrap; font-family: inherit;
+}
+.f-tabs .m-navlink:hover, .f-tabs .m-navbtn:hover { color: #fff; background: rgba(255, 255, 255, .08); text-decoration: none; }
+.f-tabs .m-navlink.active, .f-tabs .m-navitem.on > .m-navbtn { color: var(--ink); background: var(--bg); }
+.m-caret { font-size: 9px; opacity: .8; }
+
+.m-navitem { position: relative; }
+.m-menu {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 60;
+  min-width: 208px; padding: 6px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(15, 23, 35, .22);
+  display: none;
+}
+.m-menu-right { left: auto; right: 0; }
+.m-navitem.open > .m-menu { display: block; }
+.m-menu-link {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px; border-radius: 7px;
+  font-size: 12.5px; color: var(--ink); white-space: nowrap;
+}
+.m-menu-link:hover { background: var(--hover); text-decoration: none; }
+.m-menu-link.active { background: var(--brand-soft); color: var(--brand); font-weight: 600; }
+.m-menu-link .ic { width: 15px; text-align: center; opacity: .8; flex: 0 0 auto; }
+
+/* ---- canvas ---------------------------------------------------------------- */
+:root[data-design="forest"] .content { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+:root[data-design="forest"] .wrap { width: 100%; max-width: 1360px; margin: 26px auto 40px; padding: 0 26px; }
+:root[data-design="forest"] .page-head h1 { letter-spacing: -.01em; }
+:root[data-design="forest"] .card { border-radius: 12px; }
+
+/* ---- responsive ------------------------------------------------------------- */
+@media (max-width: 960px) {
+  .f-burger { display: block; }
+  .f-brand-text small { display: none; }
+  .f-pill { display: none; }
+  .f-tabs {
+    flex-basis: 100%; flex-direction: column; align-items: stretch; gap: 2px;
+    padding: 6px 12px 10px; display: none;
+  }
+  .f-tabs.open { display: flex; }
+  .f-row1 { padding: 10px 14px 0; }
+  .f-tabs .m-navlink, .f-tabs .m-navbtn { width: 100%; justify-content: flex-start; border-radius: 8px; padding: 10px 12px; }
+  .m-menu { position: static; display: block; box-shadow: none; border: 0; border-radius: 0; padding: 0 0 6px 20px; min-width: 0; background: none; }
+  .m-menu-right { right: auto; }
+  :root[data-design="forest"] .wrap { padding: 0 16px; margin-top: 18px; }
+}
+
+@media print {
+  .f-header, .f-burger { display: none !important; }
+  :root[data-design="forest"] .wrap { margin: 0; max-width: none; padding: 0; }
+}

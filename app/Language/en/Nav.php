@@ -2,6 +2,7 @@
 
 return [
     'dashboard'     => 'Dashboard',
+    'tagline'       => 'Accounting',
     'group_master'  => 'Master Data',
     'group_txn'     => 'Transactions',
     'group_reports' => 'Reports',

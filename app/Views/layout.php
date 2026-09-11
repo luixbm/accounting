@@ -8,6 +8,15 @@
  * @var string $title
  */
 $design = active_design();
+
+// Cache-bust the two stylesheets off their own mtime, so a CSS edit takes
+// effect on the next normal load instead of needing a hard refresh.
+$assetV = static function (string $rel): string {
+    $path = FCPATH . 'assets/' . $rel;
+    $v    = is_file($path) ? filemtime($path) : time();
+
+    return base_url('assets/' . $rel) . '?v=' . $v;
+};
 ?>
 <!DOCTYPE html>
 <html lang="<?= esc(app_locale()) ?>" data-theme="<?= esc(app_theme()) ?>" data-design="<?= esc($design) ?>" data-thead="<?= esc(table_header_style()) ?>">
@@ -15,8 +24,8 @@ $design = active_design();
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title><?= esc($title ?? 'LuixSpace') ?> &middot; <?= esc(company_name()) ?></title>
-<link rel="stylesheet" href="<?= base_url('assets/app.css') ?>">
-<link rel="stylesheet" href="<?= base_url('assets/design-' . $design . '.css') ?>">
+<link rel="stylesheet" href="<?= $assetV('app.css') ?>">
+<link rel="stylesheet" href="<?= $assetV('design-' . $design . '.css') ?>">
 <script>
   (function () {
     try {
