@@ -37,8 +37,13 @@ class MyInvoisAuth
             return ['ok' => false, 'error' => 'Client ID / secret not set.'];
         }
 
-        $host   = self::host($settings['environment'] ?? 'sandbox');
-        $secret = Secret::decrypt($settings['client_secret_enc']);
+        $host = self::host($settings['environment'] ?? 'sandbox');
+
+        try {
+            $secret = Secret::decrypt($settings['client_secret_enc']);
+        } catch (\Throwable $e) {
+            return ['ok' => false, 'error' => 'The saved client secret could not be decrypted — re-enter it in Setup → E-Invoice and save.'];
+        }
 
         $res = service('curlrequest', ['timeout' => 20])->post($host . '/connect/token', [
             'form_params' => [
