@@ -24,36 +24,51 @@
           <option value="production" <?= $row['environment'] === 'production' ? 'selected' : '' ?>><?= lang('Einvoice.env_production') ?></option>
         </select>
       </div>
-    </div>
-    <div class="row">
-      <div class="field"><label><?= lang('Einvoice.client_id') ?></label><input name="client_id" value="<?= esc($row['client_id'] ?? '') ?>"></div>
-      <div class="field">
-        <label><?= lang('Einvoice.client_secret') ?></label>
-        <input type="password" name="client_secret" autocomplete="off" placeholder="••••••••••••">
-        <div class="muted small"><?= $hasSecret ? lang('Einvoice.client_secret_set') : lang('Einvoice.client_secret_unset') ?></div>
-      </div>
+      <p class="muted small" style="flex-basis:100%;margin:2px 0 0"><?= lang('Einvoice.environment_hint') ?></p>
     </div>
   </div>
+
+  <?php
+  $envCard = static function (string $key, string $title, string $hint) use ($creds, $hasSecret) {
+      $c = $creds[$key];
+      ?>
+      <div class="card" style="max-width:680px">
+        <h2><?= esc($title) ?></h2>
+        <p class="muted small"><?= esc($hint) ?></p>
+        <div class="row">
+          <div class="field"><label><?= lang('Einvoice.client_id') ?></label><input name="<?= $key ?>_client_id" value="<?= esc($c['client_id'] ?? '') ?>"></div>
+          <div class="field">
+            <label><?= lang('Einvoice.client_secret') ?></label>
+            <input type="password" name="<?= $key ?>_client_secret" autocomplete="off" placeholder="••••••••••••">
+            <div class="muted small"><?= $hasSecret[$key] ? lang('Einvoice.client_secret_set') : lang('Einvoice.client_secret_unset') ?></div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field"><label><?= lang('Einvoice.tax_id') ?></label><input name="<?= $key ?>_tax_id" value="<?= esc($c['tax_id'] ?? '') ?>"></div>
+          <div class="field" style="max-width:180px">
+            <label><?= lang('Einvoice.id_type') ?></label>
+            <select name="<?= $key ?>_id_type">
+              <?php foreach (['BRN', 'NRIC', 'PASSPORT', 'ARMY'] as $t): ?>
+                <option value="<?= $t ?>" <?= ($c['id_type'] ?? 'BRN') === $t ? 'selected' : '' ?>><?= $t ?></option>
+              <?php endforeach ?>
+            </select>
+          </div>
+          <div class="field"><label><?= lang('Einvoice.id_value') ?></label><input name="<?= $key ?>_id_value" value="<?= esc($c['id_value'] ?? '') ?>"></div>
+        </div>
+        <div class="field" style="max-width:260px"><label><?= lang('Einvoice.sst_no') ?></label><input name="<?= $key ?>_sst_no" value="<?= esc($c['sst_no'] ?? '') ?>"></div>
+      </div>
+      <?php
+  };
+  $envCard('sandbox', lang('Einvoice.sandbox_h'), lang('Einvoice.sandbox_hint'));
+  $envCard('production', lang('Einvoice.production_h'), lang('Einvoice.production_hint'));
+  ?>
 
   <div class="card" style="max-width:680px">
     <h2><?= lang('Einvoice.profile_h') ?></h2>
     <div class="row">
-      <div class="field"><label><?= lang('Einvoice.tax_id') ?></label><input name="tax_id" value="<?= esc($row['tax_id'] ?? '') ?>"></div>
-      <div class="field" style="max-width:180px">
-        <label><?= lang('Einvoice.id_type') ?></label>
-        <select name="id_type">
-          <?php foreach (['BRN', 'NRIC', 'PASSPORT', 'ARMY'] as $t): ?>
-            <option value="<?= $t ?>" <?= $row['id_type'] === $t ? 'selected' : '' ?>><?= $t ?></option>
-          <?php endforeach ?>
-        </select>
-      </div>
-      <div class="field"><label><?= lang('Einvoice.id_value') ?></label><input name="id_value" value="<?= esc($row['id_value'] ?? '') ?>"></div>
-    </div>
-    <div class="row">
-      <div class="field"><label><?= lang('Einvoice.sst_no') ?></label><input name="sst_no" value="<?= esc($row['sst_no'] ?? '') ?>"></div>
       <div class="field" style="max-width:160px"><label><?= lang('Einvoice.msic_code') ?></label><input name="msic_code" value="<?= esc($row['msic_code'] ?? '') ?>"></div>
+      <div class="field"><label><?= lang('Einvoice.business_activity') ?></label><input name="business_activity" value="<?= esc($row['business_activity'] ?? '') ?>"></div>
     </div>
-    <div class="field"><label><?= lang('Einvoice.business_activity') ?></label><input name="business_activity" value="<?= esc($row['business_activity'] ?? '') ?>"></div>
   </div>
 
   <div class="card" style="max-width:680px">

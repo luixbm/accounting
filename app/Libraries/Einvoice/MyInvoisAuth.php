@@ -2,7 +2,7 @@
 
 namespace App\Libraries\Einvoice;
 
-use App\Models\EinvoiceSettingModel;
+use App\Models\EinvoiceCredentialModel;
 
 /**
  * OAuth2 client_credentials login against MyInvois's identity service. Tokens
@@ -63,7 +63,7 @@ class MyInvoisAuth
         }
 
         $expiresIn = (int) ($body['expires_in'] ?? 3600);
-        model(EinvoiceSettingModel::class)->update((int) $settings['id'], [
+        model(EinvoiceCredentialModel::class)->update((int) $settings['id'], [
             'cached_token'     => $body['access_token'],
             'token_expires_at' => date('Y-m-d H:i:s', time() + $expiresIn),
         ]);

@@ -8,6 +8,7 @@ use App\Libraries\Einvoice\MyInvoisClient;
 use App\Libraries\Einvoice\Secret;
 use App\Libraries\Einvoice\UblInvoiceBuilder;
 use App\Models\CompanyModel;
+use App\Models\EinvoiceCredentialModel;
 use App\Models\EinvoiceSettingModel;
 use App\Models\SalesInvoiceLineModel;
 use App\Models\SalesInvoiceModel;
@@ -28,33 +29,37 @@ class EinvoiceController extends BaseController
 
     public function settings()
     {
-        $row = $this->model()->current();
+        $shared    = $this->model()->sharedRow();
+        $credModel = model(EinvoiceCredentialModel::class);
+        $creds     = [
+            'sandbox'    => $credModel->forEnv((int) $shared['company_id'], 'sandbox'),
+            'production' => $credModel->forEnv((int) $shared['company_id'], 'production'),
+        ];
 
         return view('einvoice/settings', [
             'title' => lang('Nav.einvoice'),
-            'row'   => $row,
-            'hasSecret' => $row['client_secret_enc'] !== null && $row['client_secret_enc'] !== '',
+            'row'   => $shared,
+            'creds' => $creds,
+            'hasSecret' => [
+                'sandbox'    => ! empty($creds['sandbox']['client_secret_enc']),
+                'production' => ! empty($creds['production']['client_secret_enc']),
+            ],
         ]);
     }
 
     public function saveSettings()
     {
-        $model = $this->model();
-        $row   = $model->current();
+        $model  = $this->model();
+        $shared = $model->sharedRow();
 
         $str = fn (string $k): ?string => ($v = trim((string) $this->request->getPost($k))) !== '' ? $v : null;
 
         $env = (string) $this->request->getPost('environment');
-        $idt = (string) $this->request->getPost('id_type');
+        $env = in_array($env, self::ENVIRONMENTS, true) ? $env : 'sandbox';
 
-        $data = [
-            'environment'       => in_array($env, self::ENVIRONMENTS, true) ? $env : 'sandbox',
+        $model->update($shared['id'], [
+            'environment'       => $env,
             'enabled'           => $this->request->getPost('enabled') !== null ? 1 : 0,
-            'client_id'         => $str('client_id'),
-            'tax_id'            => $str('tax_id'),
-            'id_type'           => in_array($idt, self::ID_TYPES, true) ? $idt : 'BRN',
-            'id_value'          => $str('id_value'),
-            'sst_no'            => $str('sst_no'),
             'msic_code'         => $str('msic_code'),
             'business_activity' => $str('business_activity'),
             'addr_line1'        => $str('addr_line1'),
@@ -65,25 +70,48 @@ class EinvoiceController extends BaseController
             'addr_country'      => $str('addr_country') ?? 'MYS',
             'contact_phone'     => $str('contact_phone'),
             'contact_email'     => $str('contact_email'),
-        ];
+        ]);
 
-        // Secret is write-only: a blank field on save means "keep the existing
-        // one" (never re-shown), matching the api_tokens "shown once" convention.
-        $newSecret = (string) $this->request->getPost('client_secret');
-        if ($newSecret !== '') {
-            $data['client_secret_enc'] = Secret::encrypt($newSecret);
-            // a new secret invalidates any cached token from the old one
-            $data['cached_token']     = null;
-            $data['token_expires_at'] = null;
+        // Sandbox and production are separate MyInvois registrations (different
+        // Client ID/Secret, different TIN - preprod ties its client to a
+        // synthetic test TIN) so each gets its own credentials row.
+        $credModel      = model(EinvoiceCredentialModel::class);
+        $activeHasNoSecret = false;
+        foreach (self::ENVIRONMENTS as $envKey) {
+            $cred = $credModel->forEnv((int) $shared['company_id'], $envKey);
+            $idt  = strtoupper((string) $this->request->getPost($envKey . '_id_type'));
+
+            $data = [
+                'client_id' => $str($envKey . '_client_id'),
+                'tax_id'    => $str($envKey . '_tax_id'),
+                'id_type'   => in_array($idt, self::ID_TYPES, true) ? $idt : 'BRN',
+                'id_value'  => $str($envKey . '_id_value'),
+                'sst_no'    => $str($envKey . '_sst_no'),
+            ];
+
+            // Secret is write-only: a blank field on save means "keep the
+            // existing one" (never re-shown), matching api_tokens' convention.
+            $newSecret = (string) $this->request->getPost($envKey . '_client_secret');
+            if ($newSecret !== '') {
+                $data['client_secret_enc'] = Secret::encrypt($newSecret);
+                // a new secret invalidates any cached token from the old one
+                $data['cached_token']     = null;
+                $data['token_expires_at'] = null;
+            }
+
+            $credModel->update($cred['id'], $data);
+
+            if ($envKey === $env) {
+                $secretStored      = ($data['client_secret_enc'] ?? $cred['client_secret_enc'] ?? '') !== '';
+                $activeHasNoSecret = ! $secretStored && ($data['client_id'] || $this->request->getPost('enabled') !== null);
+            }
         }
 
-        $model->update($row['id'], $data);
-
-        // "Save" with an empty secret box keeps whatever was stored - which is
-        // nothing on a first save. Warn instead of silently leaving the company
-        // half-configured (it will keep failing the connection test otherwise).
-        $secretStored = ($data['client_secret_enc'] ?? $row['client_secret_enc'] ?? '') !== '';
-        if (! $secretStored && ($data['client_id'] || $data['enabled'])) {
+        // "Save" with an empty secret box on the active environment keeps
+        // whatever was stored - which is nothing on a first save. Warn instead
+        // of silently leaving the company half-configured for the environment
+        // that's actually live.
+        if ($activeHasNoSecret) {
             return redirect()->to('settings/einvoice')->with('error', lang('Einvoice.saved_no_secret'));
         }
 
@@ -118,7 +146,7 @@ class EinvoiceController extends BaseController
         $res = MyInvoisAuth::token($probe);
 
         if (! empty($res['ok'])) {
-            $fresh = $this->model()->find($row['id']);
+            $fresh = model(EinvoiceCredentialModel::class)->find($row['id']);
             $exp   = $fresh['token_expires_at'] ?? null;
 
             return $back->with('message', lang('Einvoice.test_ok', [

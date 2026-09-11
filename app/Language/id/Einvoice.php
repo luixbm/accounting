@@ -12,6 +12,12 @@ return [
     'environment'    => 'Environment',
     'env_sandbox'    => 'Sandbox (uji coba)',
     'env_production' => 'Production (live)',
+    'environment_hint' => 'Menentukan kartu kredensial mana di bawah yang dipakai untuk login dan mengirim saat ini.',
+
+    'sandbox_h'    => 'Kredensial Sandbox',
+    'sandbox_hint' => 'Dari portal preprod MyInvois. Preprod mengikat Client ID ke TIN uji coba (biasanya diawali "IG") — bukan TIN asli perusahaan Anda — gunakan TIN yang ditampilkan portal sandbox untuk Client ID ini.',
+    'production_h'    => 'Kredensial Production',
+    'production_hint' => 'Dari portal MyInvois live — Client ID/Secret dan TIN asli perusahaan Anda.',
     'client_id'      => 'Client ID',
     'client_secret'  => 'Client secret',
     'client_secret_set'    => 'Secret sudah tersimpan. Biarkan kosong untuk mempertahankannya.',

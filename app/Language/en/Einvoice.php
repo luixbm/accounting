@@ -12,6 +12,12 @@ return [
     'environment'    => 'Environment',
     'env_sandbox'    => 'Sandbox (testing)',
     'env_production' => 'Production (live)',
+    'environment_hint' => 'Which credentials card below is used to sign in and submit right now.',
+
+    'sandbox_h'    => 'Sandbox credentials',
+    'sandbox_hint' => 'From the MyInvois preprod portal. Preprod ties its Client ID to a synthetic test TIN (often starting "IG") — not your real company TIN — use whatever TIN the sandbox portal shows for this Client ID.',
+    'production_h'    => 'Production credentials',
+    'production_hint' => 'From the live MyInvois portal — your company\'s real Client ID/Secret and TIN.',
     'client_id'      => 'Client ID',
     'client_secret'  => 'Client secret',
     'client_secret_set'    => 'A secret is already saved. Leave blank to keep it.',
