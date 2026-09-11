@@ -214,13 +214,60 @@ class UblInvoiceBuilder
         ]];
     }
 
+    /**
+     * customers.country is free text, not a coded field. LHDN needs a real
+     * ISO 3166-1 alpha-3 code, and gets fussy about it: state code 17 (used
+     * for the buyer address below) is only valid for a non-Malaysian buyer,
+     * so mis-mapping a foreign country to MYS here fails validation with a
+     * confusing "State Code 17..." error that has nothing to do with country.
+     * Only a genuinely blank country falls back to MYS (assume domestic).
+     */
     private static function iso3(string $country): string
     {
         $c = strtoupper(trim($country));
+        if ($c === '') {
+            return 'MYS';
+        }
         if (preg_match('/^[A-Z]{3}$/', $c)) {
             return $c;
         }
-        $map = ['MY' => 'MYS', 'MALAYSIA' => 'MYS', 'SG' => 'SGP', 'SINGAPORE' => 'SGP', 'ID' => 'IDN', 'INDONESIA' => 'IDN'];
+        static $map = [
+            'MALAYSIA' => 'MYS', 'MY' => 'MYS',
+            'NETHERLANDS' => 'NLD', 'THE NETHERLANDS' => 'NLD', 'NETHERLAND' => 'NLD', 'HOLLAND' => 'NLD', 'NL' => 'NLD',
+            'GERMANY' => 'DEU', 'DEUTSCHLAND' => 'DEU', 'DE' => 'DEU',
+            'UNITED KINGDOM' => 'GBR', 'UK' => 'GBR', 'GREAT BRITAIN' => 'GBR', 'ENGLAND' => 'GBR',
+            'AUSTRALIA' => 'AUS', 'AU' => 'AUS',
+            'DENMARK' => 'DNK', 'DK' => 'DNK',
+            'BELGIUM' => 'BEL', 'BELGIA' => 'BEL', 'BE' => 'BEL',
+            'INDONESIA' => 'IDN', 'ID' => 'IDN',
+            'FINLAND' => 'FIN', 'FI' => 'FIN',
+            'SPAIN' => 'ESP', 'ES' => 'ESP',
+            'THAILAND' => 'THA', 'TH' => 'THA',
+            'SWEDEN' => 'SWE', 'SE' => 'SWE',
+            'SWITZERLAND' => 'CHE', 'SCHWEIZ' => 'CHE', 'SUISSE' => 'CHE', 'CH' => 'CHE',
+            'FRANCE' => 'FRA', 'FR' => 'FRA',
+            'SINGAPORE' => 'SGP', 'SG' => 'SGP',
+            'UNITED STATES' => 'USA', 'UNITED STATES OF AMERICA' => 'USA', 'USA' => 'USA', 'US' => 'USA',
+            'CANADA' => 'CAN', 'CA' => 'CAN',
+            'NORWAY' => 'NOR', 'NO' => 'NOR',
+            'ITALY' => 'ITA', 'IT' => 'ITA',
+            'AUSTRIA' => 'AUT', 'AT' => 'AUT',
+            'NEW ZEALAND' => 'NZL', 'NZ' => 'NZL',
+            'JAPAN' => 'JPN', 'JP' => 'JPN',
+            'CHINA' => 'CHN', 'CN' => 'CHN',
+            'SOUTH KOREA' => 'KOR', 'KOREA' => 'KOR', 'KR' => 'KOR',
+            'INDIA' => 'IND', 'IN' => 'IND',
+            'IRELAND' => 'IRL', 'IE' => 'IRL',
+            'PORTUGAL' => 'PRT', 'PT' => 'PRT',
+            'POLAND' => 'POL', 'PL' => 'POL',
+            'HONG KONG' => 'HKG', 'HK' => 'HKG',
+            'PHILIPPINES' => 'PHL', 'PH' => 'PHL',
+            'VIETNAM' => 'VNM', 'VN' => 'VNM',
+            'BRAZIL' => 'BRA', 'BR' => 'BRA',
+            'MEXICO' => 'MEX', 'MX' => 'MEX',
+            'SOUTH AFRICA' => 'ZAF', 'ZA' => 'ZAF',
+            'UNITED ARAB EMIRATES' => 'ARE', 'UAE' => 'ARE',
+        ];
 
         return $map[$c] ?? 'MYS';
     }
